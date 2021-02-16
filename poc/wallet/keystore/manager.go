@@ -823,7 +823,7 @@ func loadAddrManager(amBucket db.Bucket, pubPassphrase []byte, net *config.Param
 	return &AddrManager{
 		use:                    AddrUse(account),
 		unlocked:               false,
-		address:                managedAddresses,
+		addresses:                managedAddresses,
 		keystoreName:           amBucketMeta.Name(),
 		remark:                 string(remarkBytes),
 		masterKeyPub:           &masterKeyPub,
@@ -1486,7 +1486,7 @@ func (kmc *KeystoreManagerForPoC) VerifySig(sig *pocec.Signature, hash []byte, p
 
 func (kmc *KeystoreManagerForPoC) getAddrManager(addr string) (*AddrManager, error) {
 	for acctID, acctM := range kmc.managedKeystores {
-		_, ok := acctM.address[addr]
+		_, ok := acctM.addresses[addr]
 		if ok {
 			return kmc.managedKeystores[acctID], nil
 		}
@@ -1537,7 +1537,7 @@ func (kmc *KeystoreManagerForPoC) GetPublicKeyOrdinal(pubKey *pocec.PublicKey) (
 
 	addr := address.EncodeAddress()
 	for _, acctM := range kmc.managedKeystores {
-		mAddr, ok := acctM.address[addr]
+		mAddr, ok := acctM.addresses[addr]
 		if ok {
 			return mAddr.derivationPath.Index, true
 		}

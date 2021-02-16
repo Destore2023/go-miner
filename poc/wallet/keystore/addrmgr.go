@@ -26,9 +26,9 @@ type AddrManager struct {
 	remark       string
 
 	// in number of second
-	expires time.Duration
-	address map[string]*ManagedAddress
-	use     AddrUse
+	expires   time.Duration
+	addresses map[string]*ManagedAddress
+	use       AddrUse
 
 	acctInfo   *accountInfo
 	branchInfo *branchInfo
@@ -47,6 +47,8 @@ type AddrManager struct {
 	//
 	// NOTE: This is not the same thing as BIP0032 master node extended
 	// key.
+	//
+	// https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
 	//
 	// The underlying master private key will be zeroed when the address
 	// manager is locked.
@@ -196,7 +198,7 @@ func (a *AddrManager) clearPrivKeys() {
 	defer a.mu.Unlock()
 	a.unlocked = false
 
-	for _, mAddr := range a.address {
+	for _, mAddr := range a.addresses {
 		if mAddr.privKey != nil {
 			zero.BigInt(mAddr.privKey.D)
 			mAddr.privKey = nil
@@ -283,7 +285,7 @@ func (a *AddrManager) updatePrivKeys() error {
 
 	a.acctInfo.acctKeyPriv = acctKeyExPriv
 
-	for _, mAddr := range a.address {
+	for _, mAddr := range a.addresses {
 		var exBKey *hdkeychain.ExtendedKey
 		if mAddr.derivationPath.Branch == ExternalBranch {
 			exBKey = exBranchKeyExPriv
@@ -520,7 +522,7 @@ func (a *AddrManager) nextAddresses(dbTransaction db.DBTransaction, internal boo
 
 func (a *AddrManager) updateManagedAddress(dbTransaction db.ReadTransaction, managedAddresses []*ManagedAddress) error {
 	for _, managedAddress := range managedAddresses {
-		a.address[managedAddress.address] = managedAddress
+		a.addresses[managedAddress.address] = managedAddress
 	}
 
 	am := dbTransaction.FetchBucket(a.storage)
@@ -641,8 +643,8 @@ func (a *AddrManager) signPocec(hash []byte, addr string) (signed *pocec.Signatu
 		return nil, err
 	}
 
-	if a.address[addr].privKey != nil {
-		signed, err = a.address[addr].privKey.Sign(hash)
+	if a.addresses[addr].privKey != nil {
+		signed, err = a.addresses[addr].privKey.Sign(hash)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "sign failed",
 				logging.LogFormat{
@@ -688,7 +690,7 @@ func (a *AddrManager) verifySigPocec(sig *pocec.Signature, hash []byte, pub *poc
 func (a *AddrManager) CountAddresses() (external int, internal int) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	for _, ma := range a.address {
+	for _, ma := range a.addresses {
 		if ma.IsChangeAddr() {
 			internal++
 			continue
@@ -702,7 +704,7 @@ func (a *AddrManager) ListAddresses() []string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	address := make([]string, 0)
-	for addr := range a.address {
+	for addr := range a.addresses {
 		address = append(address, addr)
 	}
 	return address
@@ -712,7 +714,7 @@ func (a *AddrManager) ManagedAddresses() []*ManagedAddress {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	mas := make([]*ManagedAddress, 0)
-	for _, ma := range a.address {
+	for _, ma := range a.addresses {
 		mas = append(mas, ma)
 	}
 	return mas
@@ -721,7 +723,7 @@ func (a *AddrManager) ManagedAddresses() []*ManagedAddress {
 func (a *AddrManager) Address(addr string) (*ManagedAddress, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	ma, ok := a.address[addr]
+	ma, ok := a.addresses[addr]
 	if ok {
 		return ma, nil
 	}
