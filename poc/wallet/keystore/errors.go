@@ -19,7 +19,7 @@ var (
 	ErrAddressNotFound         = errors.New("address not found")
 	ErrAccountNotFound         = errors.New("account not found")
 	ErrCurrentKeystoreNotFound = errors.New("current keystore not found")
-	ErrUnexpecteDBError        = errors.New("unexpected error occurred in DB")
+	ErrUnexpectedDBError        = errors.New("unexpected error occurred in DB")
 	ErrKeyScopeNotFound        = errors.New("KeyScope definition not found")
 	ErrScriptHashNotFound      = errors.New("scriptHash not found")
 	ErrPubKeyNotFound          = errors.New("pubKey not found")

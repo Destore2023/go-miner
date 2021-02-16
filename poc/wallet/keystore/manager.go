@@ -609,7 +609,7 @@ func create(dbTransaction db.DBTransaction, kmBucketMeta db.BucketMeta, pubPassp
 
 	acctBucket := dbTransaction.FetchBucket(acctBucketMeta)
 	if acctBucket == nil {
-		return nil, ErrUnexpecteDBError
+		return nil, ErrUnexpectedDBError
 	}
 
 	if len(remark) > 0 {
@@ -873,7 +873,7 @@ func (kmc *KeystoreManagerForPoC) NewKeystore(privPassphrase, seed []byte, remar
 	err = db.View(kmc.db, func(dbTransaction db.ReadTransaction) error {
 		amBucket := dbTransaction.FetchBucket(acctBucketMeta)
 		if amBucket == nil {
-			return ErrUnexpecteDBError
+			return ErrUnexpectedDBError
 		}
 
 		var err error
@@ -1016,7 +1016,7 @@ func (kmc *KeystoreManagerForPoC) allocAddrMgrNamespace(dbTransaction db.DBTrans
 
 	acctBucket := dbTransaction.FetchBucket(acctBucketMeta)
 	if acctBucket == nil {
-		return nil, ErrUnexpecteDBError
+		return nil, ErrUnexpectedDBError
 	}
 
 	if len(kStore.Remark) > 0 {
@@ -1634,7 +1634,7 @@ func (kmc *KeystoreManagerForPoC) ChangePubPassphrase(oldPubPass, newPubPass []b
 		for _, addrManager := range kmc.managedKeystores {
 			amBucket := dbTransaction.FetchBucket(addrManager.storage)
 			if amBucket == nil {
-				return ErrUnexpecteDBError
+				return ErrUnexpectedDBError
 			}
 			// Load the old master pubkey params from the db.
 			masterKeyPubParams, _, err := fetchMasterKeyParams(amBucket)

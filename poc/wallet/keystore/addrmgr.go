@@ -595,8 +595,8 @@ func (a *AddrManager) changePrivPassphrase(amBucket db.Bucket, oldPrivPass []byt
 func (a *AddrManager) changeRemark(dbTransaction db.DBTransaction, newRemark string) error {
 	amBucket := dbTransaction.FetchBucket(a.storage)
 	if amBucket == nil {
-		logging.CPrint(logging.ERROR, "failed to get related bucket", logging.LogFormat{"error": ErrUnexpecteDBError})
-		return ErrUnexpecteDBError
+		logging.CPrint(logging.ERROR, "failed to get related bucket", logging.LogFormat{"error": ErrUnexpectedDBError})
+		return ErrUnexpectedDBError
 	}
 	if len(newRemark) == 0 {
 		err := deleteRemark(amBucket)
