@@ -1608,7 +1608,7 @@ func (kmc *KeystoreManagerForPoC) ChangePubPassphrase(oldPubPass, newPubPass []b
 	}
 
 	if bytes.Compare(oldPubPass, newPubPass) == 0 {
-		return ErrSamePubpass
+		return ErrSamePubPass
 	}
 
 	// should not be the same as the private pass
@@ -1705,7 +1705,7 @@ func (kmc *KeystoreManagerForPoC) ChangePrivPassphrase(oldPrivPass, newPrivPass 
 		return ErrIllegalNewPrivPass
 	}
 	if bytes.Equal(newPrivPass, oldPrivPass) {
-		return ErrSamePrivpass
+		return ErrSamePrivPass
 	}
 
 	if scryptConfig == nil {
