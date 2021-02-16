@@ -96,15 +96,15 @@ func Update(db DB, f func(tx DBTransaction) error) error {
 	return tx.Commit()
 }
 
-var drivers []DBDriver
+var drivers []Driver
 
-type DBDriver struct {
-	Type     string
-	OpenDB   func(args ...interface{}) (DB, error)
-	CreateDB func(args ...interface{}) (DB, error)
+type Driver struct {
+	Type   string
+	Open   func(args ...interface{}) (DB, error)
+	Create func(args ...interface{}) (DB, error)
 }
 
-func RegisterDriver(ins DBDriver) {
+func RegisterDriver(ins Driver) {
 	for _, driver := range drivers {
 		if driver.Type == ins.Type {
 			return
@@ -121,19 +121,19 @@ func RegisteredDbTypes() []string {
 	return types
 }
 
-func CreateDB(dbtype string, args ...interface{}) (DB, error) {
+func CreateDB(dbType string, args ...interface{}) (DB, error) {
 	for _, driver := range drivers {
-		if driver.Type == dbtype {
-			return driver.CreateDB(args...)
+		if driver.Type == dbType {
+			return driver.Create(args...)
 		}
 	}
 	return nil, ErrDbUnknownType
 }
 
-func OpenDB(dbtype string, args ...interface{}) (DB, error) {
+func OpenDB(dbType string, args ...interface{}) (DB, error) {
 	for _, driver := range drivers {
-		if driver.Type == dbtype {
-			return driver.OpenDB(args...)
+		if driver.Type == dbType {
+			return driver.Open(args...)
 		}
 	}
 	return nil, ErrDbUnknownType
