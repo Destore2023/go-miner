@@ -13,3 +13,13 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+node_modules
+docs/node_modules
+.idea
+logs
+chain
+dev-config.json
+

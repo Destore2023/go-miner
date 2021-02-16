@@ -1,0 +1,2878 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "SKT-Miner API",
+    "version": "1.0",
+    "contact": {
+      "name": "SKT project",
+      "url": "https://sukhavati.io/",
+      "email": "contact@sukhavati.io"
+    },
+    "license": {}
+  },
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json",
+    "application/x-foo-mime"
+  ],
+  "produces": [
+    "application/json",
+    "application/x-foo-mime"
+  ],
+  "paths": {
+    "/v1/blocks/best": {
+      "get": {
+        "operationId": "ApiService_GetBestBlock",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetBestBlockResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/blocks/hash/{height}": {
+      "get": {
+        "operationId": "ApiService_GetBlockHashByHeight",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetBlockHashByHeightResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "height",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/blocks/height/{height}": {
+      "get": {
+        "operationId": "ApiService_GetBlockByHeight",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetBlockResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "height",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/blocks/pubkey/{public_key}": {
+      "get": {
+        "operationId": "ApiService_GetBlockHeightByPubKey",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetBlockHeightByPubKeyResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "public_key",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/blocks/{hash}": {
+      "get": {
+        "operationId": "ApiService_GetBlock",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetBlockResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/blocks/{hash}/header": {
+      "get": {
+        "operationId": "ApiService_GetBlockHeader",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetBlockHeaderResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/client/quit": {
+      "post": {
+        "operationId": "ApiService_QuitClient",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufQuitClientResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "properties": {}
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/client/status": {
+      "get": {
+        "operationId": "ApiService_GetClientStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetClientStatusResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/governance/config/{config_type}": {
+      "get": {
+        "operationId": "ApiService_GetGovernanceConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetGovernanceConfigResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "config_type",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/spaces": {
+      "get": {
+        "operationId": "ApiService_GetCapacitySpaces",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufWorkSpacesResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "ApiService"
+        ]
+      },
+      "post": {
+        "operationId": "ApiService_ConfigureCapacity",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufWorkSpacesResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufConfigureSpaceKeeperRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/spaces/directory": {
+      "get": {
+        "operationId": "ApiService_GetCapacitySpacesByDirs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufWorkSpacesByDirsResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "ApiService"
+        ]
+      },
+      "post": {
+        "operationId": "ApiService_ConfigureCapacityByDirs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufWorkSpacesByDirsResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufConfigureSpaceKeeperByDirsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/spaces/mine": {
+      "post": {
+        "operationId": "ApiService_MineCapacitySpaces",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufActOnSpaceKeeperResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "properties": {}
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/spaces/plot": {
+      "post": {
+        "operationId": "ApiService_PlotCapacitySpaces",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufActOnSpaceKeeperResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "properties": {}
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/spaces/stop": {
+      "post": {
+        "operationId": "ApiService_StopCapacitySpaces",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufActOnSpaceKeeperResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "properties": {}
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/spaces/{space_id}": {
+      "get": {
+        "operationId": "ApiService_GetCapacitySpace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufWorkSpaceResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "space_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/spaces/{space_id}/mine": {
+      "post": {
+        "operationId": "ApiService_MineCapacitySpace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufActOnSpaceKeeperResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "space_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufWorkSpaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/spaces/{space_id}/plot": {
+      "post": {
+        "operationId": "ApiService_PlotCapacitySpace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufActOnSpaceKeeperResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "space_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufWorkSpaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/spaces/{space_id}/stop": {
+      "post": {
+        "operationId": "ApiService_StopCapacitySpace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufActOnSpaceKeeperResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "space_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufWorkSpaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/transactions/coinbase/{height}": {
+      "get": {
+        "operationId": "ApiService_GetCoinbase",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetCoinbaseResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "height",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/transactions/pool": {
+      "get": {
+        "operationId": "ApiService_GetTxPool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetTxPoolResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/transactions/pool/verbose/0": {
+      "get": {
+        "operationId": "ApiService_GetTxPoolVerbose0",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetTxPoolVerbose0Response"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/transactions/pool/verbose/1": {
+      "get": {
+        "operationId": "ApiService_GetTxPoolVerbose1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetTxPoolVerbose1Response"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/transactions/staking/award/record": {
+      "get": {
+        "operationId": "ApiService_GetStakingTxPoolAwardRecord",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetStakingTxPoolAwardRecordResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "timestamp",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/transactions/staking/pool/info": {
+      "get": {
+        "operationId": "ApiService_GetStakingTxPoolInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetStakingTxPoolInfoResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/transactions/{tx_id}/details": {
+      "get": {
+        "summary": "get tx from chain db or mempool",
+        "operationId": "ApiService_GetRawTransaction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufTxRawResult"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tx_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/wallets": {
+      "get": {
+        "operationId": "ApiService_GetKeystore",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetKeystoreResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/wallets/export": {
+      "post": {
+        "operationId": "ApiService_ExportKeystore",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufExportKeystoreResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufExportKeystoreRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/wallets/import": {
+      "post": {
+        "operationId": "ApiService_ImportKeystore",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufImportKeystoreResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufImportKeystoreRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/wallets/locking": {
+      "post": {
+        "operationId": "ApiService_LockWallet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufLockWalletResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "properties": {}
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/wallets/privpass/changing": {
+      "post": {
+        "operationId": "ApiService_ChangePrivatePass",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufChangePrivatePassResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufChangePrivatePassRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/wallets/pubpass/changing": {
+      "post": {
+        "operationId": "ApiService_ChangePublicPass",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufChangePublicPassResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufChangePublicPassRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/wallets/unlocking": {
+      "post": {
+        "operationId": "ApiService_UnlockWallet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufUnlockWalletResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufUnlockWalletRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v2/blocks/{id}": {
+      "get": {
+        "operationId": "ApiService_GetBlockV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetBlockResponseV2"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v2/blocks/{id}/header": {
+      "get": {
+        "operationId": "ApiService_GetBlockHeaderV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetBlockHeaderResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v2/blocks/{id}/verbose/1": {
+      "get": {
+        "operationId": "ApiService_GetBlockVerbose1V2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetBlockResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "GetClientStatusResponsepeerCountInfo": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "outbound": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "inbound": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "GetClientStatusResponsepeerInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "direction": {
+          "type": "string"
+        }
+      }
+    },
+    "GetClientStatusResponsepeerList": {
+      "type": "object",
+      "properties": {
+        "outbound": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GetClientStatusResponsepeerInfo"
+          }
+        },
+        "inbound": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GetClientStatusResponsepeerInfo"
+          }
+        },
+        "other": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GetClientStatusResponsepeerInfo"
+          }
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := \u0026pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "rpcprotobufActOnSpaceKeeperResponse": {
+      "type": "object",
+      "properties": {
+        "error_code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "error_message": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufBlockInfoForTx": {
+      "type": "object",
+      "properties": {
+        "height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "block_hash": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "rpcprotobufChangePrivatePassRequest": {
+      "type": "object",
+      "properties": {
+        "old_privpass": {
+          "type": "string"
+        },
+        "new_privpass": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufChangePrivatePassResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "rpcprotobufChangePublicPassRequest": {
+      "type": "object",
+      "properties": {
+        "old_pubpass": {
+          "type": "string"
+        },
+        "new_pubpass": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufChangePublicPassResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "rpcprotobufCoinbaseVout": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        },
+        "n": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "script_public_key": {
+          "$ref": "#/definitions/rpcprotobufScriptPubKeyResult"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufConfigureSpaceKeeperByDirsRequest": {
+      "type": "object",
+      "properties": {
+        "allocations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufConfigureSpaceKeeperByDirsRequestAllocation"
+          }
+        },
+        "payout_addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "passphrase": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufConfigureSpaceKeeperByDirsRequestAllocation": {
+      "type": "object",
+      "properties": {
+        "directory": {
+          "type": "string"
+        },
+        "capacity": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "rpcprotobufConfigureSpaceKeeperRequest": {
+      "type": "object",
+      "properties": {
+        "capacity": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "payout_addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "passphrase": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufExportKeystoreRequest": {
+      "type": "object",
+      "properties": {
+        "wallet_id": {
+          "type": "string"
+        },
+        "passphrase": {
+          "type": "string"
+        },
+        "export_path": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufExportKeystoreResponse": {
+      "type": "object",
+      "properties": {
+        "keystore": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufFaultPubKey": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "proposal_type": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "public_key": {
+          "type": "string"
+        },
+        "testimony": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufHeader"
+          }
+        }
+      }
+    },
+    "rpcprotobufGetBestBlockResponse": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "height": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "rpcprotobufGetBlockHashByHeightResponse": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufGetBlockHeaderResponse": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "confirmations": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64"
+        },
+        "previous_hash": {
+          "type": "string"
+        },
+        "next_hash": {
+          "type": "string"
+        },
+        "transaction_root": {
+          "type": "string"
+        },
+        "witness_root": {
+          "type": "string"
+        },
+        "proposal_root": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "quality": {
+          "type": "string"
+        },
+        "challenge": {
+          "type": "string"
+        },
+        "public_key": {
+          "type": "string"
+        },
+        "proof": {
+          "$ref": "#/definitions/rpcprotobufProof"
+        },
+        "block_signature": {
+          "$ref": "#/definitions/rpcprotobufPoCSignature"
+        },
+        "ban_list": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "time_utc": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufGetBlockHeightByPubKeyResponse": {
+      "type": "object",
+      "properties": {
+        "heights": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uint64"
+          }
+        }
+      }
+    },
+    "rpcprotobufGetBlockResponse": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "confirmations": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "time": {
+          "type": "string",
+          "format": "int64"
+        },
+        "previous_hash": {
+          "type": "string"
+        },
+        "next_hash": {
+          "type": "string"
+        },
+        "transaction_root": {
+          "type": "string"
+        },
+        "witness_root": {
+          "type": "string"
+        },
+        "proposal_root": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "quality": {
+          "type": "string"
+        },
+        "challenge": {
+          "type": "string"
+        },
+        "public_key": {
+          "type": "string"
+        },
+        "proof": {
+          "$ref": "#/definitions/rpcprotobufProof"
+        },
+        "block_signature": {
+          "$ref": "#/definitions/rpcprotobufPoCSignature"
+        },
+        "ban_list": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "proposal_area": {
+          "$ref": "#/definitions/rpcprotobufProposalArea"
+        },
+        "tx": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "raw_tx": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufTxRawResult"
+          }
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "time_utc": {
+          "type": "string"
+        },
+        "tx_count": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "rpcprotobufGetBlockResponseV2": {
+      "type": "object",
+      "properties": {
+        "previous": {
+          "type": "string"
+        },
+        "next": {
+          "type": "string"
+        },
+        "confirmations": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "plain_size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "packet_size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64"
+        },
+        "time_utc": {
+          "type": "string"
+        },
+        "transaction_root": {
+          "type": "string"
+        },
+        "witness_root": {
+          "type": "string"
+        },
+        "proposal_root": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "quality": {
+          "type": "string"
+        },
+        "challenge": {
+          "type": "string"
+        },
+        "public_key": {
+          "type": "string"
+        },
+        "proof": {
+          "$ref": "#/definitions/rpcprotobufProof"
+        },
+        "signature": {
+          "$ref": "#/definitions/rpcprotobufPoCSignature"
+        },
+        "ban_list": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "proposals": {
+          "$ref": "#/definitions/rpcprotobufProposalArea"
+        },
+        "tx_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "txids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rpcprotobufGetClientStatusResponse": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "peer_listening": {
+          "type": "boolean"
+        },
+        "syncing": {
+          "type": "boolean"
+        },
+        "mining": {
+          "type": "boolean"
+        },
+        "space_keeping": {
+          "type": "boolean"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "local_best_height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "known_best_height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "p2p_id": {
+          "type": "string"
+        },
+        "peer_count": {
+          "$ref": "#/definitions/GetClientStatusResponsepeerCountInfo"
+        },
+        "peers": {
+          "$ref": "#/definitions/GetClientStatusResponsepeerList"
+        }
+      }
+    },
+    "rpcprotobufGetCoinbaseResponse": {
+      "type": "object",
+      "properties": {
+        "txid": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "lock_time": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "block": {
+          "$ref": "#/definitions/rpcprotobufBlockInfoForTx"
+        },
+        "binding_value": {
+          "type": "string"
+        },
+        "vin": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufVin"
+          }
+        },
+        "vout": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufCoinbaseVout"
+          }
+        },
+        "payload": {
+          "type": "string"
+        },
+        "confirmations": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "total_fees": {
+          "type": "string"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "rpcprotobufGetGovernanceConfigResponse": {
+      "type": "object",
+      "properties": {
+        "txid": {
+          "type": "string"
+        },
+        "height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "config_type": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "senate_nodes_config": {
+          "$ref": "#/definitions/rpcprotobufGovernanceSenateConfig"
+        }
+      }
+    },
+    "rpcprotobufGetKeystoreResponse": {
+      "type": "object",
+      "properties": {
+        "wallets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufWalletSummary"
+          }
+        }
+      }
+    },
+    "rpcprotobufGetOrphanTxDescResponse": {
+      "type": "object",
+      "properties": {
+        "txid": {
+          "type": "string"
+        },
+        "plain_size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "packet_size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "depends": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufTxOutPoint"
+          }
+        }
+      }
+    },
+    "rpcprotobufGetStakingTxPoolAwardRecordResponse": {
+      "type": "object",
+      "properties": {
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufStakingTxPoolAwardRecord"
+          }
+        }
+      }
+    },
+    "rpcprotobufGetStakingTxPoolInfoResponse": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "maturity_value": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "immaturity_value": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "award_value": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "block_hash": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "rpcprotobufGetTxDescVerbose0Response": {
+      "type": "object",
+      "properties": {
+        "txid": {
+          "type": "string"
+        },
+        "plain_size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "packet_size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "time": {
+          "type": "string",
+          "format": "int64"
+        },
+        "height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "fee": {
+          "type": "string"
+        },
+        "starting_priority": {
+          "type": "number",
+          "format": "double"
+        },
+        "total_input_age": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "rpcprotobufGetTxDescVerbose1Response": {
+      "type": "object",
+      "properties": {
+        "txid": {
+          "type": "string"
+        },
+        "plain_size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "packet_size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "time": {
+          "type": "string",
+          "format": "int64"
+        },
+        "height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "fee": {
+          "type": "string"
+        },
+        "starting_priority": {
+          "type": "number",
+          "format": "double"
+        },
+        "total_input_age": {
+          "type": "string",
+          "format": "int64"
+        },
+        "current_priority": {
+          "type": "number",
+          "format": "double"
+        },
+        "depends": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufTxOutPoint"
+          }
+        }
+      }
+    },
+    "rpcprotobufGetTxPoolResponse": {
+      "type": "object",
+      "properties": {
+        "tx_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "orphan_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tx_plain_size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "tx_packet_size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "orphan_plain_size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "orphan_packet_size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "txs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "orphans": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rpcprotobufGetTxPoolVerbose0Response": {
+      "type": "object",
+      "properties": {
+        "tx_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "orphan_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tx_plain_size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "tx_packet_size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "orphan_plain_size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "orphan_packet_size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "txs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "orphans": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tx_descs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufGetTxDescVerbose0Response"
+          }
+        },
+        "orphan_descs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufGetOrphanTxDescResponse"
+          }
+        }
+      }
+    },
+    "rpcprotobufGetTxPoolVerbose1Response": {
+      "type": "object",
+      "properties": {
+        "tx_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "orphan_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tx_plain_size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "tx_packet_size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "orphan_plain_size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "orphan_packet_size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "txs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "orphans": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tx_descs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufGetTxDescVerbose1Response"
+          }
+        },
+        "orphan_descs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufGetOrphanTxDescResponse"
+          }
+        }
+      }
+    },
+    "rpcprotobufGovernanceSenateConfig": {
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufGovernanceSenateNode"
+          }
+        }
+      }
+    },
+    "rpcprotobufGovernanceSenateNode": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "equities": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "rpcprotobufHeader": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "time": {
+          "type": "string",
+          "format": "int64"
+        },
+        "previous_hash": {
+          "type": "string"
+        },
+        "transaction_root": {
+          "type": "string"
+        },
+        "witness_root": {
+          "type": "string"
+        },
+        "proposal_root": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "challenge": {
+          "type": "string"
+        },
+        "public_key": {
+          "type": "string"
+        },
+        "proof": {
+          "$ref": "#/definitions/rpcprotobufProof"
+        },
+        "block_signature": {
+          "$ref": "#/definitions/rpcprotobufPoCSignature"
+        },
+        "ban_list": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rpcprotobufImportKeystoreRequest": {
+      "type": "object",
+      "properties": {
+        "import_path": {
+          "type": "string"
+        },
+        "old_passphrase": {
+          "type": "string"
+        },
+        "new_passphrase": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufImportKeystoreResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "boolean"
+        },
+        "wallet_id": {
+          "type": "string"
+        },
+        "remark": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufInputsInTx": {
+      "type": "object",
+      "properties": {
+        "txid": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "address": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufLockWalletResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufNormalProposal": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "proposal_type": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "data": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufPoCSignature": {
+      "type": "object",
+      "properties": {
+        "r": {
+          "type": "string"
+        },
+        "s": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufProof": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "string"
+        },
+        "x_prime": {
+          "type": "string"
+        },
+        "bit_length": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "rpcprotobufProposalArea": {
+      "type": "object",
+      "properties": {
+        "punishment_area": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufFaultPubKey"
+          }
+        },
+        "other_area": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufNormalProposal"
+          }
+        }
+      }
+    },
+    "rpcprotobufQuitClientResponse": {
+      "type": "object",
+      "properties": {
+        "error_code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "msg": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufScriptPubKeyResult": {
+      "type": "object",
+      "properties": {
+        "asm": {
+          "type": "string"
+        },
+        "hex": {
+          "type": "string"
+        },
+        "req_sigs": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "type": {
+          "type": "string"
+        },
+        "frozen_period": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "reward_address": {
+          "type": "string"
+        },
+        "addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rpcprotobufStakingTxPoolAwardRecord": {
+      "type": "object",
+      "properties": {
+        "tx_id": {
+          "type": "string"
+        },
+        "awarded_time": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "tx": {
+          "$ref": "#/definitions/rpcprotobufTxRawResult"
+        }
+      }
+    },
+    "rpcprotobufToAddressForTx": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufTxOutPoint": {
+      "type": "object",
+      "properties": {
+        "txid": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "rpcprotobufTxRawResult": {
+      "type": "object",
+      "properties": {
+        "txid": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "lock_time": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "block": {
+          "$ref": "#/definitions/rpcprotobufBlockInfoForTx"
+        },
+        "vin": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufVin"
+          }
+        },
+        "vout": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufVout"
+          }
+        },
+        "from_address": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "to": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufToAddressForTx"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufInputsInTx"
+          }
+        },
+        "payload": {
+          "type": "string"
+        },
+        "confirmations": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "fee": {
+          "type": "string"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "type": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "rpcprotobufUnlockWalletRequest": {
+      "type": "object",
+      "properties": {
+        "passphrase": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufUnlockWalletResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufVin": {
+      "type": "object",
+      "properties": {
+        "txid": {
+          "type": "string"
+        },
+        "vout": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "sequence": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "witness": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rpcprotobufVout": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        },
+        "n": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "script_public_key": {
+          "$ref": "#/definitions/rpcprotobufScriptPubKeyResult"
+        }
+      }
+    },
+    "rpcprotobufWalletSummary": {
+      "type": "object",
+      "properties": {
+        "wallet_id": {
+          "type": "string"
+        },
+        "remark": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufWorkSpace": {
+      "type": "object",
+      "properties": {
+        "ordinal": {
+          "type": "string",
+          "format": "int64"
+        },
+        "public_key": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "bit_length": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "state": {
+          "type": "string"
+        },
+        "progress": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "rpcprotobufWorkSpaceRequest": {
+      "type": "object",
+      "properties": {
+        "space_id": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufWorkSpaceResponse": {
+      "type": "object",
+      "properties": {
+        "space": {
+          "$ref": "#/definitions/rpcprotobufWorkSpace"
+        },
+        "error_code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "error_message": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufWorkSpacesByDirsResponse": {
+      "type": "object",
+      "properties": {
+        "directory_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "allocations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufWorkSpacesByDirsResponseAllocation"
+          }
+        },
+        "error_code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "error_message": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufWorkSpacesByDirsResponseAllocation": {
+      "type": "object",
+      "properties": {
+        "directory": {
+          "type": "string"
+        },
+        "capacity": {
+          "type": "string"
+        },
+        "space_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "spaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufWorkSpace"
+          }
+        }
+      }
+    },
+    "rpcprotobufWorkSpacesResponse": {
+      "type": "object",
+      "properties": {
+        "space_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "spaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufWorkSpace"
+          }
+        },
+        "error_code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "error_message": {
+          "type": "string"
+        }
+      }
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "SKT-Miner API Documentation",
+    "url": "https://sukhavati.io/"
+  }
+}

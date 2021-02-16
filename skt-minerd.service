@@ -1,0 +1,17 @@
+[Unit]
+Description=minerd - sukhavati miner daemon
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/data/miner
+ExecStart=/data/miner/bin/minerd  -C /data/miner/config/config.json -P 123456
+ExecReload=/bin/kill -s HUP $MAINPID
+KillSignal=SIGQUIT
+TimeoutStopSec=5
+KillMode=process
+PrivateTmp=false
+User=skt
+
+[Install]
+WantedBy=multi-user.target
