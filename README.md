@@ -35,14 +35,14 @@
   # libprotoc
   libprotoc 3.14.0
   
-  # github.com/golang/protobuf 1.3.2
+  # github.com/golang/protobuf 1.4.3
   protoc-gen-go
   
-  # github.com/gogo/protobuf 1.3.1
+  # github.com/gogo/protobuf 1.3.2
   protoc-gen-gogo
   protoc-gen-gofast
   
-  # github.com/grpc-ecosystem/grpc-gateway 1.15.2
+  # github.com/grpc-ecosystem/grpc-gateway 1.16.0
   protoc-gen-grpc-gateway
   protoc-gen-swagger
   ```
