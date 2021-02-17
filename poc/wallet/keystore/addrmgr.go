@@ -30,7 +30,9 @@ type AddrManager struct {
 	addresses map[string]*ManagedAddress
 	use       AddrUse
 
-	acctInfo   *accountInfo
+	// account info
+	acctInfo *accountInfo
+	// branch info
 	branchInfo *branchInfo
 
 	hdScope KeyScope

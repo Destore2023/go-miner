@@ -1775,6 +1775,9 @@ func (pkm *PoCKeystoreManager) ChangePrivPassphrase(oldPrivPass, newPrivPass []b
 	return nil
 }
 
+// NewKeystoreManagerForPoC
+// pubPassphrase read form config.app.pub_password
+//
 func NewKeystoreManagerForPoC(store db.DB, pubPassphrase []byte, net *config.Params) (*PoCKeystoreManager, error) {
 	if store == nil || net == nil || pubPassphrase == nil {
 		return nil, ErrNilPointer

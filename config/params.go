@@ -144,6 +144,7 @@ var ChainParams = Params{
 
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
+	// https://github.com/satoshilabs/slips/blob/master/slip-0044.md
 	HDCoinType: HDCoinTypeMainNet,
 }
 

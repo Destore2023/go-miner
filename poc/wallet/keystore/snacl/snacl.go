@@ -136,6 +136,9 @@ func (sk *SecretKey) deriveKey(password *[]byte) error {
 
 // Marshal returns the Parameters field marshalled into a format suitable for
 // storage.  This result of this can be stored in clear text.
+// +----------------+-------------------+------------+------------+------------+
+// | salt (32 bytes)| digest (32 bytes) | N (8 bytes)| R (8 bytes)| P (8 bytes)|
+// +----------------+-------------------+------------+------------+------------+
 func (sk *SecretKey) Marshal() []byte {
 	params := &sk.Parameters
 
@@ -161,6 +164,9 @@ func (sk *SecretKey) Marshal() []byte {
 
 // Unmarshal unmarshalls the parameters needed to derive the secret key from a
 // passphrase into sk.
+// +----------------+-------------------+------------+------------+------------+
+// | salt (32 bytes)| digest (32 bytes) | N (8 bytes)| R (8 bytes)| P (8 bytes)|
+// +----------------+-------------------+------------+------------+------------+
 func (sk *SecretKey) Unmarshal(marshalled []byte) error {
 	if sk.Key == nil {
 		sk.Key = (*CryptoKey)(&[KeySize]byte{})

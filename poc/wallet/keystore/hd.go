@@ -31,18 +31,48 @@ var (
 
 var Net2KeyScope = map[uint32]KeyScope{1: TestNetKeyScope, 2021: MainNetKeyScope}
 
+// KeyScope represents a restricted key scope from the primary root key within
+// the HD chain. From the root manager (m/) we can create a nearly arbitrary
+// number of ScopedKeyManagers of key derivation path: m/purpose'/coinType'.
+// These scoped managers can then me managed indecently, as they house the
+// encrypted coinType key and can derive any child keys from there on.
+// https://github.com/satoshilabs/slips/blob/master/slip-0044.md
 type KeyScope struct {
+	// Purpose is the purpose of this key scope. This is the first child of
+	// the master HD key.
 	Purpose uint32
-	Coin    uint32 // 1-testnet,  2021-mainnet
+	// Coin is a value that represents the particular coin which is the
+	// child of the purpose key. With this key, any accounts, or other
+	// children can be derived at all.
+	Coin uint32 // 1-testnet,  2021-mainnet
 }
 
+// DerivationPath represents a derivation path from a particular key manager's
+// scope.  Each ScopedKeyManager starts key derivation from the end of their
+// coinType hardened key: m/purpose'/coinType'. The fields in this struct allow
+// further derivation to the next three child levels after the coin type key.
+// This restriction is in the spirit of BIP0044 type derivation. We maintain a
+// degree of coherency with the standard, but allow arbitrary derivations
+// beyond the coinType key. The key derived using this path will be exactly:
+// m/purpose'/coinType'/account/branch/index, where purpose' and coinType' are
+// bound by the scope of a particular manager.
 type DerivationPath struct {
+	// Account is the account, or the first immediate child from the scoped
+	// manager's hardened coin type key.
 	Account uint32
-	Branch  uint32
-	Index   uint32
+
+	// Branch is the branch to be derived from the account index above. For
+	// BIP0044-like derivation, this is either 0 (external) or 1
+	// (internal). However, we allow this value to vary arbitrarily within
+	// its size range.
+	Branch uint32
+
+	// Index is the final child in the derivation path. This denotes the
+	// key index within as a child of the account and branch.
+	Index uint32
 }
 
-// deriveCoinTypeKey derives the cointype key which can be used to derive the
+// deriveCoinTypeKey derives the coin type key which can be used to derive the
 // extended key for an account according to the hierarchy described by BIP0044
 // given the coin type key.
 //
