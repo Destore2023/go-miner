@@ -19,6 +19,7 @@ import (
 )
 
 var (
+	// Pseudorandom Number Generator
 	prng = rand.Reader
 )
 
@@ -82,7 +83,7 @@ func (ck *CryptoKey) Zero() {
 	zero.Bytea32((*[KeySize]byte)(ck))
 }
 
-// GenerateCryptoKey generates a new crypotgraphically random key.
+// GenerateCryptoKey generates a new cryptographically random key.
 func GenerateCryptoKey() (*CryptoKey, error) {
 	var key CryptoKey
 	_, err := io.ReadFull(prng, key[:])
@@ -204,6 +205,7 @@ func (sk *SecretKey) DeriveKey(password *[]byte) error {
 
 	// verify password
 	digest := sha256.Sum256(sk.Key[:])
+	// timing attack
 	if subtle.ConstantTimeCompare(digest[:], sk.Parameters.Digest[:]) != 1 {
 		return ErrInvalidPassword
 	}

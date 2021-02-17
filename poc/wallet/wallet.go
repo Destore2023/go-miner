@@ -14,8 +14,9 @@ import (
 	"github.com/Sukhavati-Labs/go-miner/poc/wallet/keystore"
 )
 
+// PocWallet
 type PoCWallet struct {
-	*keystore.KeystoreManagerForPoC
+	*keystore.PoCKeystoreManager
 	store db.DB
 }
 
@@ -27,11 +28,11 @@ func NewPoCWallet(cfg *configpb.Config, password []byte) (*PoCWallet, error) {
 		if !fi.IsDir() {
 			return nil, fmt.Errorf("open %s: not a directory", dbPath)
 		}
-		if store, err = db.OpenDB(cfg.Db.DbType, dbPath); err != nil {
+		if store, err = db.Open(cfg.Db.DbType, dbPath); err != nil {
 			return nil, err
 		}
 	} else if os.IsNotExist(err) {
-		if store, err = db.CreateDB(cfg.Db.DbType, dbPath); err != nil {
+		if store, err = db.Create(cfg.Db.DbType, dbPath); err != nil {
 			return nil, err
 		}
 	} else {
@@ -44,8 +45,8 @@ func NewPoCWallet(cfg *configpb.Config, password []byte) (*PoCWallet, error) {
 		return nil, err
 	}
 	return &PoCWallet{
-		KeystoreManagerForPoC: manager,
-		store:                 store,
+		PoCKeystoreManager: manager,
+		store:              store,
 	}, nil
 }
 

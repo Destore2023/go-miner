@@ -770,7 +770,7 @@ func isValidBucketName(name string) bool {
 
 func init() {
 	db.RegisterDriver(db.Driver{
-		Type:   "leveldb",
+		DbType: "leveldb",
 		Open:   OpenDB,
 		Create: CreateDB,
 	})

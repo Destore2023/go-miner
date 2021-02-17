@@ -26,9 +26,9 @@ const (
 	PoCUsage    AddrUse = iota //0
 	WalletUsage                //1
 
-	ksMgrBucket     = "km"
-	accountIDBucket = "aid"
-	pubKeyBucket    = "pub"
+	keystoreMgrBucket = "km"  // keystore manager
+	accountIDBucket   = "aid" // account id
+	pubKeyBucket      = "pub" // public key
 
 	// MaxAccountNum is the maximum allowed account number.  This value was
 	// chosen because accounts are hardened children and therefore must not
@@ -45,6 +45,7 @@ const (
 	// ExternalBranch is the child number to use when performing BIP0044
 	// style hierarchical deterministic key derivation for the external
 	// branch.
+	// https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
 	ExternalBranch uint32 = 0
 
 	// InternalBranch is the child number to use when performing BIP0044
@@ -65,11 +66,11 @@ const (
 
 type AddrUse uint8
 
-type KeystoreManagerForPoC struct {
+type PoCKeystoreManager struct {
 	mu               sync.Mutex
 	managedKeystores map[string]*AddrManager
 	params           *config.Params
-	ksMgrMeta        db.BucketMeta
+	keystoreMgrMeta  db.BucketMeta
 	accountIDMeta    db.BucketMeta
 	pubPassphrase    []byte
 	unlocked         bool
@@ -474,7 +475,7 @@ func createManagerKeyScope(km db.Bucket, root *hdkeychain.ExtendedKey,
 }
 
 // create creates a new address manager in the given namespace.  The seed must
-// conform to the standards described in hdkeychain.NewMaster and will be used
+// conform to the standards described in hdKeychain.NewMaster and will be used
 // to create the master root node from which all hierarchical deterministic
 // addresses are derived.  This allows all chained addresses in the address
 // manager to be recovered by using the same seed.
@@ -823,7 +824,7 @@ func loadAddrManager(amBucket db.Bucket, pubPassphrase []byte, net *config.Param
 	return &AddrManager{
 		use:                    AddrUse(account),
 		unlocked:               false,
-		addresses:                managedAddresses,
+		addresses:              managedAddresses,
 		keystoreName:           amBucketMeta.Name(),
 		remark:                 string(remarkBytes),
 		masterKeyPub:           &masterKeyPub,
@@ -840,13 +841,14 @@ func loadAddrManager(amBucket db.Bucket, pubPassphrase []byte, net *config.Param
 
 }
 
-func (kmc *KeystoreManagerForPoC) NewKeystore(privPassphrase, seed []byte, remark string,
+// NewKeystore
+func (pkm *PoCKeystoreManager) NewKeystore(privPassphrase, seed []byte, remark string,
 	net *config.Params, scryptConfig *ScryptOptions) (string, error) {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
-	if len(kmc.managedKeystores) > 0 {
-		for _, addrManager := range kmc.managedKeystores {
+	if len(pkm.managedKeystores) > 0 {
+		for _, addrManager := range pkm.managedKeystores {
 			err := addrManager.safelyCheckPassword(privPassphrase)
 			if err != nil {
 				return "", ErrDifferentPrivPass
@@ -856,10 +858,10 @@ func (kmc *KeystoreManagerForPoC) NewKeystore(privPassphrase, seed []byte, remar
 	}
 
 	var acctBucketMeta db.BucketMeta
-	err := db.Update(kmc.db, func(dbTransaction db.DBTransaction) error {
+	err := db.Update(pkm.db, func(dbTransaction db.DBTransaction) error {
 		var err error
 		// create hd key chain and init the bucket
-		acctBucketMeta, err = create(dbTransaction, kmc.ksMgrMeta, kmc.pubPassphrase, privPassphrase, seed, PoCUsage, remark, net, scryptConfig)
+		acctBucketMeta, err = create(dbTransaction, pkm.keystoreMgrMeta, pkm.pubPassphrase, privPassphrase, seed, PoCUsage, remark, net, scryptConfig)
 		if err != nil {
 			return err
 		}
@@ -870,14 +872,14 @@ func (kmc *KeystoreManagerForPoC) NewKeystore(privPassphrase, seed []byte, remar
 	}
 
 	var addrManager *AddrManager
-	err = db.View(kmc.db, func(dbTransaction db.ReadTransaction) error {
+	err = db.View(pkm.db, func(dbTransaction db.ReadTransaction) error {
 		amBucket := dbTransaction.FetchBucket(acctBucketMeta)
 		if amBucket == nil {
 			return ErrUnexpectedDBError
 		}
 
 		var err error
-		addrManager, err = loadAddrManager(amBucket, kmc.pubPassphrase, net)
+		addrManager, err = loadAddrManager(amBucket, pkm.pubPassphrase, net)
 		if err != nil {
 			return err
 		}
@@ -886,12 +888,12 @@ func (kmc *KeystoreManagerForPoC) NewKeystore(privPassphrase, seed []byte, remar
 	if err != nil {
 		return "", err
 	}
-	kmc.managedKeystores[addrManager.Name()] = addrManager
+	pkm.managedKeystores[addrManager.Name()] = addrManager
 
 	accountID := addrManager.Name()
 
-	if kmc.unlocked {
-		err := kmc.useKeystore(accountID, privPassphrase, true)
+	if pkm.unlocked {
+		err := pkm.useKeystore(accountID, privPassphrase, true)
 		if err != nil {
 			// should not be touched
 			return "", err
@@ -901,7 +903,7 @@ func (kmc *KeystoreManagerForPoC) NewKeystore(privPassphrase, seed []byte, remar
 	return accountID, nil
 }
 
-func (kmc *KeystoreManagerForPoC) allocAddrMgrNamespace(dbTransaction db.DBTransaction, oldPass, newPass []byte, pubPasphrase []byte, kStore *Keystore,
+func (pkm *PoCKeystoreManager) allocAddrMgrNamespace(dbTransaction db.DBTransaction, oldPass, newPass []byte, pubPasphrase []byte, kStore *Keystore,
 	net *config.Params, scryptConfig *ScryptOptions) (db.BucketMeta, error) {
 	privParamsOld, err := hex.DecodeString(kStore.Crypto.PrivParams)
 	if err != nil {
@@ -1003,7 +1005,7 @@ func (kmc *KeystoreManagerForPoC) allocAddrMgrNamespace(dbTransaction db.DBTrans
 		return nil, err
 	}
 
-	kmBucket := dbTransaction.FetchBucket(kmc.ksMgrMeta)
+	kmBucket := dbTransaction.FetchBucket(pkm.keystoreMgrMeta)
 	if kmBucket == nil {
 		return nil, ErrBucketNotFound
 	}
@@ -1046,9 +1048,9 @@ func (kmc *KeystoreManagerForPoC) allocAddrMgrNamespace(dbTransaction db.DBTrans
 	return amBucketMeta, nil
 }
 
-func (kmc *KeystoreManagerForPoC) ImportKeystore(keystoreJson []byte, oldPrivPass, newPrivPass []byte) (string, string, error) {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) ImportKeystore(keystoreJson []byte, oldPrivPass, newPrivPass []byte) (string, string, error) {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
 	if len(newPrivPass) == 0 {
 		newPrivPass = oldPrivPass
@@ -1056,12 +1058,12 @@ func (kmc *KeystoreManagerForPoC) ImportKeystore(keystoreJson []byte, oldPrivPas
 	if !ValidatePassphrase(newPrivPass) {
 		return "", "", ErrIllegalPassphrase
 	}
-	if bytes.Compare(newPrivPass, kmc.pubPassphrase) == 0 {
+	if bytes.Compare(newPrivPass, pkm.pubPassphrase) == 0 {
 		return "", "", ErrIllegalNewPrivPass
 	}
 
-	if len(kmc.managedKeystores) > 0 {
-		for _, addrManager := range kmc.managedKeystores {
+	if len(pkm.managedKeystores) > 0 {
+		for _, addrManager := range pkm.managedKeystores {
 			err := addrManager.safelyCheckPassword(newPrivPass)
 			if err != nil {
 				return "", "", ErrDifferentPrivPass
@@ -1077,10 +1079,10 @@ func (kmc *KeystoreManagerForPoC) ImportKeystore(keystoreJson []byte, oldPrivPas
 	if err != nil {
 		return "", "", err
 	}
-	err = db.Update(kmc.db, func(dbTransaction db.DBTransaction) error {
+	err = db.Update(pkm.db, func(dbTransaction db.DBTransaction) error {
 		// storage update
 		var err error
-		amBucketMeta, err = kmc.allocAddrMgrNamespace(dbTransaction, oldPrivPass, newPrivPass, kmc.pubPassphrase, kStore, kmc.params, nil)
+		amBucketMeta, err = pkm.allocAddrMgrNamespace(dbTransaction, oldPrivPass, newPrivPass, pkm.pubPassphrase, kStore, pkm.params, nil)
 		if err != nil {
 			return err
 		}
@@ -1090,11 +1092,11 @@ func (kmc *KeystoreManagerForPoC) ImportKeystore(keystoreJson []byte, oldPrivPas
 		return "", "", err
 	}
 
-	err = db.View(kmc.db, func(dbTransaction db.ReadTransaction) error {
+	err = db.View(pkm.db, func(dbTransaction db.ReadTransaction) error {
 		// load addrManager
 		var err error
 		amBucket := dbTransaction.FetchBucket(amBucketMeta)
-		acctManager, err = loadAddrManager(amBucket, kmc.pubPassphrase, kmc.params)
+		acctManager, err = loadAddrManager(amBucket, pkm.pubPassphrase, pkm.params)
 		if err != nil {
 			return err
 		}
@@ -1105,13 +1107,13 @@ func (kmc *KeystoreManagerForPoC) ImportKeystore(keystoreJson []byte, oldPrivPas
 		logging.CPrint(logging.FATAL, "failed to load addrManager from db", logging.LogFormat{"error": err})
 		return "", "", err
 	}
-	kmc.managedKeystores[acctManager.keystoreName] = acctManager
+	pkm.managedKeystores[acctManager.keystoreName] = acctManager
 
-	if kmc.unlocked {
-		err := kmc.useKeystore(acctManager.keystoreName, newPrivPass, true)
+	if pkm.unlocked {
+		err := pkm.useKeystore(acctManager.keystoreName, newPrivPass, true)
 		if err != nil {
 			// should not be touched
-			delete(kmc.managedKeystores, acctManager.keystoreName)
+			delete(pkm.managedKeystores, acctManager.keystoreName)
 			logging.CPrint(logging.FATAL, "failed to user keystore", logging.LogFormat{"error": err})
 			return "", "", err
 		}
@@ -1120,14 +1122,14 @@ func (kmc *KeystoreManagerForPoC) ImportKeystore(keystoreJson []byte, oldPrivPas
 	return acctManager.keystoreName, acctManager.remark, nil
 }
 
-func (kmc *KeystoreManagerForPoC) ExportKeystore(accountID string, privPassphrase []byte) ([]byte, error) {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) ExportKeystore(accountID string, privPassphrase []byte) ([]byte, error) {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
 	keystoreBytes := make([]byte, 0)
-	addrManager, found := kmc.managedKeystores[accountID]
+	addrManager, found := pkm.managedKeystores[accountID]
 	if found {
-		err := db.View(kmc.db, func(dbTransaction db.ReadTransaction) error {
+		err := db.View(pkm.db, func(dbTransaction db.ReadTransaction) error {
 			keystore, err := addrManager.exportKeystore(dbTransaction, privPassphrase)
 			if err != nil {
 				return err
@@ -1148,12 +1150,12 @@ func (kmc *KeystoreManagerForPoC) ExportKeystore(accountID string, privPassphras
 	}
 }
 
-func (kmc *KeystoreManagerForPoC) DeleteKeystore(accountID string, privPassphrase []byte) (bool, error) {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) DeleteKeystore(accountID string, privPassphrase []byte) (bool, error) {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
 	// check private pass
-	addrManager, found := kmc.managedKeystores[accountID]
+	addrManager, found := pkm.managedKeystores[accountID]
 	if found {
 		err := addrManager.safelyCheckPassword(privPassphrase)
 		if err != nil {
@@ -1164,7 +1166,7 @@ func (kmc *KeystoreManagerForPoC) DeleteKeystore(accountID string, privPassphras
 			return false, err
 		}
 
-		err = db.Update(kmc.db, func(dbTransaction db.DBTransaction) error {
+		err = db.Update(pkm.db, func(dbTransaction db.DBTransaction) error {
 			if addrManager.destroy(dbTransaction) != nil {
 				logging.CPrint(logging.ERROR, "delete account failed",
 					logging.LogFormat{
@@ -1173,7 +1175,7 @@ func (kmc *KeystoreManagerForPoC) DeleteKeystore(accountID string, privPassphras
 				return err
 			}
 
-			kmBucket := dbTransaction.FetchBucket(kmc.ksMgrMeta)
+			kmBucket := dbTransaction.FetchBucket(pkm.keystoreMgrMeta)
 			if kmBucket == nil {
 				logging.CPrint(logging.ERROR, "failed to fetch keystore manager bucket")
 				return ErrBucketNotFound
@@ -1185,7 +1187,7 @@ func (kmc *KeystoreManagerForPoC) DeleteKeystore(accountID string, privPassphras
 				return err
 			}
 
-			accountIDBucket := dbTransaction.FetchBucket(kmc.accountIDMeta)
+			accountIDBucket := dbTransaction.FetchBucket(pkm.accountIDMeta)
 			err = deleteAccountID(accountIDBucket, []byte(accountID))
 			if err != nil {
 				return err
@@ -1197,7 +1199,7 @@ func (kmc *KeystoreManagerForPoC) DeleteKeystore(accountID string, privPassphras
 		}
 
 		addrManager.clearPrivKeys()
-		delete(kmc.managedKeystores, accountID)
+		delete(pkm.managedKeystores, accountID)
 		return true, nil
 
 	} else {
@@ -1209,8 +1211,8 @@ func (kmc *KeystoreManagerForPoC) DeleteKeystore(accountID string, privPassphras
 	}
 }
 
-func (kmc *KeystoreManagerForPoC) useKeystore(name string, privPassphrase []byte, updatePriv bool) error {
-	addrManager, found := kmc.managedKeystores[name]
+func (pkm *PoCKeystoreManager) useKeystore(name string, privPassphrase []byte, updatePriv bool) error {
+	addrManager, found := pkm.managedKeystores[name]
 	if found {
 		// check privPasspharse
 		if err := addrManager.checkPassword(privPassphrase); err != nil {
@@ -1255,12 +1257,12 @@ func (kmc *KeystoreManagerForPoC) useKeystore(name string, privPassphrase []byte
 	return nil
 }
 
-func (kmc *KeystoreManagerForPoC) Unlock(privPassphrase []byte) error {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) Unlock(privPassphrase []byte) error {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
-	for accountID := range kmc.managedKeystores {
-		err := kmc.useKeystore(accountID, privPassphrase, true)
+	for accountID := range pkm.managedKeystores {
+		err := pkm.useKeystore(accountID, privPassphrase, true)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "failed to use keystore",
 				logging.LogFormat{
@@ -1269,34 +1271,34 @@ func (kmc *KeystoreManagerForPoC) Unlock(privPassphrase []byte) error {
 			return err
 		}
 	}
-	kmc.unlocked = true
+	pkm.unlocked = true
 	return nil
 }
 
-func (kmc *KeystoreManagerForPoC) Lock() {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) Lock() {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
-	for _, addrManager := range kmc.managedKeystores {
+	for _, addrManager := range pkm.managedKeystores {
 		addrManager.clearPrivKeys()
 	}
-	kmc.unlocked = false
+	pkm.unlocked = false
 }
 
-func (kmc *KeystoreManagerForPoC) IsLocked() bool {
-	return !kmc.unlocked
+func (pkm *PoCKeystoreManager) IsLocked() bool {
+	return !pkm.unlocked
 }
 
-func (kmc *KeystoreManagerForPoC) NextAddresses(accountID string, internal bool, numAddresses uint32) ([]*ManagedAddress, error) {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) NextAddresses(accountID string, internal bool, numAddresses uint32) ([]*ManagedAddress, error) {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
 	managedAddresses := make([]*ManagedAddress, 0)
-	addrManager, found := kmc.managedKeystores[accountID]
+	addrManager, found := pkm.managedKeystores[accountID]
 	if found {
-		err := db.Update(kmc.db, func(dbTransaction db.DBTransaction) error {
+		err := db.Update(pkm.db, func(dbTransaction db.DBTransaction) error {
 			var err error
-			managedAddresses, err = addrManager.nextAddresses(dbTransaction, internal, numAddresses, kmc.params)
+			managedAddresses, err = addrManager.nextAddresses(dbTransaction, internal, numAddresses, pkm.params)
 			if err != nil {
 				logging.CPrint(logging.ERROR, "new address failed",
 					logging.LogFormat{
@@ -1310,7 +1312,7 @@ func (kmc *KeystoreManagerForPoC) NextAddresses(accountID string, internal bool,
 			return nil, err
 		}
 
-		err = db.View(kmc.db, func(dbTransaction db.ReadTransaction) error {
+		err = db.View(pkm.db, func(dbTransaction db.ReadTransaction) error {
 			return addrManager.updateManagedAddress(dbTransaction, managedAddresses)
 		})
 		if err != nil {
@@ -1328,20 +1330,20 @@ func (kmc *KeystoreManagerForPoC) NextAddresses(accountID string, internal bool,
 	}
 }
 
-func (kmc *KeystoreManagerForPoC) GenerateNewPublicKey() (*pocec.PublicKey, uint32, error) {
+func (pkm *PoCKeystoreManager) GenerateNewPublicKey() (*pocec.PublicKey, uint32, error) {
 	managedAddresses := make([]*ManagedAddress, 0)
 	var accountID string
 	var pubkey *pocec.PublicKey
 	var index uint32
-	for accountID = range kmc.managedKeystores {
+	for accountID = range pkm.managedKeystores {
 		break
 	}
-	addrManager, found := kmc.managedKeystores[accountID]
+	addrManager, found := pkm.managedKeystores[accountID]
 	if found {
 
-		err := db.Update(kmc.db, func(dbTransaction db.DBTransaction) error {
+		err := db.Update(pkm.db, func(dbTransaction db.DBTransaction) error {
 			var err error
-			managedAddresses, err = addrManager.nextAddresses(dbTransaction, false, 1, kmc.params)
+			managedAddresses, err = addrManager.nextAddresses(dbTransaction, false, 1, pkm.params)
 			if err != nil {
 				logging.CPrint(logging.ERROR, "new address failed",
 					logging.LogFormat{
@@ -1355,7 +1357,7 @@ func (kmc *KeystoreManagerForPoC) GenerateNewPublicKey() (*pocec.PublicKey, uint
 			return nil, 0, err
 		}
 
-		err = db.View(kmc.db, func(tx db.ReadTransaction) error {
+		err = db.View(pkm.db, func(tx db.ReadTransaction) error {
 			return addrManager.updateManagedAddress(tx, managedAddresses)
 		})
 		if err != nil {
@@ -1382,16 +1384,16 @@ func (kmc *KeystoreManagerForPoC) GenerateNewPublicKey() (*pocec.PublicKey, uint
 	}
 }
 
-func (kmc *KeystoreManagerForPoC) SignMessage(pubKey *pocec.PublicKey, message []byte) (*pocec.Signature, error) {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) SignMessage(pubKey *pocec.PublicKey, message []byte) (*pocec.Signature, error) {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
 	if pubKey == nil {
 		return nil, ErrNilPointer
 	}
 
 	mHash := wire.HashH(message)
-	_, address, err := newPoCAddress(pubKey, kmc.params)
+	_, address, err := newPoCAddress(pubKey, pkm.params)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "new witness address failed",
 			logging.LogFormat{
@@ -1400,7 +1402,7 @@ func (kmc *KeystoreManagerForPoC) SignMessage(pubKey *pocec.PublicKey, message [
 		return nil, err
 	}
 	addr := address.EncodeAddress()
-	acctM, err := kmc.getAddrManager(addr)
+	acctM, err := pkm.getAddrManager(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -1415,15 +1417,15 @@ func (kmc *KeystoreManagerForPoC) SignMessage(pubKey *pocec.PublicKey, message [
 	return sig, nil
 }
 
-func (kmc *KeystoreManagerForPoC) SignHash(pubKey *pocec.PublicKey, hash []byte) (*pocec.Signature, error) {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) SignHash(pubKey *pocec.PublicKey, hash []byte) (*pocec.Signature, error) {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
 	if pubKey == nil {
 		return nil, ErrNilPointer
 	}
 
-	_, address, err := newPoCAddress(pubKey, kmc.params)
+	_, address, err := newPoCAddress(pubKey, pkm.params)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "new witness address failed",
 			logging.LogFormat{
@@ -1433,7 +1435,7 @@ func (kmc *KeystoreManagerForPoC) SignHash(pubKey *pocec.PublicKey, hash []byte)
 	}
 
 	addr := address.EncodeAddress()
-	acctM, err := kmc.getAddrManager(addr)
+	acctM, err := pkm.getAddrManager(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -1450,15 +1452,15 @@ func (kmc *KeystoreManagerForPoC) SignHash(pubKey *pocec.PublicKey, hash []byte)
 
 }
 
-func (kmc *KeystoreManagerForPoC) VerifySig(sig *pocec.Signature, hash []byte, pubKey *pocec.PublicKey) (bool, error) {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) VerifySig(sig *pocec.Signature, hash []byte, pubKey *pocec.PublicKey) (bool, error) {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
 	if pubKey == nil {
 		return false, ErrNilPointer
 	}
 
-	_, address, err := newPoCAddress(pubKey, kmc.params)
+	_, address, err := newPoCAddress(pubKey, pkm.params)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "new witness address failed",
 			logging.LogFormat{
@@ -1468,7 +1470,7 @@ func (kmc *KeystoreManagerForPoC) VerifySig(sig *pocec.Signature, hash []byte, p
 	}
 
 	addr := address.EncodeAddress()
-	acctM, err := kmc.getAddrManager(addr)
+	acctM, err := pkm.getAddrManager(addr)
 	if err != nil {
 		return false, err
 	}
@@ -1484,59 +1486,59 @@ func (kmc *KeystoreManagerForPoC) VerifySig(sig *pocec.Signature, hash []byte, p
 	return boolRe, nil
 }
 
-func (kmc *KeystoreManagerForPoC) getAddrManager(addr string) (*AddrManager, error) {
-	for acctID, acctM := range kmc.managedKeystores {
+func (pkm *PoCKeystoreManager) getAddrManager(addr string) (*AddrManager, error) {
+	for acctID, acctM := range pkm.managedKeystores {
 		_, ok := acctM.addresses[addr]
 		if ok {
-			return kmc.managedKeystores[acctID], nil
+			return pkm.managedKeystores[acctID], nil
 		}
 	}
 
 	return nil, ErrAccountNotFound
 }
 
-func (kmc *KeystoreManagerForPoC) ListKeystoreNames() []string {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) ListKeystoreNames() []string {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 	list := make([]string, 0)
-	for id := range kmc.managedKeystores {
+	for id := range pkm.managedKeystores {
 		list = append(list, id)
 	}
 
 	return list
 }
 
-func (kmc *KeystoreManagerForPoC) GetManagedAddrManager() []*AddrManager {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) GetManagedAddrManager() []*AddrManager {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 	ret := make([]*AddrManager, 0)
-	for _, v := range kmc.managedKeystores {
+	for _, v := range pkm.managedKeystores {
 		ret = append(ret, v)
 	}
 	return ret
 }
 
-func (kmc *KeystoreManagerForPoC) ChainParams() *config.Params {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
-	return kmc.params
+func (pkm *PoCKeystoreManager) ChainParams() *config.Params {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
+	return pkm.params
 }
 
-func (kmc *KeystoreManagerForPoC) GetPublicKeyOrdinal(pubKey *pocec.PublicKey) (uint32, bool) {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) GetPublicKeyOrdinal(pubKey *pocec.PublicKey) (uint32, bool) {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
 	if pubKey == nil {
 		return 0, false
 	}
 
-	_, address, err := newPoCAddress(pubKey, kmc.params)
+	_, address, err := newPoCAddress(pubKey, pkm.params)
 	if err != nil {
 		return 0, false
 	}
 
 	addr := address.EncodeAddress()
-	for _, acctM := range kmc.managedKeystores {
+	for _, acctM := range pkm.managedKeystores {
 		mAddr, ok := acctM.addresses[addr]
 		if ok {
 			return mAddr.derivationPath.Index, true
@@ -1546,15 +1548,15 @@ func (kmc *KeystoreManagerForPoC) GetPublicKeyOrdinal(pubKey *pocec.PublicKey) (
 	return 0, false
 }
 
-func (kmc *KeystoreManagerForPoC) GetAddressByPubKey(pubKey *pocec.PublicKey) (string, error) {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) GetAddressByPubKey(pubKey *pocec.PublicKey) (string, error) {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
 	if pubKey == nil {
 		return "", ErrNilPointer
 	}
 
-	_, address, err := newPoCAddress(pubKey, kmc.params)
+	_, address, err := newPoCAddress(pubKey, pkm.params)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "new witness address failed",
 			logging.LogFormat{
@@ -1564,20 +1566,20 @@ func (kmc *KeystoreManagerForPoC) GetAddressByPubKey(pubKey *pocec.PublicKey) (s
 	}
 
 	addr := address.EncodeAddress()
-	_, err = kmc.getAddrManager(addr)
+	_, err = pkm.getAddrManager(addr)
 	if err != nil {
 		return "", err
 	}
 	return addr, nil
 }
 
-func (kmc *KeystoreManagerForPoC) ChangeRemark(accountID, newRemark string) error {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) ChangeRemark(accountID, newRemark string) error {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
-	addrManager, found := kmc.managedKeystores[accountID]
+	addrManager, found := pkm.managedKeystores[accountID]
 	if found {
-		err := db.Update(kmc.db, func(dbTransaction db.DBTransaction) error {
+		err := db.Update(pkm.db, func(dbTransaction db.DBTransaction) error {
 			err := addrManager.changeRemark(dbTransaction, newRemark)
 			if err != nil {
 				logging.CPrint(logging.ERROR, "failed to change remark", logging.LogFormat{"error": err})
@@ -1599,9 +1601,9 @@ func (kmc *KeystoreManagerForPoC) ChangeRemark(accountID, newRemark string) erro
 
 }
 
-func (kmc *KeystoreManagerForPoC) ChangePubPassphrase(oldPubPass, newPubPass []byte, scryptConfig *ScryptOptions) error {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) ChangePubPassphrase(oldPubPass, newPubPass []byte, scryptConfig *ScryptOptions) error {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
 	if !ValidatePassphrase(newPubPass) {
 		return ErrIllegalPassphrase
@@ -1612,8 +1614,8 @@ func (kmc *KeystoreManagerForPoC) ChangePubPassphrase(oldPubPass, newPubPass []b
 	}
 
 	// should not be the same as the private pass
-	for accountID := range kmc.managedKeystores {
-		err := kmc.managedKeystores[accountID].safelyCheckPassword(newPubPass)
+	for accountID := range pkm.managedKeystores {
+		err := pkm.managedKeystores[accountID].safelyCheckPassword(newPubPass)
 		if err == nil {
 			return ErrIllegalNewPubPass
 		}
@@ -1630,8 +1632,8 @@ func (kmc *KeystoreManagerForPoC) ChangePubPassphrase(oldPubPass, newPubPass []b
 		return err
 	}
 
-	err = db.Update(kmc.db, func(dbTransaction db.DBTransaction) error {
-		for _, addrManager := range kmc.managedKeystores {
+	err = db.Update(pkm.db, func(dbTransaction db.DBTransaction) error {
+		for _, addrManager := range pkm.managedKeystores {
 			amBucket := dbTransaction.FetchBucket(addrManager.storage)
 			if amBucket == nil {
 				return ErrUnexpectedDBError
@@ -1687,21 +1689,21 @@ func (kmc *KeystoreManagerForPoC) ChangePubPassphrase(oldPubPass, newPubPass []b
 		return err
 	}
 
-	for _, addrManager := range kmc.managedKeystores {
+	for _, addrManager := range pkm.managedKeystores {
 		addrManager.masterKeyPub = newMasterKeyPub
 	}
-	kmc.pubPassphrase = newPubPass
+	pkm.pubPassphrase = newPubPass
 	return nil
 }
 
-func (kmc *KeystoreManagerForPoC) ChangePrivPassphrase(oldPrivPass, newPrivPass []byte, scryptConfig *ScryptOptions) error {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
+func (pkm *PoCKeystoreManager) ChangePrivPassphrase(oldPrivPass, newPrivPass []byte, scryptConfig *ScryptOptions) error {
+	pkm.mu.Lock()
+	defer pkm.mu.Unlock()
 
 	if !ValidatePassphrase(newPrivPass) {
 		return ErrIllegalPassphrase
 	}
-	if bytes.Compare(newPrivPass, kmc.pubPassphrase) == 0 {
+	if bytes.Compare(newPrivPass, pkm.pubPassphrase) == 0 {
 		return ErrIllegalNewPrivPass
 	}
 	if bytes.Equal(newPrivPass, oldPrivPass) {
@@ -1719,8 +1721,8 @@ func (kmc *KeystoreManagerForPoC) ChangePrivPassphrase(oldPrivPass, newPrivPass 
 		return err
 	}
 
-	err = db.Update(kmc.db, func(dbTransaction db.DBTransaction) error {
-		for _, addrManager := range kmc.managedKeystores {
+	err = db.Update(pkm.db, func(dbTransaction db.DBTransaction) error {
+		for _, addrManager := range pkm.managedKeystores {
 			amBucket := dbTransaction.FetchBucket(addrManager.storage)
 			err := addrManager.changePrivPassphrase(amBucket, oldPrivPass, newMasterPrivKey)
 			if err != nil {
@@ -1733,7 +1735,7 @@ func (kmc *KeystoreManagerForPoC) ChangePrivPassphrase(oldPrivPass, newPrivPass 
 		return err
 	}
 
-	for _, addrManager := range kmc.managedKeystores {
+	for _, addrManager := range pkm.managedKeystores {
 		var passphraseSalt [saltSize]byte
 		_, err = rand.Read(passphraseSalt[:])
 		if err != nil {
@@ -1752,7 +1754,7 @@ func (kmc *KeystoreManagerForPoC) ChangePrivPassphrase(oldPrivPass, newPrivPass 
 		}
 
 		var cPrivKeyEnc []byte
-		err = db.View(kmc.db, func(dbTransaction db.ReadTransaction) error {
+		err = db.View(pkm.db, func(dbTransaction db.ReadTransaction) error {
 			amBucket := dbTransaction.FetchBucket(addrManager.storage)
 			var err error
 			_, cPrivKeyEnc, err = fetchCryptoKeys(amBucket)
@@ -1773,7 +1775,7 @@ func (kmc *KeystoreManagerForPoC) ChangePrivPassphrase(oldPrivPass, newPrivPass 
 	return nil
 }
 
-func NewKeystoreManagerForPoC(store db.DB, pubPassphrase []byte, net *config.Params) (*KeystoreManagerForPoC, error) {
+func NewKeystoreManagerForPoC(store db.DB, pubPassphrase []byte, net *config.Params) (*PoCKeystoreManager, error) {
 	if store == nil || net == nil || pubPassphrase == nil {
 		return nil, ErrNilPointer
 	}
@@ -1788,14 +1790,14 @@ func NewKeystoreManagerForPoC(store db.DB, pubPassphrase []byte, net *config.Par
 	}
 
 	managed := make(map[string]*AddrManager)
-	var kmBucketMeta db.BucketMeta
+	var keystoreMgrBucketMeta db.BucketMeta
 	var accountIDBucketMeta db.BucketMeta
 	err := db.Update(store, func(tx db.DBTransaction) error {
-		kmBucket, err := db.GetOrCreateTopLevelBucket(tx, ksMgrBucket)
+		kmBucket, err := db.GetOrCreateTopLevelBucket(tx, keystoreMgrBucket)
 		if err != nil {
 			return err
 		}
-		kmBucketMeta = kmBucket.GetBucketMeta()
+		keystoreMgrBucketMeta = kmBucket.GetBucketMeta()
 
 		// Load the account from db
 		accountIDBucket, err := db.GetOrCreateBucket(kmBucket, accountIDBucket)
@@ -1823,10 +1825,10 @@ func NewKeystoreManagerForPoC(store db.DB, pubPassphrase []byte, net *config.Par
 	if err != nil {
 		return nil, err
 	}
-	return &KeystoreManagerForPoC{
+	return &PoCKeystoreManager{
 		managedKeystores: managed,
 		params:           net,
-		ksMgrMeta:        kmBucketMeta,
+		keystoreMgrMeta:  keystoreMgrBucketMeta,
 		accountIDMeta:    accountIDBucketMeta,
 		pubPassphrase:    pubPassphrase,
 		db:               store,
