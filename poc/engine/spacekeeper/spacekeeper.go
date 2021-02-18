@@ -32,15 +32,16 @@ var (
 )
 
 var (
-	KeeperBackendList []SKBackend
+	KeeperBackendList []Backend
 )
 
-type SKBackend struct {
+// SpaceKeeperBackend
+type Backend struct {
 	Typ            string
 	NewSpaceKeeper func(args ...interface{}) (SpaceKeeper, error)
 }
 
-func AddSpaceKeeperBackend(ins SKBackend) {
+func AddSpaceKeeperBackend(ins Backend) {
 	for _, kb := range KeeperBackendList {
 		if kb.Typ == ins.Typ {
 			return

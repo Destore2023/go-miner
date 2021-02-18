@@ -56,7 +56,7 @@ func NewSpaceKeeperPlasterer(args ...interface{}) (spacekeeper.SpaceKeeper, erro
 }
 
 func init() {
-	spacekeeper.AddSpaceKeeperBackend(spacekeeper.SKBackend{
+	spacekeeper.AddSpaceKeeperBackend(spacekeeper.Backend{
 		Typ:            TypeSpaceKeeperPlasterer,
 		NewSpaceKeeper: NewSpaceKeeperPlasterer,
 	})

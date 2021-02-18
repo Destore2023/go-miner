@@ -10,6 +10,24 @@ import (
 	"github.com/Sukhavati-Labs/go-miner/wire"
 )
 
+// blockExists determines whether a block with the given hash exists either in
+// the main chain or any side chains.
+//
+// This function is safe for concurrent access.
+func (chain *Blockchain) blockExists(hash *wire.Hash) bool {
+	// Check memory chain first (could be main chain or side chain blocks).
+	if chain.blockTree.nodeExists(hash) {
+		return true
+	}
+	// Check in database (rest of main chain not in memory).
+	exists, err := chain.db.ExistsBlockSha(hash)
+	if err != nil {
+		logging.CPrint(logging.ERROR, "fail to check block existence from db",
+			logging.LogFormat{"hash": hash, "err": err})
+	}
+	return exists
+}
+
 func (chain *Blockchain) processOrphans(hash *wire.Hash, flags BehaviorFlags) error {
 	for _, orphan := range chain.blockTree.orphanBlockPool.getOrphansByPrevious(hash) {
 		logging.CPrint(logging.INFO, "process orphan",

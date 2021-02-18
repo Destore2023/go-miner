@@ -46,6 +46,7 @@ type ProofTemplate struct {
 	quality *big.Int
 }
 
+// PoCMiner
 type PoCMiner struct {
 	*service.BaseService
 	quit            chan struct{}
@@ -113,6 +114,8 @@ func (m *PoCMiner) SetPayoutAddresses(addresses []chainutil.Address) error {
 	return nil
 }
 
+// submitBlock submits the passed block to network after ensuring it passes all
+// of the consensus validation rules.
 func (m *PoCMiner) generateBlocks(quit chan struct{}) {
 	m.wg.Add(1)
 	defer m.wg.Done()

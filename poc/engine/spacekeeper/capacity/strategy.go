@@ -327,7 +327,7 @@ func peekPocDBInfosByDir(dbDir, dbType string) ([]engine.WorkSpaceInfo, error) {
 }
 
 func init() {
-	spacekeeper.AddSpaceKeeperBackend(spacekeeper.SKBackend{
+	spacekeeper.AddSpaceKeeperBackend(spacekeeper.Backend{
 		Typ:            TypeSpaceKeeperV1,
 		NewSpaceKeeper: NewSpaceKeeperV1,
 	})

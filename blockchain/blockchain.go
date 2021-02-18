@@ -7,7 +7,6 @@ import (
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/config"
 	"github.com/Sukhavati-Labs/go-miner/database"
-	"github.com/Sukhavati-Labs/go-miner/logging"
 	"github.com/Sukhavati-Labs/go-miner/pocec"
 	"github.com/Sukhavati-Labs/go-miner/txscript"
 	"github.com/Sukhavati-Labs/go-miner/wire"
@@ -183,20 +182,6 @@ func (chain *Blockchain) generateInitialIndex() error {
 	}
 
 	return nil
-}
-
-func (chain *Blockchain) blockExists(hash *wire.Hash) bool {
-	// Check memory chain first (could be main chain or side chain blocks).
-	if chain.blockTree.nodeExists(hash) {
-		return true
-	}
-	// Check in database (rest of main chain not in memory).
-	exists, err := chain.db.ExistsBlockSha(hash)
-	if err != nil {
-		logging.CPrint(logging.ERROR, "fail to check block existence from db",
-			logging.LogFormat{"hash": hash, "err": err})
-	}
-	return exists
 }
 
 func (chain *Blockchain) loadBlockNode(blockSha *wire.Hash) (*BlockNode, error) {
