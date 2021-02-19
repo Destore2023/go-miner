@@ -42,7 +42,7 @@
 						"best"
 					]
 				},
-				"description": "查询最新的块信息"
+				"description": "query best block"
 			},
 			"response": []
 		},
@@ -63,7 +63,7 @@
 						"ee26300e0f068114a680a772e080507c0f9c0ca4335c382c42b78e2eafbebaa3"
 					]
 				},
-				"description": "查看块的具体信息"
+				"description": "query block info"
 			},
 			"response": []
 		},
@@ -85,7 +85,7 @@
 						"0"
 					]
 				},
-				"description": "查看对应高度的hash"
+				"description": "query block hash"
 			},
 			"response": []
 		},
@@ -261,7 +261,7 @@
 						"directory"
 					]
 				},
-				"description": "配置挖矿路径\r\n"
+				"description": "config miner spaces dir"
 			},
 			"response": []
 		},
@@ -294,7 +294,7 @@
 						"spaces"
 					]
 				},
-				"description": "设置使用的容量"
+				"description": "setting spaces"
 			},
 			"response": []
 		},
