@@ -335,9 +335,12 @@ func assembleFullBlock(blockTemplate *blockchain.BlockTemplate, pocTemplate *blo
 		block.Header.TransactionRoot = wire.GetMerkleRootFromCache(coinbaseTx.Hash(), blockTemplate.MerkleCache)
 		block.Header.WitnessRoot = wire.GetMerkleRootFromCache(coinbaseTx.WitnessHash(), blockTemplate.WitnessMerkleCache)
 	}
-	n := len(block.Transactions[0].TxOut)
-
-	minerReward, err := chainutil.NewAmountFromInt(block.Transactions[0].TxOut[n-1].Value)
+	minerRewardTxOut, err := blockchain.GetMinerRewardTxOutFromCoinbase(block.Transactions[0])
+	if err != nil {
+		logging.CPrint(logging.ERROR, "failed to calculate miner reward", logging.LogFormat{"error": err})
+		return nil, chainutil.Amount{}, err
+	}
+	minerReward, err := chainutil.NewAmountFromInt(minerRewardTxOut.Value)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "failed to calculate miner reward", logging.LogFormat{"error": err})
 		return nil, chainutil.Amount{}, err
