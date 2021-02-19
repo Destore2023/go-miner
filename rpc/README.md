@@ -55,12 +55,12 @@ Alternatively, check `./api/proto/api.swagger.json` directly for full definition
 ### client related APIs
 
 - client
-    * [GetClientStatus](#getclientstatus)
+    * [GetClientStatus](#GetClientStatus)
 
 ### blockchain related APIs
 
 - blocks
-    * [GetBestBlock](#getbestblock)
+    * [GetBestBlock](#GetBestBlock)
     * [GetBlock](#getblock)
     * [GetBlockHashByHeight](#getblockhashbyheight)
     * [GetBlockByHeight](#getblockbyheight)
