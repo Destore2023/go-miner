@@ -603,7 +603,7 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, preCoinbase *wire.MsgTx, bindingTx
 }
 
 // createCoinbaseTx returns a coinbase transaction paying an appropriate subsidy
-// based on the passed block height to the provided wallet.  When the wallet
+// based on the passed block height to the provided address.  When the address
 // is nil, the coinbase transaction will instead be redeemable by anyone.
 //
 // See the comment for NewBlockTemplate for more information about why the nil
