@@ -61,12 +61,12 @@ Alternatively, check `./api/proto/api.swagger.json` directly for full definition
 
 - blocks
     * [GetBestBlock](#GetBestBlock)
-    * [GetBlock](#getblock)
-    * [GetBlockHashByHeight](#getblockhashbyheight)
-    * [GetBlockByHeight](#getblockbyheight)
-    * [GetBlockHeader](#getblockheader)
+    * [GetBlock](#GetBlock)
+    * [GetBlockHashByHeight](#GetBlockHashByHeight)
+    * [GetBlockByHeight](#GetBlockByHeight)
+    * [GetBlockHeader](#GetBlockHeader)
 - transactions
-    * [GetTxPool](#gettxpool)
+    * [GetTxPool](#GetTxPool)
 
 ### mining related APIs
 
@@ -76,8 +76,8 @@ Alternatively, check `./api/proto/api.swagger.json` directly for full definition
     * [ConfigureCapacityByDirs](#configurecapacitybydirs)
     * [GetCapacitySpacesByDirs](#getcapacityspacesbydirs)
     * [GetCapacitySpace](#getcapacityspace)
-    * [PlotCapacitySpaces](#plotcapacityspaces)
-    * [PlotCapacitySpace](#plotcapacityspace)
+    * [PlotCapacitySpaces](#PlotCapacitySpaces)
+    * [PlotCapacitySpace](#PlotCapacitySpace)
     * [MineCapacitySpaces](#minecapacityspaces)
     * [MineCapacitySpace](#minecapacityspace)
     * [StopCapacitySpaces](#stopcapacityspaces)

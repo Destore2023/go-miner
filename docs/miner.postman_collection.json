@@ -1,0 +1,443 @@
+{
+	"info": {
+		"_postman_id": "1c4c7b6d-afe6-407f-8435-8812c3d96e37",
+		"name": "miner",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "client-GetClientStatus",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/client/status",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"client",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "block-GetBestBlock",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/blocks/best",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"blocks",
+						"best"
+					]
+				},
+				"description": "查询最新的块信息"
+			},
+			"response": []
+		},
+		{
+			"name": "block-GetBlock",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/blocks/ee26300e0f068114a680a772e080507c0f9c0ca4335c382c42b78e2eafbebaa3",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"blocks",
+						"ee26300e0f068114a680a772e080507c0f9c0ca4335c382c42b78e2eafbebaa3"
+					]
+				},
+				"description": "查看块的具体信息"
+			},
+			"response": []
+		},
+		{
+			"name": "block-GetBlockHashByHeight",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/blocks/hash/0",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"blocks",
+						"hash",
+						"0"
+					]
+				},
+				"description": "查看对应高度的hash"
+			},
+			"response": []
+		},
+		{
+			"name": "block-GetBlockByHeight",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/blocks/height/0",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"blocks",
+						"height",
+						"0"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "block-GetBlockHeader",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/blocks/ee26300e0f068114a680a772e080507c0f9c0ca4335c382c42b78e2eafbebaa3/header",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"blocks",
+						"ee26300e0f068114a680a772e080507c0f9c0ca4335c382c42b78e2eafbebaa3",
+						"header"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "tx-GetTxPool",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/transactions/pool",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"transactions",
+						"pool"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "tx-GetCoinbase",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/transactions/coinbase/2",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"transactions",
+						"coinbase",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "tx-GetStakingTxPoolAwardRecord",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/transactions/staking/award/record",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"transactions",
+						"staking",
+						"award",
+						"record"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "spaces-PlotCapacitySpaces",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/spaces/plot",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"spaces",
+						"plot"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "spaces-PlotCapacitySpace",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}} /v1/spaces/03097f7a83c8f6fe3340e28d251cfaaab5e60995be6d45cf83aaf4d7866710a3d2-28/plot",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}} "
+					],
+					"path": [
+						"v1",
+						"spaces",
+						"03097f7a83c8f6fe3340e28d251cfaaab5e60995be6d45cf83aaf4d7866710a3d2-28",
+						"plot"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "spaces-GetCapacitySpacesByDirs",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"allocations\": [\r\n        {\r\n            \"directory\": \"D:\\\\mass\\\\proof\",\r\n            \"capacity\": 204800\r\n        }\r\n    ],\r\n    \"payout_addresses\": [\r\n        \"sk1qqggu42p34335mwrutv88t7fqh6sp5eqlawglmx457dhn0w7ks2nzsm0rq7q\"\r\n    ],\r\n    \"passphrase\": \"123456\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{miner-url}}/v1/spaces/directory",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"spaces",
+						"directory"
+					]
+				},
+				"description": "配置挖矿路径\r\n"
+			},
+			"response": []
+		},
+		{
+			"name": "spaces-ConfigureCapacity",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"payout_addresses\": [\r\n        \"sk1qqekrzwzvgzqt04yyc7hqt3h47pztk4k6ck0qmz5ltgw5vgu5rktgqg7mfvj\"\r\n    ],\r\n    \"capacity\": 2048,\r\n    \"passphrase\": \"123456\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:9686/v1/spaces",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9686",
+					"path": [
+						"v1",
+						"spaces"
+					]
+				},
+				"description": "设置使用的容量"
+			},
+			"response": []
+		},
+		{
+			"name": "spaces-GetCapacitySpaces",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/spaces",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"spaces"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "spaces-ConfigureCapacityByDirs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/spaces/directory",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"spaces",
+						"directory"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "spaces-GetCapacitySpace",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/spaces/03097f7a83c8f6fe3340e28d251cfaaab5e60995be6d45cf83aaf4d7866710a3d2-28",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"spaces",
+						"03097f7a83c8f6fe3340e28d251cfaaab5e60995be6d45cf83aaf4d7866710a3d2-28"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "spaces-MineCapacitySpaces",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/spaces/mine",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"spaces",
+						"mine"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "spaces-MineCapacitySpace",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/spaces/{space_id}/mine",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"spaces",
+						"{space_id}",
+						"mine"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "spaces-StopCapacitySpaces",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/spaces/stop",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"spaces",
+						"stop"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "governance-GetGovernanceConfig",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{miner-url}}/v1/governance/config/1",
+					"protocol": "http",
+					"host": [
+						"{{miner-url}}"
+					],
+					"path": [
+						"v1",
+						"governance",
+						"config",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
