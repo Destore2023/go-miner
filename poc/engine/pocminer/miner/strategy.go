@@ -193,7 +193,7 @@ func getQualities(proofs []*engine.WorkSpaceProof, challenge pocutil.Hash, slot,
 }
 
 func init() {
-	pocminer.AddPoCMinerBackend(pocminer.Backend{
+	pocminer.AddPoCMinerBackend(pocminer.MinerBackend{
 		Typ:         TypeSyncMiner,
 		NewPoCMiner: NewSyncMiner,
 	})
