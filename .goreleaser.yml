@@ -7,19 +7,21 @@ before:
     # you may remove this if you don't need go generate
     # - go generate ./...
 
-hooks:
-  post: `upx --brrute dist/miner-*`
+#hooks:
+    #post: upx --brrute dist/miner-*
 
 builds:
-  - id: "miner"
-    main: ./main.go
-
-  - env:
-      - CGO_ENABLED=0
+  - main: ./main.go
+    id: "miner"
+    dir: .
+    binary: minerd
     goos:
       - linux
       - windows
       - darwin
+    goarch:
+      - amd64
+
 archives:
   - replacements:
       darwin: Darwin
