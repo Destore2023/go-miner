@@ -54,8 +54,8 @@ var (
 	ErrUnsupportedBitLength = errors.New("unsupported bit length")
 )
 
-// DoubleSHA256([]byte("POCDB"))
-const DBFileCodeStr = "047FAEF17942034CF4ADF13C897337C370590925E6E79F564AA027892A46C044"
+// DoubleSHA256([]byte("SKTDB"))
+const DBFileCodeStr = "97B80AD7CB1FB24109E58CD37E71FF8CCC660538FF4074E1F121ED86751F4018"
 
 var (
 	DBFileCode    []byte

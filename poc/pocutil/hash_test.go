@@ -30,6 +30,8 @@ func TestSktHash_String(t *testing.T) {
 }
 
 func TestHash_String(t *testing.T) {
+	var str = pocutil.DoubleSHA256([]byte("SKTDB")).String()
+	t.Log(str)
 	var h = pocutil.SHA256([]byte("TestHash_String"))
 	var testRound = 10000
 

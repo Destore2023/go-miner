@@ -9,12 +9,12 @@ type PoCValue uint64
 
 const (
 	// PoCPrefixLen represents the byte length of PoCPrefix.
-	PoCPrefixLen = 9
+	PoCPrefixLen = 4
 )
 
 var (
 	// PoCPrefix is the prefix for PoC Calculation.
-	PoCPrefix = []byte("SUKHAVATI")
+	PoCPrefix = []byte("SKTI")
 )
 
 // P calculates SktSHA256(PoCPrefix || PubKeyHash || X).CutByBitLength(bitLength),
