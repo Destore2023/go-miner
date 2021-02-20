@@ -312,14 +312,23 @@ type BlockTemplate struct {
 	Err                error
 }
 
-// MinerPkScript
-func getMinerPkScript(coinbase *wire.MsgTx) (pkScript []byte, err error) {
+// Miner Reward Tx Out
+// +--------------+
+// |              |
+// |              |
+// +--------------+
+// | Miner Reward |
+// +--------------+
+func GetMinerRewardTxOutFromCoinbase(coinbase *wire.MsgTx) (*wire.TxOut, error) {
+	if !coinbase.IsCoinBaseTx() {
+		return nil, ErrCoinbaseTx
+	}
 	l := len(coinbase.TxOut)
 	if l == 0 {
 		return nil, ErrCoinbaseTx
 	}
-	minerPkScript := coinbase.TxOut[l-1].PkScript
-	return minerPkScript, nil
+	minerTxOut := coinbase.TxOut[l-1]
+	return minerTxOut, nil
 }
 
 //  Coinbase Tx
@@ -333,7 +342,7 @@ func getMinerPkScript(coinbase *wire.MsgTx) (pkScript []byte, err error) {
 //  +------------------------------------------------------------------+
 func reCreateCoinbaseTx(coinbase *wire.MsgTx, preCoinbase *wire.MsgTx, bindingTxListReply []*database.BindingTxReply, nextBlockHeight uint64,
 	bitLength int, rewardAddresses []database.Rank, senateEquities database.SenateEquities, totalFee chainutil.Amount) (err error) {
-	minerPkScript, err := getMinerPkScript(coinbase)
+	minerTxOut, err := GetMinerRewardTxOutFromCoinbase(coinbase)
 	if err != nil {
 		return err
 	}
@@ -428,7 +437,7 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, preCoinbase *wire.MsgTx, bindingTx
 			return err
 		}
 		coinbase.AddTxOut(&wire.TxOut{
-			PkScript: minerPkScript,
+			PkScript: minerTxOut.PkScript,
 			Value:    miner.IntValue(),
 		})
 		return
@@ -521,7 +530,7 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, preCoinbase *wire.MsgTx, bindingTx
 	}
 	// miner as first out  and update value later
 	coinbase.AddTxOut(&wire.TxOut{
-		PkScript: minerPkScript,
+		PkScript: minerTxOut.PkScript,
 		Value:    miner.IntValue(),
 	})
 
