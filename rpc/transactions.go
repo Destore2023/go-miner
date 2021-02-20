@@ -413,7 +413,7 @@ func (s *Server) showCoinbaseOutputDetails(mtx *wire.MsgTx, chainParams *config.
 	}
 	numStaking := coinbasePayload.NumStakingReward()
 
-	baseMiner, superNode, _, err := blockchain.CalcBlockSubsidy(height, chainParams, g, int(numStaking), bitlength)
+	baseMiner, superNode, _, err := blockchain.CalcBlockSubsidy(height, chainParams, g, bitlength)
 	if err != nil {
 		return nil, -1, err
 	}

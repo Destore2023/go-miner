@@ -259,7 +259,7 @@ func checkCoinbase(tx *chainutil.Tx, stakingRanks []database.Rank, nextBlockHeig
 		return chainutil.ZeroAmount(), ErrStakingRewardNum
 	}
 
-	miner, poolReward, senateNode, err := CalcBlockSubsidy(nextBlockHeight, net, totalSukhavatiIn, num, bitLength)
+	miner, poolReward, senateNode, err := CalcBlockSubsidy(nextBlockHeight, net, totalSukhavatiIn, bitLength)
 	if err != nil {
 		return chainutil.ZeroAmount(), err
 	}
@@ -606,8 +606,16 @@ func CalcCoinbaseSubsidy(subsidyHalvingInterval uint64, height uint64) (*safetyp
 }
 
 // CalcBlockSubsidy
-func CalcBlockSubsidy(height uint64, chainParams *config.Params, totalBinding chainutil.Amount, numRank, bitLength int) (
-	miner, poolNode chainutil.Amount, senateNode chainutil.Amount, err error) {
+// +-----------+------------+
+// |           | poolNode   |
+// | coinbase  |------------|
+// |           | senateNode |
+// |           |------------|
+// |           | miner      |
+// +-----------+------------+
+//
+func CalcBlockSubsidy(height uint64, chainParams *config.Params, totalBinding chainutil.Amount, bitLength int) (
+	miner, poolNode, senateNode chainutil.Amount, err error) {
 	subsidyHalvingInterval := consensus.SubsidyHalvingInterval
 	if chainParams.SubsidyHalvingInterval == 0 {
 		subsidyHalvingInterval = 0
@@ -622,7 +630,7 @@ func CalcBlockSubsidy(height uint64, chainParams *config.Params, totalBinding ch
 	valueRequired, ok := bindingRequiredAmount[bitLength]
 	if !ok {
 		if bitLength != bitLengthMissing {
-			logging.CPrint(logging.ERROR, "invalid bitlength",
+			logging.CPrint(logging.ERROR, "invalid bitLength",
 				logging.LogFormat{"bitLength": bitLength})
 		}
 	} else {

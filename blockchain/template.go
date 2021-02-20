@@ -312,45 +312,34 @@ type BlockTemplate struct {
 	Err                error
 }
 
-// Miner Reward Tx Out
-// +--------------+
-// |              |
-// |              |
-// +--------------+
-// | Miner Reward |
-// +--------------+
-func GetMinerRewardTxOutFromCoinbase(coinbase *wire.MsgTx) (*wire.TxOut, error) {
+// MinerPkScript
+func getMinerPkScript(coinbase *wire.MsgTx) (pkScript []byte, err error) {
 	l := len(coinbase.TxOut)
 	if l == 0 {
 		return nil, ErrCoinbaseTx
 	}
-	minerTxOut := coinbase.TxOut[l-1]
-	return minerTxOut, nil
+	minerPkScript := coinbase.TxOut[l-1].PkScript
+	return minerPkScript, nil
 }
 
 //  Coinbase Tx
 //   Vin:                           Vout:
 //  +------------------------------+-----------------------------------+
 //  | coinbase Genesis in          |   staking pool Genesis  out       |
-//  +------------------------------|-----------------------------------+
-//  |           |                  |   staking pool accumulated out    |
-//  |           |                  |-----------------------------------|
-//  | staking   | pool             |   senate Genesis out              |
-//  |           |                  |-----------------------------------|
-//  |           |                  |   miner Genesis out               |
+//  |                              |-----------------------------------|
+//  |                              |   senate Genesis out              |
+//  |                              |-----------------------------------|
+//  |                              |   miner Genesis out               |
 //  +------------------------------------------------------------------+
 func reCreateCoinbaseTx(coinbase *wire.MsgTx, preCoinbase *wire.MsgTx, bindingTxListReply []*database.BindingTxReply, nextBlockHeight uint64,
-	bitLength int, rewardAddresses []database.Rank, senateEquities database.SenateEquities, unspentPoolTxs []*database.TxReply, totalFee chainutil.Amount) (err error) {
-	minerRewardTxOut, err := GetMinerRewardTxOutFromCoinbase(coinbase)
+	bitLength int, rewardAddresses []database.Rank, senateEquities database.SenateEquities, totalFee chainutil.Amount) (err error) {
+	minerPkScript, err := getMinerPkScript(coinbase)
 	if err != nil {
 		return err
 	}
 	coinbase.RemoveAllTxOut()
 	totalBinding := chainutil.ZeroAmount()
 	poolReward := chainutil.ZeroAmount()
-	poolTotal := safetype.NewUint128()
-	poolBalance := safetype.NewUint128()
-	poolMaturityValue := safetype.NewUint128()
 	if len(preCoinbase.TxOut) == 0 {
 		return ErrBadTxOutValue
 	}
@@ -362,69 +351,6 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, preCoinbase *wire.MsgTx, bindingTx
 	if err != nil {
 		return err
 	}
-	var poolWitness [][]byte
-	for _, reply := range unspentPoolTxs {
-		blocksSincePrev := nextBlockHeight - reply.Height
-		for index, txOut := range reply.Tx.TxOut {
-			if reply.TxSpent[index] {
-				continue
-			}
-			if !txscript.IsPayToPoolScriptHash(txOut.PkScript) {
-				continue
-			}
-			poolTotal, err = poolTotal.AddInt(txOut.Value)
-			if err != nil {
-				return err
-			}
-			if blocksSincePrev < consensus.TransactionMaturity {
-				continue
-			}
-			switch index {
-			case 0:
-				if blocksSincePrev < consensus.CoinbaseMaturity {
-					continue
-				}
-				fallthrough
-			default:
-				poolMaturityValue, err = poolMaturityValue.AddInt(txOut.Value)
-				if err != nil {
-					return err
-				}
-				prevOut := wire.NewOutPoint(reply.TxSha, uint32(index))
-				poolTxIn := wire.NewTxIn(prevOut, poolWitness)
-				coinbase.AddTxIn(poolTxIn)
-			}
-		}
-	}
-	//  1/200 pool reward
-	//if coinbasePayload.LastStakingAwardedTimestamp() == 0 || (uint64(time.Now().Unix())-coinbasePayload.LastStakingAwardedTimestamp()) < 86400 {
-	if len(rewardAddresses) > 0 {
-		divInt, err := poolTotal.DivInt(consensus.StakingPoolRewardProportionalDenominator)
-		if err != nil {
-			return err
-		}
-		if divInt.Gt(poolMaturityValue) {
-			poolReward, err = poolReward.AddInt(poolMaturityValue.IntValue())
-			if err != nil {
-				return err
-			}
-		} else {
-			poolReward, err = poolReward.AddInt(divInt.IntValue())
-		}
-		if err != nil {
-			return err
-		}
-		poolBalance, err = poolTotal.SubUint(uint64(poolReward.IntValue()))
-		if err != nil {
-			return err
-		}
-		coinbasePayload.Reset()
-		coinbasePayload.lastStakingAwardedTimestamp = uint64(time.Now().Unix())
-	} else {
-		poolBalance = poolMaturityValue
-		coinbasePayload.Reset()
-	}
-
 	// means still have reward in coinbase
 	// originMiner cannot be smaller than diff
 	// has guaranty tx
@@ -477,7 +403,7 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, preCoinbase *wire.MsgTx, bindingTx
 		logging.CPrint(logging.INFO, "No binding tx in the pubkey")
 	}
 
-	miner, poolNode, senateNode, err := CalcBlockSubsidy(nextBlockHeight, &config.ChainParams, totalBinding, len(rewardAddresses), bitLength)
+	miner, poolNode, senateNode, err := CalcBlockSubsidy(nextBlockHeight, &config.ChainParams, totalBinding, bitLength)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "fail on CalcBlockSubsidy", logging.LogFormat{
 			"err":                    err,
@@ -502,7 +428,7 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, preCoinbase *wire.MsgTx, bindingTx
 			return err
 		}
 		coinbase.AddTxOut(&wire.TxOut{
-			PkScript: minerRewardTxOut.PkScript,
+			PkScript: minerPkScript,
 			Value:    miner.IntValue(),
 		})
 		return
@@ -567,13 +493,7 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, preCoinbase *wire.MsgTx, bindingTx
 	coinbasePayload.numStakingReward = numOfStakingRewardSent
 	coinbasePayload.height = nextBlockHeight
 	coinbase.SetPayload(coinbasePayload.Bytes())
-	// poolNode balance
-	if !poolBalance.IsZero() {
-		coinbase.AddTxOut(&wire.TxOut{
-			Value:    poolBalance.IntValue(),
-			PkScript: stakingPoolPubKeyScript,
-		})
-	}
+
 	// senateNode
 	if !senateNode.IsZero() && len(senateEquities) > 0 {
 		for _, equity := range senateEquities {
@@ -601,11 +521,88 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, preCoinbase *wire.MsgTx, bindingTx
 	}
 	// miner as first out  and update value later
 	coinbase.AddTxOut(&wire.TxOut{
-		PkScript: minerRewardTxOut.PkScript,
+		PkScript: minerPkScript,
 		Value:    miner.IntValue(),
 	})
 
 	return
+}
+
+// createStakingPoolRewardTx
+// +-------------------------------+-----------------------------------+
+// | staking pool reward           |  staking pool accumulated out     |
+// +-------------------------------|-----------------------------------+
+// |                               |  reward                           |
+// +-------------------------------+-----------------------------------+
+func createStakingPoolRewardTx(nextBlockHeight uint64, unspentPoolTxs []*database.TxReply) (*chainutil.Tx, error) {
+	stakingPoolRewardTx := wire.NewMsgTx()
+	var poolWitness [][]byte
+	poolTotal := safetype.NewUint128()
+	poolMaturityValue := safetype.NewUint128()
+	poolReward := chainutil.ZeroAmount()
+	poolBalance := safetype.NewUint128()
+	var err error
+	for _, reply := range unspentPoolTxs {
+		blocksSincePrev := nextBlockHeight - reply.Height
+		isCoinbase := reply.Tx.IsCoinBaseTx()
+		for index, txOut := range reply.Tx.TxOut {
+			if reply.TxSpent[index] {
+				continue
+			}
+			if !txscript.IsPayToPoolScriptHash(txOut.PkScript) {
+				continue
+			}
+			poolTotal, err = poolTotal.AddInt(txOut.Value)
+			if err != nil {
+				return nil, err
+			}
+			if blocksSincePrev < consensus.TransactionMaturity {
+				continue
+			}
+			if isCoinbase && blocksSincePrev < consensus.CoinbaseMaturity {
+				continue
+			}
+			poolMaturityValue, err = poolMaturityValue.AddInt(txOut.Value)
+			if err != nil {
+				return nil, err
+			}
+			prevOut := wire.NewOutPoint(reply.TxSha, uint32(index))
+			poolTxIn := wire.NewTxIn(prevOut, poolWitness)
+			stakingPoolRewardTx.AddTxIn(poolTxIn)
+		}
+	}
+	//  1/200 pool reward
+	//if coinbasePayload.LastStakingAwardedTimestamp() == 0 || (uint64(time.Now().Unix())-coinbasePayload.LastStakingAwardedTimestamp()) < 86400 {
+	divInt, err := poolTotal.DivInt(consensus.StakingPoolRewardProportionalDenominator)
+	if err != nil {
+		return nil, err
+	}
+
+	if divInt.Gt(poolMaturityValue) {
+		poolReward, err = poolReward.AddInt(poolMaturityValue.IntValue())
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		poolReward, err = poolReward.AddInt(divInt.IntValue())
+	}
+	if err != nil {
+		return nil, err
+	}
+	poolBalance, err = poolTotal.SubUint(uint64(poolReward.IntValue()))
+	if err != nil {
+		return nil, err
+	}
+	// poolNode balance
+	if !poolBalance.IsZero() {
+		stakingPoolRewardTx.AddTxOut(&wire.TxOut{
+			Value:    poolBalance.IntValue(),
+			PkScript: stakingPoolPubKeyScript,
+		})
+	}
+	//coinbasePayload.Reset()
+	//coinbasePayload.lastStakingAwardedTimestamp = uint64(time.Now().Unix())
+	return chainutil.NewTx(stakingPoolRewardTx), nil
 }
 
 // createCoinbaseTx returns a coinbase transaction paying an appropriate subsidy
@@ -615,7 +612,7 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, preCoinbase *wire.MsgTx, bindingTx
 // See the comment for NewBlockTemplate for more information about why the nil
 // address handling is useful.
 
-func createCoinbaseTx(nextBlockHeight uint64, addr chainutil.Address, rewardAddresses []database.Rank) (*chainutil.Tx, error) {
+func createCoinbaseTx(nextBlockHeight uint64, payToAddress chainutil.Address) (*chainutil.Tx, error) {
 	tx := wire.NewMsgTx()
 	tx.AddTxIn(&wire.TxIn{
 		// Coinbase transactions have no inputs, so previous outpoint is
@@ -631,26 +628,26 @@ func createCoinbaseTx(nextBlockHeight uint64, addr chainutil.Address, rewardAddr
 	// redeemable by anyone.
 	pkScriptMiner := anyoneRedeemableScript
 	var err error
-	if addr != nil {
-		pkScriptMiner, err = txscript.PayToAddrScript(addr)
+	if payToAddress != nil {
+		pkScriptMiner, err = txscript.PayToAddrScript(payToAddress)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	miner, _, _, err := CalcBlockSubsidy(nextBlockHeight,
-		&config.ChainParams, chainutil.ZeroAmount(), len(rewardAddresses), bitLengthMissing)
+		&config.ChainParams, chainutil.ZeroAmount(), bitLengthMissing)
 	if err != nil {
 		return nil, err
 	}
 	// no longer mint
-	if miner.IsZero() {
-		tx.AddTxOut(&wire.TxOut{
-			Value:    miner.IntValue(),
-			PkScript: pkScriptMiner,
-		})
-		return chainutil.NewTx(tx), nil
-	}
+	//if miner.IsZero() {
+	//	tx.AddTxOut(&wire.TxOut{
+	//		Value:    miner.IntValue(),
+	//		PkScript: pkScriptMiner,
+	//	})
+	//	return chainutil.NewTx(tx), nil
+	//}
 
 	// mint
 
@@ -665,30 +662,30 @@ func createCoinbaseTx(nextBlockHeight uint64, addr chainutil.Address, rewardAddr
 
 	// calc reward
 	//totalSNValue := safetype.NewUint64()
-	for i := 0; i < len(rewardAddresses); i++ {
-		key := make([]byte, sha256.Size)
-		copy(key, rewardAddresses[i].ScriptHash[:])
-		pkScriptSuperNode, err := txscript.PayToWitnessScriptHashScript(key)
-		if err != nil {
-			return nil, err
-		}
-		//superNodeValue, err := calcSuperNodeReward(superNode, totalStakingValue, rewardAddresses[i].Value)
-		//if err != nil {
-		//	return nil, err
-		//}
-		//if superNodeValue.IsZero() {
-		//	// break loop as rewardAddresses is in descending order by value
-		//	break
-		//}
-		//totalSNValue, err = totalSNValue.Add(superNodeValue)
-		//if err != nil {
-		//	return nil, err
-		//}
-		tx.AddTxOut(&wire.TxOut{
-			Value:    0,
-			PkScript: pkScriptSuperNode,
-		})
-	}
+	//for i := 0; i < len(rewardAddresses); i++ {
+	//	key := make([]byte, sha256.Size)
+	//	copy(key, rewardAddresses[i].ScriptHash[:])
+	//	pkScriptSuperNode, err := txscript.PayToWitnessScriptHashScript(key)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//superNodeValue, err := calcSuperNodeReward(superNode, totalStakingValue, rewardAddresses[i].Value)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//if superNodeValue.IsZero() {
+	//	// break loop as rewardAddresses is in descending order by value
+	//	break
+	//}
+	//totalSNValue, err = totalSNValue.Add(superNodeValue)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//	tx.AddTxOut(&wire.TxOut{
+	//		Value:    0,
+	//		PkScript: pkScriptSuperNode,
+	//	})
+	//}
 	tx.AddTxOut(&wire.TxOut{
 		Value:    miner.IntValue(),
 		PkScript: pkScriptMiner,
@@ -784,7 +781,7 @@ func logSkippedDeps(tx *chainutil.Tx, deps *list.List) {
 //  |  <= cfg.BlockMinSize)             |   |
 //   -----------------------------------  --
 
-func (chain *Blockchain) NewBlockTemplate(payoutAddress chainutil.Address, templateCh chan interface{}) error {
+func (chain *Blockchain) NewBlockTemplate(miningAddr chainutil.Address, templateCh chan interface{}) error {
 	chain.l.Lock()
 	defer chain.l.Unlock()
 
@@ -808,7 +805,7 @@ func (chain *Blockchain) NewBlockTemplate(payoutAddress chainutil.Address, templ
 	//	return err
 	//}
 	// run newBlockTemplate as goroutine
-	go newBlockTemplate(chain, payoutAddress, templateCh, bestNode, txs, punishments, rewardAddress)
+	go newBlockTemplate(chain, miningAddr, templateCh, bestNode, txs, punishments, rewardAddress)
 	//go newBlockTemplate(chain, payoutAddress, templateCh, bestNode, txs, punishments, stakingRewardInfo)
 	return nil
 }
@@ -821,7 +818,7 @@ func GetFeeAfterBurnGas(fees chainutil.Amount) (chainutil.Amount, error) {
 	return chainutil.NewAmount(value)
 }
 
-func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templateCh chan interface{},
+func newBlockTemplate(chain *Blockchain, payToAddress chainutil.Address, templateCh chan interface{},
 	bestNode *BlockNode, mempoolTxns []*TxDesc, proposals []*PunishmentProposal, rewardAddresses []database.Rank) {
 	nextBlockHeight := bestNode.Height + 1
 	challenge, err := calcNextChallenge(bestNode)
@@ -831,19 +828,7 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 		}
 		return
 	}
-	coinbaseTx, err := createCoinbaseTx(nextBlockHeight, payoutAddress, rewardAddresses)
-	if err != nil {
-		templateCh <- &PoCTemplate{
-			Err: err,
-		}
-		return
-	}
-	// get unspent pool tx
-	startHeight := bestNode.Height - consensus.CoinbaseMaturity
-	if startHeight < 0 {
-		startHeight = 0
-	}
-	blockShaList, err := chain.db.FetchHeightRange(startHeight, nextBlockHeight)
+	coinbaseTx, err := createCoinbaseTx(nextBlockHeight, payToAddress)
 	if err != nil {
 		templateCh <- &PoCTemplate{
 			Err: err,
@@ -851,18 +836,6 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 		return
 	}
 
-	unspentTxShaList := make([]*wire.Hash, 0)
-	for _, blockSha := range blockShaList {
-		block, err := chain.db.FetchBlockBySha(&blockSha)
-		if err != nil {
-			templateCh <- &PoCTemplate{
-				Err: err,
-			}
-			return
-		}
-		unspentTxShaList = append(unspentTxShaList, block.Transactions()[0].Hash())
-	}
-	unspentStakingPoolTxs := chain.db.FetchUnSpentTxByShaList(unspentTxShaList)
 	rawBlock, err := chain.db.FetchBlockBySha(bestNode.Hash)
 	if err != nil {
 		templateCh <- &PoCTemplate{
@@ -897,7 +870,7 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 			return nil, err
 		}
 
-		err = reCreateCoinbaseTx(coinbaseTx.MsgTx(), blockCoinbaseTx, BindingTxListReply, nextBlockHeight, bitLength, rewardAddresses, nodesConfig.SenateEquities, unspentStakingPoolTxs, totalFee)
+		err = reCreateCoinbaseTx(coinbaseTx.MsgTx(), blockCoinbaseTx, BindingTxListReply, nextBlockHeight, bitLength, rewardAddresses, nodesConfig.SenateEquities, totalFee)
 		if err != nil {
 			return nil, err
 		}
@@ -908,7 +881,6 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 		target, _ := calcNextTarget(bestNode, timestamp)
 		return target
 	}
-
 	templateCh <- &PoCTemplate{
 		Height:        nextBlockHeight,
 		Timestamp:     bestNode.Timestamp.Add(1 * poc.PoCSlot * time.Second),
@@ -919,7 +891,18 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 		GetCoinbase:   getCoinbaseTx,
 	}
 
+	//  after create coinbase transaction
+
 	numCoinbaseSigOps := int64(CountSigOps(coinbaseTx))
+
+	// Create slices to hold the fees and number of signature operations
+	// for each of the selected transactions and add an entry for the
+	// coinbase.  This allows the code below to simply append details about
+	// a transaction as it is selected for inclusion in the final block.
+	// However, since the total fees aren't known yet, use a dummy value for
+	// the coinbase fee which will be updated later.
+	txSigOpCounts := make([]int64, 0, len(mempoolTxns))
+	txSigOpCounts = append(txSigOpCounts, numCoinbaseSigOps)
 
 	// Get the current memory pool transactions and create a priority queue
 	// to hold the transactions which are ready for inclusion into a block
@@ -944,6 +927,45 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 	// can be avoided.
 	blockTxns := make([]*wire.MsgTx, 0, len(mempoolTxns))
 	blockTxns = append(blockTxns, coinbaseTx.MsgTx())
+
+	if len(rewardAddresses) > 0 {
+		// get unspent staking pool tx
+		startHeight := bestNode.Height - consensus.CoinbaseMaturity
+		if startHeight < 0 {
+			startHeight = 0
+		}
+		blockShaList, err := chain.db.FetchHeightRange(startHeight, nextBlockHeight)
+		if err != nil {
+			templateCh <- &PoCTemplate{
+				Err: err,
+			}
+			return
+		}
+
+		unspentTxShaList := make([]*wire.Hash, 0)
+		for _, blockSha := range blockShaList {
+			block, err := chain.db.FetchBlockBySha(&blockSha)
+			if err != nil {
+				templateCh <- &PoCTemplate{
+					Err: err,
+				}
+				return
+			}
+			unspentTxShaList = append(unspentTxShaList, block.Transactions()[0].Hash())
+		}
+		unspentStakingPoolTxs := chain.db.FetchUnSpentTxByShaList(unspentTxShaList)
+		stakingPoolRewardTx, err := createStakingPoolRewardTx(nextBlockHeight, unspentStakingPoolTxs)
+		if err != nil {
+			templateCh <- &PoCTemplate{
+				Err: err,
+			}
+			return
+		}
+		blockTxns = append(blockTxns, stakingPoolRewardTx.MsgTx())
+		numStakingPoolRewardTxSigOps := int64(CountSigOps(stakingPoolRewardTx))
+		txSigOpCounts = append(txSigOpCounts, numStakingPoolRewardTxSigOps)
+	}
+
 	//blockTxStore := make(TxStore)
 	punishProposals := make([]*wire.FaultPubKey, 0, len(proposals))
 	otherProposals := make([]*wire.NormalProposal, 0)
@@ -957,15 +979,6 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 	// determine which dependent transactions are now eligible for inclusion
 	// in the block once each transaction has been included.
 	dependers := make(map[wire.Hash]*list.List)
-
-	// Create slices to hold the fees and number of signature operations
-	// for each of the selected transactions and add an entry for the
-	// coinbase.  This allows the code below to simply append details about
-	// a transaction as it is selected for inclusion in the final block.
-	// However, since the total fees aren't known yet, use a dummy value for
-	// the coinbase fee which will be updated later.
-	txSigOpCounts := make([]int64, 0, len(mempoolTxns))
-	txSigOpCounts = append(txSigOpCounts, numCoinbaseSigOps)
 
 	logging.CPrint(logging.DEBUG, "Considering transactions in mempool for inclusion to new block", logging.LogFormat{"tx count": len(mempoolTxns)})
 
@@ -1259,7 +1272,7 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 		TotalFee:           totalFee,
 		SigOpCounts:        txSigOpCounts,
 		Height:             nextBlockHeight,
-		ValidPayAddress:    payoutAddress != nil,
+		ValidPayAddress:    payToAddress != nil,
 		MerkleCache:        merklesCache,
 		WitnessMerkleCache: witnessMerklesCache,
 	}
