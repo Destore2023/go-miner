@@ -202,7 +202,7 @@ func upgradePocDBFile(sk *SpaceKeeper) error {
 			return
 		}
 		// make new filename
-		newFilename := fmt.Sprintf("%d_%s_%d%s.db", ordinal, args[0], bitLength, tagA)
+		newFilename := fmt.Sprintf("%d_%s_%d%s.pocdb", ordinal, args[0], bitLength, tagA)
 		newFilepath := filepath.Join(dir, newFilename)
 		if err = os.Rename(filePath, newFilepath); err != nil {
 			logging.CPrint(logging.ERROR, "fail to rename db",
@@ -215,7 +215,7 @@ func upgradePocDBFile(sk *SpaceKeeper) error {
 	for idx, dbDir := range dbDirs {
 		for _, fi := range dirFileInfos[idx] {
 			filename := fi.Name()
-			// try match `*.db`
+			// try match `*.pocdb`
 			if !strings.HasSuffix(strings.ToUpper(filename), ".POCDB") {
 				continue
 			}
