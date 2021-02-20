@@ -19,7 +19,7 @@ import (
 type MapType uint8
 
 const (
-	TypePocDBV1             = "sktdb.v1"
+	TypePocDBV1             = "db.v1"
 	MapTypeHashMapA MapType = iota
 	MapTypeHashMapB
 )

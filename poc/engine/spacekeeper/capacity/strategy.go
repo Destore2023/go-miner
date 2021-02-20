@@ -23,8 +23,8 @@ import (
 
 const (
 	typePocDBV1       = pocdb_v1.TypePocDBV1
-	regPocDBV1        = `^\d+_[A-F0-9]{66}_\d{2}\.SKTDB$`
-	suffixPocDBV1     = ".SKTDB"
+	regPocDBV1        = `^\d+_[A-F0-9]{66}_\d{2}\.POCDB$`
+	suffixPocDBV1     = ".POCDB"
 	TypeSpaceKeeperV1 = "spacekeeper.v1"
 )
 
@@ -174,7 +174,7 @@ func generateInitialIndex(sk *SpaceKeeper, dbType, regStrB, suffixB string) erro
 }
 
 func upgradePocDBFile(sk *SpaceKeeper) error {
-	var oldRegStrB, oldRegStrA = `^[A-F0-9]{66}-\d{2}-B\.SKTDB$`, `^[A-F0-9]{66}-\d{2}-A\.SKTDB$`
+	var oldRegStrB, oldRegStrA = `^[A-F0-9]{66}-\d{2}-B\.POCDB$`, `^[A-F0-9]{66}-\d{2}-A\.POCDB$`
 	regExpB, err := regexp.Compile(oldRegStrB)
 	if err != nil {
 		return err
@@ -187,7 +187,7 @@ func upgradePocDBFile(sk *SpaceKeeper) error {
 	var rename = func(dir, filename, tagA string) {
 		filePath := filepath.Join(dir, filename)
 		// extract args
-		args := strings.Split(filename[:len(filename)-len(".SKTDB")], "-")
+		args := strings.Split(filename[:len(filename)-len(".POCDB")], "-")
 		_, pubKey, bitLength, err := parsePocDBArgsFromString("0", args[0], args[1])
 		if err != nil {
 			logging.CPrint(logging.TRACE, "cannot parse PocDB args from filename",
@@ -202,7 +202,7 @@ func upgradePocDBFile(sk *SpaceKeeper) error {
 			return
 		}
 		// make new filename
-		newFilename := fmt.Sprintf("%d_%s_%d%s.sktdb", ordinal, args[0], bitLength, tagA)
+		newFilename := fmt.Sprintf("%d_%s_%d%s.db", ordinal, args[0], bitLength, tagA)
 		newFilepath := filepath.Join(dir, newFilename)
 		if err = os.Rename(filePath, newFilepath); err != nil {
 			logging.CPrint(logging.ERROR, "fail to rename db",
@@ -215,7 +215,7 @@ func upgradePocDBFile(sk *SpaceKeeper) error {
 	for idx, dbDir := range dbDirs {
 		for _, fi := range dirFileInfos[idx] {
 			filename := fi.Name()
-			// try match `*.pocdb`
+			// try match `*.db`
 			if !strings.HasSuffix(strings.ToUpper(filename), ".POCDB") {
 				continue
 			}

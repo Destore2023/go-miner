@@ -14,7 +14,7 @@ const (
 
 var (
 	// PoCPrefix is the prefix for PoC Calculation.
-	PoCPrefix = []byte("SKTI")
+	PoCPrefix = []byte("MASS")
 )
 
 // P calculates SktSHA256(PoCPrefix || PubKeyHash || X).CutByBitLength(bitLength),
