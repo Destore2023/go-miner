@@ -340,7 +340,7 @@ func GetMinerRewardTxOutFromCoinbase(coinbase *wire.MsgTx) (*wire.TxOut, error) 
 //  |                              |-----------------------------------|
 //  |                              |   miner Genesis out               |
 //  +------------------------------------------------------------------+
-func reCreateCoinbaseTx(coinbase *wire.MsgTx, preCoinbase *wire.MsgTx, bindingTxListReply []*database.BindingTxReply, nextBlockHeight uint64,
+func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.BindingTxReply, nextBlockHeight uint64,
 	bitLength int, rewardAddresses []database.Rank, senateEquities database.SenateEquities, totalFee chainutil.Amount) (err error) {
 	minerTxOut, err := GetMinerRewardTxOutFromCoinbase(coinbase)
 	if err != nil {
@@ -349,17 +349,7 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, preCoinbase *wire.MsgTx, bindingTx
 	coinbase.RemoveAllTxOut()
 	totalBinding := chainutil.ZeroAmount()
 	poolReward := chainutil.ZeroAmount()
-	if len(preCoinbase.TxOut) == 0 {
-		return ErrBadTxOutValue
-	}
-	if len(preCoinbase.Payload) == 0 {
-		return ErrBadTxOutValue
-	}
 	coinbasePayload := NewCoinbasePayload()
-	err = coinbasePayload.SetBytes(preCoinbase.Payload)
-	if err != nil {
-		return err
-	}
 	// means still have reward in coinbase
 	// originMiner cannot be smaller than diff
 	// has guaranty tx
@@ -728,6 +718,14 @@ func logSkippedDeps(tx *chainutil.Tx, deps *list.List) {
 	}
 }
 
+// BlockTemplateGenerator provides a type that can be used to generate block templates
+// based on a given mining policy and source of transactions to choose from.
+// It also houses additional state required in order to ensure the templates
+// are built on top of the current best chain and adhere to the consensus rules.
+type BlockTemplateGenerator struct {
+	chain *Blockchain
+}
+
 // NewBlockTemplate returns a new block template that is ready to be solved
 // using the transactions from the passed transaction memory pool and a coinbase
 // that either pays to the passed address if it is not nil, or a coinbase that
@@ -790,7 +788,7 @@ func logSkippedDeps(tx *chainutil.Tx, deps *list.List) {
 //  |  <= cfg.BlockMinSize)             |   |
 //   -----------------------------------  --
 
-func (chain *Blockchain) NewBlockTemplate(miningAddr chainutil.Address, templateCh chan interface{}) error {
+func (chain *Blockchain) NewBlockTemplate(payToAddress chainutil.Address, templateCh chan interface{}) error {
 	chain.l.Lock()
 	defer chain.l.Unlock()
 
@@ -814,7 +812,7 @@ func (chain *Blockchain) NewBlockTemplate(miningAddr chainutil.Address, template
 	//	return err
 	//}
 	// run newBlockTemplate as goroutine
-	go newBlockTemplate(chain, miningAddr, templateCh, bestNode, txs, punishments, rewardAddress)
+	go newBlockTemplate(chain, payToAddress, templateCh, bestNode, txs, punishments, rewardAddress)
 	//go newBlockTemplate(chain, payoutAddress, templateCh, bestNode, txs, punishments, stakingRewardInfo)
 	return nil
 }
@@ -844,15 +842,6 @@ func newBlockTemplate(chain *Blockchain, payToAddress chainutil.Address, templat
 		}
 		return
 	}
-
-	rawBlock, err := chain.db.FetchBlockBySha(bestNode.Hash)
-	if err != nil {
-		templateCh <- &PoCTemplate{
-			Err: err,
-		}
-		return
-	}
-	blockCoinbaseTx := rawBlock.Transactions()[0].MsgTx()
 	governanceConfig, err := chain.db.FetchEnabledGovernanceConfig(database.GovernanceSenate)
 	if err != nil {
 		templateCh <- &PoCTemplate{
@@ -879,7 +868,7 @@ func newBlockTemplate(chain *Blockchain, payToAddress chainutil.Address, templat
 			return nil, err
 		}
 
-		err = reCreateCoinbaseTx(coinbaseTx.MsgTx(), blockCoinbaseTx, BindingTxListReply, nextBlockHeight, bitLength, rewardAddresses, nodesConfig.SenateEquities, totalFee)
+		err = reCreateCoinbaseTx(coinbaseTx.MsgTx(), BindingTxListReply, nextBlockHeight, bitLength, rewardAddresses, nodesConfig.SenateEquities, totalFee)
 		if err != nil {
 			return nil, err
 		}

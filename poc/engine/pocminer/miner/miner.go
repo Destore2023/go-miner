@@ -49,36 +49,36 @@ type ProofTemplate struct {
 // PoCMiner
 type PoCMiner struct {
 	*service.BaseService
-	quit            chan struct{}
-	wg              sync.WaitGroup
-	allowSolo       bool
-	chain           Chain
-	syncManager     SyncManager
-	SpaceKeeper     spacekeeper.SpaceKeeper
-	minedHeight     map[uint64]struct{}
-	newBlockCh      chan *wire.Hash
-	payoutAddresses []chainutil.Address
-	getBestProof    func(pocTemplate *blockchain.PoCTemplate, quit chan struct{}) (*ProofTemplate, error)
+	quit           chan struct{}
+	wg             sync.WaitGroup
+	allowSolo      bool
+	chain          Chain
+	syncManager    SyncManager
+	SpaceKeeper    spacekeeper.SpaceKeeper
+	minedHeight    map[uint64]struct{}
+	newBlockCh     chan *wire.Hash
+	payToAddresses []chainutil.Address
+	getBestProof   func(pocTemplate *blockchain.PoCTemplate, quit chan struct{}) (*ProofTemplate, error)
 }
 
 func NewPoCMiner(name string, allowSolo bool, chain Chain, syncManager SyncManager, sk spacekeeper.SpaceKeeper, newBlockCh chan *wire.Hash, payoutAddresses []chainutil.Address) *PoCMiner {
 	m := &PoCMiner{
-		allowSolo:       allowSolo,
-		chain:           chain,
-		syncManager:     syncManager,
-		SpaceKeeper:     sk,
-		minedHeight:     make(map[uint64]struct{}),
-		newBlockCh:      newBlockCh,
-		payoutAddresses: payoutAddresses,
+		allowSolo:      allowSolo,
+		chain:          chain,
+		syncManager:    syncManager,
+		SpaceKeeper:    sk,
+		minedHeight:    make(map[uint64]struct{}),
+		newBlockCh:     newBlockCh,
+		payToAddresses: payoutAddresses,
 	}
 	m.BaseService = service.NewBaseService(m, name)
 	return m
 }
 
 func (m *PoCMiner) OnStart() error {
-	if len(m.payoutAddresses) == 0 {
-		logging.CPrint(logging.ERROR, "can not start mining", logging.LogFormat{"err": ErrNoPayoutAddresses})
-		return ErrNoPayoutAddresses
+	if len(m.payToAddresses) == 0 {
+		logging.CPrint(logging.ERROR, "can not start mining", logging.LogFormat{"err": ErrNoPayToAddresses})
+		return ErrNoPayToAddresses
 	}
 
 	if !m.SpaceKeeper.Started() {
@@ -108,9 +108,9 @@ func (m *PoCMiner) Type() string {
 
 func (m *PoCMiner) SetPayoutAddresses(addresses []chainutil.Address) error {
 	if len(addresses) == 0 {
-		return ErrNoPayoutAddresses
+		return ErrNoPayToAddresses
 	}
-	m.payoutAddresses = addresses
+	m.payToAddresses = addresses
 	return nil
 }
 
@@ -141,9 +141,9 @@ out:
 		}
 
 		// Choose a payment address randomly.
-		payoutAddresses := m.payoutAddresses
+		payoutAddresses := m.payToAddresses
 		if len(payoutAddresses) == 0 {
-			logging.CPrint(logging.ERROR, "no valid mining payout addresses", logging.LogFormat{"err": ErrNoPayoutAddresses})
+			logging.CPrint(logging.ERROR, "no valid mining payout addresses", logging.LogFormat{"err": ErrNoPayToAddresses})
 			break out
 		}
 		payToAddr := payoutAddresses[rand.Intn(len(payoutAddresses))]
@@ -205,7 +205,7 @@ func (m *PoCMiner) submitBlock(block *chainutil.Block, minerReward chainutil.Amo
 	return true
 }
 
-func (m *PoCMiner) solveBlock(miningAddr chainutil.Address, quit chan struct{}) (*wire.MsgBlock, chainutil.Amount, error) {
+func (m *PoCMiner) solveBlock(payToAddress chainutil.Address, quit chan struct{}) (*wire.MsgBlock, chainutil.Amount, error) {
 	var failure = func(err error) (*wire.MsgBlock, chainutil.Amount, error) {
 		logging.CPrint(logging.INFO, "quit solve block", logging.LogFormat{"err": err})
 		return nil, chainutil.ZeroAmount(), err
@@ -214,7 +214,7 @@ func (m *PoCMiner) solveBlock(miningAddr chainutil.Address, quit chan struct{}) 
 	// Step 1: request for poc & body template
 	logging.CPrint(logging.INFO, "Step 1: request for poc & body template")
 	templateCh := make(chan interface{}, 2)
-	if err := m.chain.NewBlockTemplate(miningAddr, templateCh); err != nil {
+	if err := m.chain.NewBlockTemplate(payToAddress, templateCh); err != nil {
 		return failure(err)
 	}
 
