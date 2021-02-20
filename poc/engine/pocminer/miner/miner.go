@@ -205,7 +205,7 @@ func (m *PoCMiner) submitBlock(block *chainutil.Block, minerReward chainutil.Amo
 	return true
 }
 
-func (m *PoCMiner) solveBlock(payoutAddress chainutil.Address, quit chan struct{}) (*wire.MsgBlock, chainutil.Amount, error) {
+func (m *PoCMiner) solveBlock(miningAddr chainutil.Address, quit chan struct{}) (*wire.MsgBlock, chainutil.Amount, error) {
 	var failure = func(err error) (*wire.MsgBlock, chainutil.Amount, error) {
 		logging.CPrint(logging.INFO, "quit solve block", logging.LogFormat{"err": err})
 		return nil, chainutil.ZeroAmount(), err
@@ -214,7 +214,7 @@ func (m *PoCMiner) solveBlock(payoutAddress chainutil.Address, quit chan struct{
 	// Step 1: request for poc & body template
 	logging.CPrint(logging.INFO, "Step 1: request for poc & body template")
 	templateCh := make(chan interface{}, 2)
-	if err := m.chain.NewBlockTemplate(payoutAddress, templateCh); err != nil {
+	if err := m.chain.NewBlockTemplate(miningAddr, templateCh); err != nil {
 		return failure(err)
 	}
 
