@@ -21,15 +21,15 @@ var (
 )
 
 var (
-	BackendList []MinerBackend
+	BackendList []Backend
 )
 
-type MinerBackend struct {
+type Backend struct {
 	Typ         string
 	NewPoCMiner func(args ...interface{}) (PoCMiner, error)
 }
 
-func AddPoCMinerBackend(ins MinerBackend) {
+func AddPoCMinerBackend(ins Backend) {
 	for _, kb := range BackendList {
 		if kb.Typ == ins.Typ {
 			return

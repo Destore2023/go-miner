@@ -46,39 +46,38 @@ type ProofTemplate struct {
 	quality *big.Int
 }
 
-// PoCMiner
 type PoCMiner struct {
 	*service.BaseService
-	quit           chan struct{}
-	wg             sync.WaitGroup
-	allowSolo      bool
-	chain          Chain
-	syncManager    SyncManager
-	SpaceKeeper    spacekeeper.SpaceKeeper
-	minedHeight    map[uint64]struct{}
-	newBlockCh     chan *wire.Hash
-	payToAddresses []chainutil.Address
-	getBestProof   func(pocTemplate *blockchain.PoCTemplate, quit chan struct{}) (*ProofTemplate, error)
+	quit            chan struct{}
+	wg              sync.WaitGroup
+	allowSolo       bool
+	chain           Chain
+	syncManager     SyncManager
+	SpaceKeeper     spacekeeper.SpaceKeeper
+	minedHeight     map[uint64]struct{}
+	newBlockCh      chan *wire.Hash
+	payoutAddresses []chainutil.Address
+	getBestProof    func(pocTemplate *blockchain.PoCTemplate, quit chan struct{}) (*ProofTemplate, error)
 }
 
 func NewPoCMiner(name string, allowSolo bool, chain Chain, syncManager SyncManager, sk spacekeeper.SpaceKeeper, newBlockCh chan *wire.Hash, payoutAddresses []chainutil.Address) *PoCMiner {
 	m := &PoCMiner{
-		allowSolo:      allowSolo,
-		chain:          chain,
-		syncManager:    syncManager,
-		SpaceKeeper:    sk,
-		minedHeight:    make(map[uint64]struct{}),
-		newBlockCh:     newBlockCh,
-		payToAddresses: payoutAddresses,
+		allowSolo:       allowSolo,
+		chain:           chain,
+		syncManager:     syncManager,
+		SpaceKeeper:     sk,
+		minedHeight:     make(map[uint64]struct{}),
+		newBlockCh:      newBlockCh,
+		payoutAddresses: payoutAddresses,
 	}
 	m.BaseService = service.NewBaseService(m, name)
 	return m
 }
 
 func (m *PoCMiner) OnStart() error {
-	if len(m.payToAddresses) == 0 {
-		logging.CPrint(logging.ERROR, "can not start mining", logging.LogFormat{"err": ErrNoPayToAddresses})
-		return ErrNoPayToAddresses
+	if len(m.payoutAddresses) == 0 {
+		logging.CPrint(logging.ERROR, "can not start mining", logging.LogFormat{"err": ErrNoPayoutAddresses})
+		return ErrNoPayoutAddresses
 	}
 
 	if !m.SpaceKeeper.Started() {
@@ -108,14 +107,12 @@ func (m *PoCMiner) Type() string {
 
 func (m *PoCMiner) SetPayoutAddresses(addresses []chainutil.Address) error {
 	if len(addresses) == 0 {
-		return ErrNoPayToAddresses
+		return ErrNoPayoutAddresses
 	}
-	m.payToAddresses = addresses
+	m.payoutAddresses = addresses
 	return nil
 }
 
-// submitBlock submits the passed block to network after ensuring it passes all
-// of the consensus validation rules.
 func (m *PoCMiner) generateBlocks(quit chan struct{}) {
 	m.wg.Add(1)
 	defer m.wg.Done()
@@ -141,9 +138,9 @@ out:
 		}
 
 		// Choose a payment address randomly.
-		payoutAddresses := m.payToAddresses
+		payoutAddresses := m.payoutAddresses
 		if len(payoutAddresses) == 0 {
-			logging.CPrint(logging.ERROR, "no valid mining payout addresses", logging.LogFormat{"err": ErrNoPayToAddresses})
+			logging.CPrint(logging.ERROR, "no valid mining payout addresses", logging.LogFormat{"err": ErrNoPayoutAddresses})
 			break out
 		}
 		payToAddr := payoutAddresses[rand.Intn(len(payoutAddresses))]
@@ -205,7 +202,7 @@ func (m *PoCMiner) submitBlock(block *chainutil.Block, minerReward chainutil.Amo
 	return true
 }
 
-func (m *PoCMiner) solveBlock(payToAddress chainutil.Address, quit chan struct{}) (*wire.MsgBlock, chainutil.Amount, error) {
+func (m *PoCMiner) solveBlock(payoutAddress chainutil.Address, quit chan struct{}) (*wire.MsgBlock, chainutil.Amount, error) {
 	var failure = func(err error) (*wire.MsgBlock, chainutil.Amount, error) {
 		logging.CPrint(logging.INFO, "quit solve block", logging.LogFormat{"err": err})
 		return nil, chainutil.ZeroAmount(), err
@@ -214,7 +211,7 @@ func (m *PoCMiner) solveBlock(payToAddress chainutil.Address, quit chan struct{}
 	// Step 1: request for poc & body template
 	logging.CPrint(logging.INFO, "Step 1: request for poc & body template")
 	templateCh := make(chan interface{}, 2)
-	if err := m.chain.NewBlockTemplate(payToAddress, templateCh); err != nil {
+	if err := m.chain.NewBlockTemplate(payoutAddress, templateCh); err != nil {
 		return failure(err)
 	}
 
@@ -311,8 +308,6 @@ func getTemplate(quit chan struct{}, ch chan interface{}, typ reflect.Type) (int
 	}
 }
 
-//  assembleFullBlock
-//
 func assembleFullBlock(blockTemplate *blockchain.BlockTemplate, pocTemplate *blockchain.PoCTemplate, tProof *ProofTemplate) (*wire.MsgBlock, chainutil.Amount, error) {
 	var block = blockTemplate.Block
 	var workProof, pocProof = tProof.proof, tProof.proof.Proof

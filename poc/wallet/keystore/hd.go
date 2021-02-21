@@ -8,12 +8,12 @@ import (
 )
 
 var (
-	TestNetKeyScope = KeyScope{
+	TestnetKeyScope = KeyScope{
 		Purpose: 44,
 		Coin:    1,
 	}
 
-	MainNetKeyScope = KeyScope{
+	MainnetKeyScope = KeyScope{
 		Purpose: 44,
 		Coin:    2021,
 	}
@@ -29,7 +29,7 @@ var (
 	}
 )
 
-var Net2KeyScope = map[uint32]KeyScope{1: TestNetKeyScope, 2021: MainNetKeyScope}
+var Net2KeyScope = map[uint32]KeyScope{1: TestnetKeyScope, 2021: MainnetKeyScope}
 
 // KeyScope represents a restricted key scope from the primary root key within
 // the HD chain. From the root manager (m/) we can create a nearly arbitrary

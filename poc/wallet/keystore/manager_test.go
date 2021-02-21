@@ -53,7 +53,7 @@ var (
 
 	samplePublicKey = "03da7e0c5c6ca123447d6106eabbe0db9bcd4ea1753b19b37e14113e5f709a7876"
 
-	msg1 = []byte("skt")
+	msg1 = []byte("mass")
 	msg2 = []byte("abcd")
 
 	// fastScrypt are parameters used throughout the tests to speed up the
@@ -65,7 +65,7 @@ var (
 	}
 
 	exportFilePath       = "./testdata/keystore"
-	exportFileNamePrefix = "keystore"
+	exportFileNamePerfix = "keystore"
 )
 
 func TestKeystoreManagerForPoC_NewKeystore(t *testing.T) {
@@ -1085,7 +1085,7 @@ func TestKeystoreManagerForPoC_ExportKeystore(t *testing.T) {
 	t.Log("ketstore string: ", string(keystoreBytes))
 
 	// write json file
-	exportFileName := fmt.Sprintf("%s/%s-%s.json", exportFilePath, exportFileNamePrefix, acctID0)
+	exportFileName := fmt.Sprintf("%s/%s-%s.json", exportFilePath, exportFileNamePerfix, acctID0)
 	if !fileExists(exportFilePath) {
 		err = os.MkdirAll(exportFilePath, 0777)
 		if err != nil {
@@ -1109,7 +1109,7 @@ func TestKeystoreManagerForPoC_ExportKeystore(t *testing.T) {
 
 func TestKeystoreManagerForPoC_ImportKeystore(t *testing.T) {
 	acctID0 := "ac102vdc5l75yf7uytufjezpphf3m6hqk46hxp8k99"
-	importFileName := fmt.Sprintf("%s/%s-%s.json", exportFilePath, exportFileNamePrefix, acctID0)
+	importFileName := fmt.Sprintf("%s/%s-%s.json", exportFilePath, exportFileNamePerfix, acctID0)
 	file, err := os.Open(importFileName)
 	if err != nil {
 		t.Fatalf("failed to open keystore file, %v", err)

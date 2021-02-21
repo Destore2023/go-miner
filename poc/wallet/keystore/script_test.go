@@ -2,10 +2,9 @@ package keystore
 
 import (
 	"encoding/hex"
-	"testing"
-
 	"github.com/Sukhavati-Labs/go-miner/config"
 	"github.com/Sukhavati-Labs/go-miner/pocec"
+	"testing"
 )
 
 func TestNewPoCAddress(t *testing.T) {

@@ -8,12 +8,12 @@ import (
 	"github.com/Sukhavati-Labs/go-miner/testutil"
 )
 
-func TestSktHash_String(t *testing.T) {
-	var h = pocutil.SktSHA256([]byte("TestSktHash_String"))
+func TestMASSHash_String(t *testing.T) {
+	var h = pocutil.MASSSHA256([]byte("TestMASSHash_String"))
 	var testRound = 10000
 
 	for i := 0; i < testRound; i++ {
-		h = pocutil.SktSHA256(h[:])
+		h = pocutil.MASSSHA256(h[:])
 		str := h.String()
 		if h != mustDecodeStringToHash(str) {
 			t.Error("Hash String decode error")
@@ -21,7 +21,7 @@ func TestSktHash_String(t *testing.T) {
 	}
 
 	for i := 0; i < testRound; i++ {
-		h = pocutil.SktDoubleSHA256(h[:])
+		h = pocutil.MASSDoubleSHA256(h[:])
 		str := h.String()
 		if h != mustDecodeStringToHash(str) {
 			t.Error("Hash String decode error")

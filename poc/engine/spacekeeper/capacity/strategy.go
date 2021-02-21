@@ -15,7 +15,7 @@ import (
 	"github.com/Sukhavati-Labs/go-miner/logging"
 	"github.com/Sukhavati-Labs/go-miner/poc"
 	"github.com/Sukhavati-Labs/go-miner/poc/engine"
-	pocdb_v1 "github.com/Sukhavati-Labs/go-miner/poc/engine/db/v1"
+	sktdb_v1 "github.com/Sukhavati-Labs/go-miner/poc/engine/sktdb/sktdb.v1"
 	"github.com/Sukhavati-Labs/go-miner/poc/engine/spacekeeper"
 	"github.com/Sukhavati-Labs/go-miner/pocec"
 	"github.com/panjf2000/ants"
@@ -152,8 +152,8 @@ func generateInitialIndex(sk *SpaceKeeper, dbType, regStrB, suffixB string) erro
 			// prevent duplicate PocDB
 			sid := NewSpaceID(int64(ordinal), pubKey, bitLength).String()
 			if _, ok := sk.workSpaceIndex[allState].Get(sid); ok {
-				logging.CPrint(logging.WARN, "duplicate db in root dirs",
-					logging.LogFormat{"filepath": filePath, "err": ErrPocDBDuplicate})
+				logging.CPrint(logging.WARN, "duplicate sktdb in root dirs",
+					logging.LogFormat{"filepath": filePath, "err": ErrSktDBDuplicate})
 				continue
 			}
 
@@ -202,10 +202,10 @@ func upgradePocDBFile(sk *SpaceKeeper) error {
 			return
 		}
 		// make new filename
-		newFilename := fmt.Sprintf("%d_%s_%d%s.db", ordinal, args[0], bitLength, tagA)
+		newFilename := fmt.Sprintf("%d_%s_%d%s.massdb", ordinal, args[0], bitLength, tagA)
 		newFilepath := filepath.Join(dir, newFilename)
 		if err = os.Rename(filePath, newFilepath); err != nil {
-			logging.CPrint(logging.ERROR, "fail to rename db",
+			logging.CPrint(logging.ERROR, "fail to rename sktdb",
 				logging.LogFormat{"dir": dir, "old_name": filename, "new_name": newFilename, "err": err})
 		}
 	}
@@ -215,8 +215,8 @@ func upgradePocDBFile(sk *SpaceKeeper) error {
 	for idx, dbDir := range dbDirs {
 		for _, fi := range dirFileInfos[idx] {
 			filename := fi.Name()
-			// try match `*.db`
-			if !strings.HasSuffix(strings.ToUpper(filename), ".POCDB") {
+			// try match `*.massdb`
+			if !strings.HasSuffix(strings.ToUpper(filename), ".MASSDB") {
 				continue
 			}
 			if regExpB.MatchString(strings.ToUpper(filename)) {

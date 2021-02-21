@@ -11,9 +11,9 @@ var (
 	ErrWorkSpaceIsNotStill      = errors.New("non-registered or non-ready workSpace")
 	ErrWorkSpaceCannotGenerate  = errors.New("not allowed to generate new workSpace")
 
-	ErrPocDBWrongFileName        = errors.New("db file name not standard")
-	ErrPocDBDuplicate            = errors.New("db file duplicate in root dirs")
-	ErrPocDBDoesNotMatchWithName = errors.New("db file content does not match with name")
+	ErrSktDBWrongFileName        = errors.New("db file name not standard")
+	ErrSktDBDuplicate            = errors.New("db file duplicate in root dirs")
+	ErrSktDBDoesNotMatchWithName = errors.New("db file content does not match with name")
 
 	ErrWalletDoesNotContainPubKey = errors.New("wallet does not contain pubKey")
 	ErrWalletIsLocked             = errors.New("wallet is locked")

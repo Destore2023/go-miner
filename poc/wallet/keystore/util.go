@@ -3,7 +3,6 @@ package keystore
 import (
 	"bytes"
 	"fmt"
-
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/chainutil/bech32"
 	"github.com/Sukhavati-Labs/go-miner/pocec"

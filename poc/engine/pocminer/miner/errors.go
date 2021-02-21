@@ -8,5 +8,5 @@ var (
 	errWrongTemplateCh   = errors.New("unexpected element received from template channel")
 	errAvoidDoubleMining = errors.New("sleep mining for 1 second to avoid double mining")
 	errBestChainSwitched = errors.New("best chain has been switched")
-	ErrNoPayToAddresses  = errors.New("can not mine without mining addresses")
+	ErrNoPayoutAddresses = errors.New("can not mine without payout addresses")
 )

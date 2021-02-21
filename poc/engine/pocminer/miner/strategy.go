@@ -22,18 +22,18 @@ const (
 )
 
 func NewSyncMiner(args ...interface{}) (pocminer.PoCMiner, error) {
-	allowSolo, chain, syncManager, sk, newBlockCh, payToAddresses, err := parsArgs(args...)
+	allowSolo, chain, syncManager, sk, newBlockCh, payoutAddresses, err := parsArgs(args...)
 	if err != nil {
 		return nil, err
 	}
-	m := NewPoCMiner(TypeSyncMiner, allowSolo, chain, syncManager, sk, newBlockCh, payToAddresses)
+	m := NewPoCMiner(TypeSyncMiner, allowSolo, chain, syncManager, sk, newBlockCh, payoutAddresses)
 	m.getBestProof = m.syncGetBestProof
 	return m, nil
 }
 
-func parsArgs(args ...interface{}) (allowSolo bool, chain Chain, syncManager SyncManager, sk spacekeeper.SpaceKeeper, newBlockCh chan *wire.Hash, payToAddresses []chainutil.Address, err error) {
+func parsArgs(args ...interface{}) (allowSolo bool, chain Chain, syncManager SyncManager, sk spacekeeper.SpaceKeeper, newBlockCh chan *wire.Hash, payoutAddresses []chainutil.Address, err error) {
 	var failure = func() (bool, Chain, SyncManager, spacekeeper.SpaceKeeper, chan *wire.Hash, []chainutil.Address, error) {
-		expectedTypes := []reflect.Type{reflect.TypeOf(chain), reflect.TypeOf(syncManager), reflect.TypeOf(sk), reflect.TypeOf(newBlockCh), reflect.TypeOf(payToAddresses)}
+		expectedTypes := []reflect.Type{reflect.TypeOf(chain), reflect.TypeOf(syncManager), reflect.TypeOf(sk), reflect.TypeOf(newBlockCh), reflect.TypeOf(payoutAddresses)}
 		actualTypes := make([]reflect.Type, len(args))
 		for i, arg := range args {
 			actualTypes[i] = reflect.TypeOf(arg)
@@ -66,7 +66,7 @@ func parsArgs(args ...interface{}) (allowSolo bool, chain Chain, syncManager Syn
 	if !ok {
 		return failure()
 	}
-	payToAddresses, ok = args[5].([]chainutil.Address)
+	payoutAddresses, ok = args[5].([]chainutil.Address)
 	if !ok {
 		return failure()
 	}
@@ -193,7 +193,7 @@ func getQualities(proofs []*engine.WorkSpaceProof, challenge pocutil.Hash, slot,
 }
 
 func init() {
-	pocminer.AddPoCMinerBackend(pocminer.MinerBackend{
+	pocminer.AddPoCMinerBackend(pocminer.Backend{
 		Typ:         TypeSyncMiner,
 		NewPoCMiner: NewSyncMiner,
 	})

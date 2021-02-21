@@ -396,7 +396,7 @@ func (sk *SpaceKeeper) RemoveWS(sid string) error {
 }
 
 // DeleteWS should only be applied on registered/ready workSpace
-// WorkSpace in spaceKeeper index and data in PocDB would be both deleted
+// WorkSpace in spaceKeeper index and data in SktDB would be both deleted
 func (sk *SpaceKeeper) DeleteWS(sid string) error {
 	sk.stateLock.Lock()
 	defer sk.stateLock.Unlock()
@@ -547,7 +547,7 @@ func (sk *SpaceKeeper) IsCapacityAvailable(path string, capacityBytes uint64) er
 		for _, ws := range p.spaces {
 			wsiList = append(wsiList, ws.Info())
 		}
-	} else if wsiList, err = peekPocDBInfosByDir(absPath, sk.dbType); err != nil {
+	} else if wsiList, err = peekSktDBInfosByDir(absPath, sk.dbType); err != nil {
 		return err
 	}
 

@@ -16,7 +16,7 @@ import (
 const testDbRoot = "testDbs"
 
 var (
-	dbType          = ""
+	dbtype          = ""
 	triggerRollback = errors.New("trigger rollback")
 )
 
@@ -44,7 +44,7 @@ func GetDb(dbName string) (walletdb.DB, func(), error) {
 		err := fmt.Errorf("cannot remove old db: %v", err)
 		return nil, nil, err
 	}
-	db, err := walletdb.CreateDB(dbType, dbPath)
+	db, err := walletdb.CreateDB(dbtype, dbPath)
 	if err != nil {
 		fmt.Println("create db error: ", err)
 		return nil, nil, err
@@ -61,7 +61,7 @@ func GetDb(dbName string) (walletdb.DB, func(), error) {
 
 func TestAll(t *testing.T) {
 	for _, tp := range walletdb.RegisteredDbTypes() {
-		dbType = tp
+		dbtype = tp
 		t.Logf("run tests with %s...", tp)
 		testDB_NewRootBucket(t)
 		testDB_RootBucket(t)
@@ -780,9 +780,9 @@ func testCreateOrOpenDB(t *testing.T) {
 				err error
 			)
 			if test.create {
-				db, err = walletdb.CreateDB(dbType, test.dbPath)
+				db, err = walletdb.CreateDB(dbtype, test.dbPath)
 			} else {
-				db, err = walletdb.OpenDB(dbType, test.dbPath)
+				db, err = walletdb.OpenDB(dbtype, test.dbPath)
 			}
 
 			assert.Equal(t, test.err, err)

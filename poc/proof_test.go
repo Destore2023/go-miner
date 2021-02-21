@@ -14,45 +14,45 @@ import (
 
 func TestEnsureBitLength(t *testing.T) {
 	tests := []*struct {
-		bitLength int
-		valid     bool
+		bl    int
+		valid bool
 	}{
 		{
-			bitLength: 22,
-			valid:     false,
+			bl:    22,
+			valid: false,
 		},
 		{
-			bitLength: 23,
-			valid:     false,
+			bl:    23,
+			valid: false,
 		},
 		{
-			bitLength: 24,
-			valid:     true,
+			bl:    24,
+			valid: true,
 		},
 		{
-			bitLength: 25,
-			valid:     false,
+			bl:    25,
+			valid: false,
 		},
 		{
-			bitLength: 39,
-			valid:     false,
+			bl:    39,
+			valid: false,
 		},
 		{
-			bitLength: 40,
-			valid:     true,
+			bl:    40,
+			valid: true,
 		},
 		{
-			bitLength: 41,
-			valid:     false,
+			bl:    41,
+			valid: false,
 		},
 		{
-			bitLength: 42,
-			valid:     false,
+			bl:    42,
+			valid: false,
 		},
 	}
 
 	for i, test := range tests {
-		if valid := poc.EnsureBitLength(test.bitLength); valid != test.valid {
+		if valid := poc.EnsureBitLength(test.bl); valid != test.valid {
 			t.Errorf("%d, EnsureBitLength not equal, got = %v, want = %v", i, valid, test.valid)
 		}
 	}
@@ -75,24 +75,24 @@ func TestProof_Encode(t *testing.T) {
 	var BL = 24
 	var endBL = 40
 
-	for bitLength := BL; bitLength < endBL; bitLength += 2 {
-		x := rand.Intn(int(1) << uint(bitLength))
-		xPrime := rand.Intn(int(1) << uint(bitLength))
+	for bl := BL; bl < endBL; bl += 2 {
+		x := rand.Intn(int(1) << uint(bl))
+		xPrime := rand.Intn(int(1) << uint(bl))
 		proof := &poc.Proof{
-			X:         pocutil.PoCValue2Bytes(pocutil.PoCValue(x), bitLength),
-			XPrime:    pocutil.PoCValue2Bytes(pocutil.PoCValue(xPrime), bitLength),
-			BitLength: bitLength,
+			X:         pocutil.PoCValue2Bytes(pocutil.PoCValue(x), bl),
+			XPrime:    pocutil.PoCValue2Bytes(pocutil.PoCValue(xPrime), bl),
+			BitLength: bl,
 		}
 		data := proof.Encode()
 		decoded := new(poc.Proof)
 		err := decoded.Decode(data)
 		if err != nil {
 			t.Fatalf("decode fail, X = %d, XPrime = %d, BitLength = %d, Encoded = %s",
-				x, xPrime, bitLength, hex.EncodeToString(data))
+				x, xPrime, bl, hex.EncodeToString(data))
 		}
 		if !reflect.DeepEqual(decoded, proof) {
 			t.Fatalf("proof encode/decode not equal to original, X = %d, XPrime = %d, BitLength = %d, Encoded = %s",
-				x, xPrime, bitLength, hex.EncodeToString(data))
+				x, xPrime, bl, hex.EncodeToString(data))
 		}
 	}
 }
@@ -101,14 +101,14 @@ func TestProof_Decode(t *testing.T) {
 	var BL = 24
 	var endBL = 40
 
-	for bitLength := BL; bitLength < endBL; bitLength += 2 {
+	for bl := BL; bl < endBL; bl += 2 {
 		randLength := rand.Intn(20)
 		data := make([]byte, randLength)
 
 		err := new(poc.Proof).Decode(data)
 		if len(data) != 17 && err != poc.ErrProofDecodeDataSize {
 			t.Fatalf("decode fail, BitLength = %d, Encoded = %s",
-				bitLength, hex.EncodeToString(data))
+				bl, hex.EncodeToString(data))
 		}
 	}
 }

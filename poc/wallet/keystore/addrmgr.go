@@ -26,13 +26,11 @@ type AddrManager struct {
 	remark       string
 
 	// in number of second
-	expires   time.Duration
-	addresses map[string]*ManagedAddress
-	use       AddrUse
+	expires time.Duration
+	addrs   map[string]*ManagedAddress
+	use     AddrUse
 
-	// account info
-	acctInfo *accountInfo
-	// branch info
+	acctInfo   *accountInfo
 	branchInfo *branchInfo
 
 	hdScope KeyScope
@@ -49,8 +47,6 @@ type AddrManager struct {
 	//
 	// NOTE: This is not the same thing as BIP0032 master node extended
 	// key.
-	//
-	// https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
 	//
 	// The underlying master private key will be zeroed when the address
 	// manager is locked.
@@ -78,11 +74,11 @@ type AddrManager struct {
 type Keystore struct {
 	Remark string     `json:"remark"`
 	Crypto cryptoJSON `json:"crypto"`
-	HDPath hdPath     `json:"hdPath"`
+	HDpath hdPath     `json:"hdPath"`
 }
 type hdPath struct {
 	Purpose          uint32
-	Coin             uint32 // 1-testnet,  2021-mainnet
+	Coin             uint32 // 1-testnet,  297-mainnet
 	Account          uint32
 	ExternalChildNum uint32
 	InternalChildNum uint32
@@ -200,7 +196,7 @@ func (a *AddrManager) clearPrivKeys() {
 	defer a.mu.Unlock()
 	a.unlocked = false
 
-	for _, mAddr := range a.addresses {
+	for _, mAddr := range a.addrs {
 		if mAddr.privKey != nil {
 			zero.BigInt(mAddr.privKey.D)
 			mAddr.privKey = nil
@@ -287,7 +283,7 @@ func (a *AddrManager) updatePrivKeys() error {
 
 	a.acctInfo.acctKeyPriv = acctKeyExPriv
 
-	for _, mAddr := range a.addresses {
+	for _, mAddr := range a.addrs {
 		var exBKey *hdkeychain.ExtendedKey
 		if mAddr.derivationPath.Branch == ExternalBranch {
 			exBKey = exBranchKeyExPriv
@@ -388,7 +384,7 @@ func export(b db.Bucket, keyScope KeyScope) (*Keystore, error) {
 	exportedKeyStruct := &Keystore{
 		Remark: string(remarkBytes),
 		Crypto: cryptoStruct,
-		HDPath: hd,
+		HDpath: hd,
 	}
 	return exportedKeyStruct, nil
 }
@@ -524,7 +520,7 @@ func (a *AddrManager) nextAddresses(dbTransaction db.DBTransaction, internal boo
 
 func (a *AddrManager) updateManagedAddress(dbTransaction db.ReadTransaction, managedAddresses []*ManagedAddress) error {
 	for _, managedAddress := range managedAddresses {
-		a.addresses[managedAddress.address] = managedAddress
+		a.addrs[managedAddress.address] = managedAddress
 	}
 
 	am := dbTransaction.FetchBucket(a.storage)
@@ -597,8 +593,8 @@ func (a *AddrManager) changePrivPassphrase(amBucket db.Bucket, oldPrivPass []byt
 func (a *AddrManager) changeRemark(dbTransaction db.DBTransaction, newRemark string) error {
 	amBucket := dbTransaction.FetchBucket(a.storage)
 	if amBucket == nil {
-		logging.CPrint(logging.ERROR, "failed to get related bucket", logging.LogFormat{"error": ErrUnexpectedDBError})
-		return ErrUnexpectedDBError
+		logging.CPrint(logging.ERROR, "failed to get related bucket", logging.LogFormat{"error": ErrUnexpecteDBError})
+		return ErrUnexpecteDBError
 	}
 	if len(newRemark) == 0 {
 		err := deleteRemark(amBucket)
@@ -645,8 +641,8 @@ func (a *AddrManager) signPocec(hash []byte, addr string) (signed *pocec.Signatu
 		return nil, err
 	}
 
-	if a.addresses[addr].privKey != nil {
-		signed, err = a.addresses[addr].privKey.Sign(hash)
+	if a.addrs[addr].privKey != nil {
+		signed, err = a.addrs[addr].privKey.Sign(hash)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "sign failed",
 				logging.LogFormat{
@@ -692,7 +688,7 @@ func (a *AddrManager) verifySigPocec(sig *pocec.Signature, hash []byte, pub *poc
 func (a *AddrManager) CountAddresses() (external int, internal int) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	for _, ma := range a.addresses {
+	for _, ma := range a.addrs {
 		if ma.IsChangeAddr() {
 			internal++
 			continue
@@ -705,18 +701,18 @@ func (a *AddrManager) CountAddresses() (external int, internal int) {
 func (a *AddrManager) ListAddresses() []string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	address := make([]string, 0)
-	for addr := range a.addresses {
-		address = append(address, addr)
+	addrs := make([]string, 0)
+	for addr := range a.addrs {
+		addrs = append(addrs, addr)
 	}
-	return address
+	return addrs
 }
 
 func (a *AddrManager) ManagedAddresses() []*ManagedAddress {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	mas := make([]*ManagedAddress, 0)
-	for _, ma := range a.addresses {
+	for _, ma := range a.addrs {
 		mas = append(mas, ma)
 	}
 	return mas
@@ -725,7 +721,7 @@ func (a *AddrManager) ManagedAddresses() []*ManagedAddress {
 func (a *AddrManager) Address(addr string) (*ManagedAddress, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	ma, ok := a.addresses[addr]
+	ma, ok := a.addrs[addr]
 	if ok {
 		return ma, nil
 	}
