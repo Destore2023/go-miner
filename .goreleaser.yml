@@ -13,7 +13,6 @@ before:
 builds:
   - main: ./main.go
     id: "miner"
-    dir: .
     binary: minerd
     goos:
       - linux
