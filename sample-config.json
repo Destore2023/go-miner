@@ -8,7 +8,7 @@
       "listen_address": "tcp://0.0.0.0:43453",
       "skip_upnp": false
     },
-    "api": {
+    "rpc": {
       "api_port_grpc": "9685",
       "api_port_http": "9686",
       "api_whitelist": [],
