@@ -22,15 +22,16 @@ import (
 )
 
 const (
-	typePocDBV1       = pocdb_v1.TypePocDBV1
-	regPocDBV1        = `^\d+_[A-F0-9]{66}_\d{2}\.POCDB$`
-	suffixPocDBV1     = ".POCDB"
+	// TODO Compatible with multiple poc file db formats
+	typeSktDBV1       = sktdb_v1.TypeSktDBV1
+	regSktDBV1        = `^\d+_[A-F0-9]{66}_\d{2}\.MASSDB$`
+	suffixSktDBV1     = ".MASSDB"
 	TypeSpaceKeeperV1 = "spacekeeper.v1"
 )
 
 var (
-	dbType2RegStr  = map[string]string{typePocDBV1: regPocDBV1}
-	dbType2SuffixB = map[string]string{typePocDBV1: suffixPocDBV1}
+	dbType2RegStr  = map[string]string{typeSktDBV1: regSktDBV1}
+	dbType2SuffixB = map[string]string{typeSktDBV1: suffixSktDBV1}
 )
 
 // NewSpaceKeeperV1
@@ -46,7 +47,7 @@ func NewSpaceKeeperV1(args ...interface{}) (spacekeeper.SpaceKeeper, error) {
 	sk := &SpaceKeeper{
 		allowGenerateNewSpace: true,
 		dbDirs:                cfg.Miner.ProofDir,
-		dbType:                typePocDBV1,
+		dbType:                typeSktDBV1,
 		wallet:                poCWallet,
 		workSpaceIndex:        make([]*WorkSpaceMap, 0),
 		workSpacePaths:        make(map[string]*WorkSpacePath),
@@ -57,9 +58,9 @@ func NewSpaceKeeperV1(args ...interface{}) (spacekeeper.SpaceKeeper, error) {
 		fileWatcher:           func() {},
 	}
 	sk.BaseService = service.NewBaseService(sk, TypeSpaceKeeperV1)
-	sk.generateInitialIndex = func() error { return generateInitialIndex(sk, typePocDBV1, regPocDBV1, suffixPocDBV1) }
+	sk.generateInitialIndex = func() error { return generateInitialIndex(sk, typeSktDBV1, regSktDBV1, suffixSktDBV1) }
 
-	if err = upgradePocDBFile(sk); err != nil {
+	if err = upgradeSktDBFile(sk); err != nil {
 		return nil, err
 	}
 	if err = sk.generateInitialIndex(); err != nil {
@@ -135,9 +136,9 @@ func generateInitialIndex(sk *SpaceKeeper, dbType, regStrB, suffixB string) erro
 			filePath := filepath.Join(dbDir, fileName)
 			// extract args
 			args := strings.Split(fileName[:len(fileName)-len(suffixB)], "_")
-			dbIndex, pubKey, bitLength, err := parsePocDBArgsFromString(args[0], args[1], args[2])
+			dbIndex, pubKey, bitLength, err := parseSktDBArgsFromString(args[0], args[1], args[2])
 			if err != nil {
-				logging.CPrint(logging.ERROR, "cannot parse DB args from filename", logging.LogFormat{"filepath": filePath, "err": err})
+				logging.CPrint(logging.ERROR, "cannot parse SktDB args from filename", logging.LogFormat{"filepath": filePath, "err": err})
 				continue
 			}
 
@@ -149,7 +150,7 @@ func generateInitialIndex(sk *SpaceKeeper, dbType, regStrB, suffixB string) erro
 				continue
 			}
 
-			// prevent duplicate PocDB
+			// prevent duplicate SktDB
 			sid := NewSpaceID(int64(ordinal), pubKey, bitLength).String()
 			if _, ok := sk.workSpaceIndex[allState].Get(sid); ok {
 				logging.CPrint(logging.WARN, "duplicate sktdb in root dirs",
@@ -173,8 +174,9 @@ func generateInitialIndex(sk *SpaceKeeper, dbType, regStrB, suffixB string) erro
 	return nil
 }
 
-func upgradePocDBFile(sk *SpaceKeeper) error {
-	var oldRegStrB, oldRegStrA = `^[A-F0-9]{66}-\d{2}-B\.POCDB$`, `^[A-F0-9]{66}-\d{2}-A\.POCDB$`
+func upgradeSktDBFile(sk *SpaceKeeper) error {
+	// TODO Compatible with multiple poc file db formats
+	var oldRegStrB, oldRegStrA = `^[A-F0-9]{66}-\d{2}-B\.MASSDB$`, `^[A-F0-9]{66}-\d{2}-A\.MASSDB$`
 	regExpB, err := regexp.Compile(oldRegStrB)
 	if err != nil {
 		return err
@@ -187,10 +189,10 @@ func upgradePocDBFile(sk *SpaceKeeper) error {
 	var rename = func(dir, filename, tagA string) {
 		filePath := filepath.Join(dir, filename)
 		// extract args
-		args := strings.Split(filename[:len(filename)-len(".POCDB")], "-")
-		_, pubKey, bitLength, err := parsePocDBArgsFromString("0", args[0], args[1])
+		args := strings.Split(filename[:len(filename)-len(".MASSDB")], "-")
+		_, pubKey, bitLength, err := parseSktDBArgsFromString("0", args[0], args[1])
 		if err != nil {
-			logging.CPrint(logging.TRACE, "cannot parse PocDB args from filename",
+			logging.CPrint(logging.TRACE, "cannot parse SktDB args from filename",
 				logging.LogFormat{"filepath": filePath, "err": err})
 			return
 		}
@@ -262,7 +264,7 @@ func prepareDirs(dirs []string) ([]string, [][]os.FileInfo) {
 	return resultDir, resultDirFileInfo
 }
 
-func parsePocDBArgsFromString(ordinalStr, pkStr, blStr string) (ordinal int, pubKey *pocec.PublicKey, bitLength int, err error) {
+func parseSktDBArgsFromString(ordinalStr, pkStr, blStr string) (ordinal int, pubKey *pocec.PublicKey, bitLength int, err error) {
 	// parse ordinal
 	ordinal, err = strconv.Atoi(ordinalStr)
 	if err != nil {
@@ -290,7 +292,7 @@ func parsePocDBArgsFromString(ordinalStr, pkStr, blStr string) (ordinal int, pub
 	return
 }
 
-func peekPocDBInfosByDir(dbDir, dbType string) ([]engine.WorkSpaceInfo, error) {
+func peekSktDBInfosByDir(dbDir, dbType string) ([]engine.WorkSpaceInfo, error) {
 	regStrB, suffixB := dbType2RegStr[dbType], dbType2SuffixB[dbType]
 	regExpB, err := regexp.Compile(regStrB)
 	if err != nil {
@@ -310,7 +312,7 @@ func peekPocDBInfosByDir(dbDir, dbType string) ([]engine.WorkSpaceInfo, error) {
 
 		// extract args
 		args := strings.Split(fileName[:len(fileName)-len(suffixB)], "_")
-		dbIndex, pubKey, bitLength, err := parsePocDBArgsFromString(args[0], args[1], args[2])
+		dbIndex, pubKey, bitLength, err := parseSktDBArgsFromString(args[0], args[1], args[2])
 		if err != nil {
 			continue
 		}
@@ -327,7 +329,7 @@ func peekPocDBInfosByDir(dbDir, dbType string) ([]engine.WorkSpaceInfo, error) {
 }
 
 func init() {
-	spacekeeper.AddSpaceKeeperBackend(spacekeeper.KeeperBackend{
+	spacekeeper.AddSpaceKeeperBackend(spacekeeper.SKBackend{
 		Typ:            TypeSpaceKeeperV1,
 		NewSpaceKeeper: NewSpaceKeeperV1,
 	})
