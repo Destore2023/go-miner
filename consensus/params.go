@@ -31,6 +31,9 @@ const (
 	// 40s height + 1  1day 24 * 60 * 60 = 86400s  86400s % 40s = 2160
 	// release staking pool  1/200
 	StakingPoolRewardProportionalDenominator = 200
+	// staking pool merge  epoch
+	StakingPoolMergeEpoch = 100
+	StakingPoolAwardStart = 2
 	// 90 day --> height
 	StakingPoolRewardStartHeight = 194400
 	StakingPoolRewardEpoch       = 2160

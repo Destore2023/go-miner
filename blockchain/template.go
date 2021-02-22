@@ -794,16 +794,18 @@ func (chain *Blockchain) NewBlockTemplate(payToAddress chainutil.Address, templa
 
 	// Get snapshot of chain/txPool
 	bestNode := chain.blockTree.bestBlockNode()
+	nextBlockHeight := bestNode.Height + 1
 	txs := chain.txPool.TxDescs()
 	punishments := chain.proposalPool.PunishmentProposals()
 	var rewardAddresses []database.Rank
-	if bestNode.Height >= consensus.StakingPoolAwardActivation {
+	// new epoch merge staking pool
+	if nextBlockHeight >= consensus.StakingPoolAwardActivation && nextBlockHeight%consensus.StakingPoolMergeEpoch >= consensus.StakingPoolAwardStart {
 		records, err := chain.db.FetchStakingAwardedRecordByTime(uint64(bestNode.Timestamp.Unix()))
 		if err != nil {
 			return err
 		}
 		if len(records) == 0 {
-			rewardAddresses, err = chain.db.FetchUnexpiredStakingRank(bestNode.Height+1, true)
+			rewardAddresses, err = chain.db.FetchUnexpiredStakingRank(nextBlockHeight, true)
 			if err != nil {
 				return err
 			}
@@ -964,6 +966,8 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 		blockTxns = append(blockTxns, stakingPoolRewardTx.MsgTx())
 		numStakingPoolRewardTxSigOps := int64(CountSigOps(stakingPoolRewardTx))
 		txSigOpCounts = append(txSigOpCounts, numStakingPoolRewardTxSigOps)
+	} else {
+
 	}
 
 	//blockTxStore := make(TxStore)
