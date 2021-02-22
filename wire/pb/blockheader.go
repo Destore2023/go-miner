@@ -75,6 +75,32 @@ func (m *BlockHeader) BytesPoC() []byte {
 	return buf.Bytes()
 }
 
+// BytesChainID
+// +--------------------+
+// | version (8 bytes)  |
+// +--------------------+
+// | height (8 bytes)   |
+// +--------------------+
+// | timestamp (8 bytes)|
+// +--------------------+
+// | Previous           |
+// +--------------------+
+// | TransactionRoot    |
+// +--------------------+
+// | WitnessRoot        |
+// +--------------------+
+// | ProposalRoot       |
+// +--------------------+
+// | Target             |
+// +--------------------+
+// | Challenge          |
+// +--------------------+
+// | PubKey             |
+// +--------------------+
+// | Proof              |
+// +--------------------+
+// | BanList            |
+// +--------------------+
 func (m *BlockHeader) BytesChainID() []byte {
 	var buf bytes.Buffer
 	var version, height, timestamp [8]byte
