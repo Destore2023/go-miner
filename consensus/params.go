@@ -24,8 +24,10 @@ const (
 	defaultMinFrozenPeriod uint64 = 61440
 	defaultMinStakingValue uint64 = 2048 * SukhavatiPerSkt
 
-	Ip1Activation  uint64 = 694000
-	MaxValidPeriod        = defaultMinFrozenPeriod * 24 // 1474560
+	Ip1Activation uint64 = 694000
+	// after 90 days  activation ,and dev only 1
+	StakingPoolAwardActivation uint64 = 1
+	MaxValidPeriod                    = defaultMinFrozenPeriod * 24 // 1474560
 	// 40s height + 1  1day 24 * 60 * 60 = 86400s  86400s % 40s = 2160
 	// release staking pool  1/200
 	StakingPoolRewardProportionalDenominator = 200

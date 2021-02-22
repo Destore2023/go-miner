@@ -797,14 +797,16 @@ func (chain *Blockchain) NewBlockTemplate(payToAddress chainutil.Address, templa
 	txs := chain.txPool.TxDescs()
 	punishments := chain.proposalPool.PunishmentProposals()
 	var rewardAddress []database.Rank
-	records, err := chain.db.FetchStakingAwardedRecordByTime(uint64(bestNode.Timestamp.Unix()))
-	if err != nil {
-		return err
-	}
-	if len(records) == 0 {
-		rewardAddress, err = chain.db.FetchUnexpiredStakingRank(bestNode.Height+1, true)
+	if bestNode.Height >= consensus.StakingPoolAwardActivation {
+		records, err := chain.db.FetchStakingAwardedRecordByTime(uint64(bestNode.Timestamp.Unix()))
 		if err != nil {
 			return err
+		}
+		if len(records) == 0 {
+			rewardAddress, err = chain.db.FetchUnexpiredStakingRank(bestNode.Height+1, true)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	//stakingRewardInfo, err := chain.db.FetchStakingStakingRewardInfo(bestNode.Height + 1)
