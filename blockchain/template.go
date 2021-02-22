@@ -796,14 +796,14 @@ func (chain *Blockchain) NewBlockTemplate(payToAddress chainutil.Address, templa
 	bestNode := chain.blockTree.bestBlockNode()
 	txs := chain.txPool.TxDescs()
 	punishments := chain.proposalPool.PunishmentProposals()
-	var rewardAddress []database.Rank
+	var rewardAddresses []database.Rank
 	if bestNode.Height >= consensus.StakingPoolAwardActivation {
 		records, err := chain.db.FetchStakingAwardedRecordByTime(uint64(bestNode.Timestamp.Unix()))
 		if err != nil {
 			return err
 		}
 		if len(records) == 0 {
-			rewardAddress, err = chain.db.FetchUnexpiredStakingRank(bestNode.Height+1, true)
+			rewardAddresses, err = chain.db.FetchUnexpiredStakingRank(bestNode.Height+1, true)
 			if err != nil {
 				return err
 			}
@@ -814,7 +814,7 @@ func (chain *Blockchain) NewBlockTemplate(payToAddress chainutil.Address, templa
 	//	return err
 	//}
 	// run newBlockTemplate as goroutine
-	go newBlockTemplate(chain, payToAddress, templateCh, bestNode, txs, punishments, rewardAddress)
+	go newBlockTemplate(chain, payToAddress, templateCh, bestNode, txs, punishments, rewardAddresses)
 	//go newBlockTemplate(chain, payoutAddress, templateCh, bestNode, txs, punishments, stakingRewardInfo)
 	return nil
 }
@@ -827,7 +827,7 @@ func GetFeeAfterBurnGas(fees chainutil.Amount) (chainutil.Amount, error) {
 	return chainutil.NewAmount(value)
 }
 
-func newBlockTemplate(chain *Blockchain, payToAddress chainutil.Address, templateCh chan interface{},
+func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templateCh chan interface{},
 	bestNode *BlockNode, mempoolTxns []*TxDesc, proposals []*PunishmentProposal, rewardAddresses []database.Rank) {
 	nextBlockHeight := bestNode.Height + 1
 	challenge, err := calcNextChallenge(bestNode)
@@ -837,7 +837,7 @@ func newBlockTemplate(chain *Blockchain, payToAddress chainutil.Address, templat
 		}
 		return
 	}
-	coinbaseTx, err := createCoinbaseTx(nextBlockHeight, payToAddress)
+	coinbaseTx, err := createCoinbaseTx(nextBlockHeight, payoutAddress)
 	if err != nil {
 		templateCh <- &PoCTemplate{
 			Err: err,
@@ -1272,7 +1272,7 @@ func newBlockTemplate(chain *Blockchain, payToAddress chainutil.Address, templat
 		TotalFee:           totalFee,
 		SigOpCounts:        txSigOpCounts,
 		Height:             nextBlockHeight,
-		ValidPayAddress:    payToAddress != nil,
+		ValidPayAddress:    payoutAddress != nil,
 		MerkleCache:        merklesCache,
 		WitnessMerkleCache: witnessMerklesCache,
 	}
