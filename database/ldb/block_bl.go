@@ -13,12 +13,12 @@ import (
 )
 
 var (
-	pubKeyBitLengthAndHeightKeyPrefix = "PUBKBL"
-	updatePubKeyBitLengthAndHEightKey = []byte("UPPKBL")
+	pubKeyBLHeightKeyPrefix = "PUBKBL"
+	updatePubKeyBLHeightKey = []byte("UPPKBL")
 
 	// prefix + pk(compressed)
-	pubKeyBitLengthAndHeightKeyPrefixLen = len(pubKeyBitLengthAndHeightKeyPrefix)
-	pubKeyBitLengthKeyLen                = pubKeyBitLengthAndHeightKeyPrefixLen + 33
+	pubKeyBLHeightKeyPrefixLen = len(pubKeyBLHeightKeyPrefix)
+	pubKeyBitLengthKeyLen      = pubKeyBLHeightKeyPrefixLen + 33
 
 	// bl + blockHeight
 	bitLengthAndHeightLen = 1 + 8
@@ -30,8 +30,8 @@ var (
 // +-------------+---------------------------+
 func makePubKeyBitLengthKey(publicKey *pocec.PublicKey) []byte {
 	key := make([]byte, pubKeyBitLengthKeyLen)
-	copy(key, pubKeyBitLengthAndHeightKeyPrefix)
-	copy(key[pubKeyBitLengthAndHeightKeyPrefixLen:pubKeyBitLengthKeyLen], publicKey.SerializeCompressed())
+	copy(key, pubKeyBLHeightKeyPrefix)
+	copy(key[pubKeyBLHeightKeyPrefixLen:pubKeyBitLengthKeyLen], publicKey.SerializeCompressed())
 	return key
 }
 
@@ -39,7 +39,7 @@ func makePubKeyBitLengthKey(publicKey *pocec.PublicKey) []byte {
 // +--------------------+----------------------------+
 // | bitLength(1 byte)  |  blockHeight (8 bytes)     |
 // +--------------------+----------------------------+
-func serializeBitLengthAndBlockHeight(bitLength uint8, blockHeight uint64) []byte {
+func serializeBLHeight(bitLength uint8, blockHeight uint64) []byte {
 	buf := make([]byte, bitLengthAndHeightLen)
 	buf[0] = bitLength
 	binary.LittleEndian.PutUint64(buf[1:bitLengthAndHeightLen], blockHeight)
@@ -62,7 +62,7 @@ func deserializeBLHeight(buf []byte) []*database.BLHeight {
 // publicKey --> (bitLength + blockHeight)
 func (db *ChainDb) insertPubKeyBLHeightToBatch(batch storage.Batch, publicKey *pocec.PublicKey, bitLength int, blockHeight uint64) error {
 	key := makePubKeyBitLengthKey(publicKey)
-	buf := serializeBitLengthAndBlockHeight(uint8(bitLength), blockHeight)
+	buf := serializeBLHeight(uint8(bitLength), blockHeight)
 	v, err := db.localStorage.Get(key)
 	if err != nil {
 		if err == storage.ErrNotFound {
@@ -118,7 +118,7 @@ func (db *ChainDb) GetPubkeyBLHeightRecord(publicKey *pocec.PublicKey) ([]*datab
 
 func (db *ChainDb) insertPubKeyBLHeight(publicKey *pocec.PublicKey, bitLength int, blockHeight uint64) error {
 	key := makePubKeyBitLengthKey(publicKey)
-	buf := serializeBitLengthAndBlockHeight(uint8(bitLength), blockHeight)
+	buf := serializeBLHeight(uint8(bitLength), blockHeight)
 	v, err := db.localStorage.Get(key)
 	if err != nil {
 		if err == storage.ErrNotFound {
@@ -139,8 +139,8 @@ func (db *ChainDb) insertPubKeyBLHeight(publicKey *pocec.PublicKey, bitLength in
 	return nil
 }
 
-func (db *ChainDb) fetchPubKeyBitLengthAndHeightIndexProgress() (uint64, error) {
-	buf, err := db.localStorage.Get(updatePubKeyBitLengthAndHEightKey)
+func (db *ChainDb) fetchPubKeyBLHeightIndexProgress() (uint64, error) {
+	buf, err := db.localStorage.Get(updatePubKeyBLHeightKey)
 	if err != nil {
 		if err == storage.ErrNotFound {
 			return 0, nil
@@ -150,18 +150,18 @@ func (db *ChainDb) fetchPubKeyBitLengthAndHeightIndexProgress() (uint64, error) 
 	return binary.LittleEndian.Uint64(buf), nil
 }
 
-func (db *ChainDb) updatePubKeyBitLengthAndHeightIndexProgress(height uint64) error {
+func (db *ChainDb) updatePubKeyBLHeightIndexProgress(height uint64) error {
 	value := make([]byte, 8)
 	binary.LittleEndian.PutUint64(value, height)
-	return db.localStorage.Put(updatePubKeyBitLengthAndHEightKey, value)
+	return db.localStorage.Put(updatePubKeyBLHeightKey, value)
 }
 
 func (db *ChainDb) deletePubKeyBitLengthAndHeightIndexProgress() error {
-	return db.localStorage.Delete(updatePubKeyBitLengthAndHEightKey)
+	return db.localStorage.Delete(updatePubKeyBLHeightKey)
 }
 
 func (db *ChainDb) clearPubKeyBitLengthAndHeight() error {
-	iter := db.localStorage.NewIterator(storage.BytesPrefix([]byte(pubKeyBitLengthAndHeightKeyPrefix)))
+	iter := db.localStorage.NewIterator(storage.BytesPrefix([]byte(pubKeyBLHeightKeyPrefix)))
 	defer iter.Release()
 
 	for iter.Next() {

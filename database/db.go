@@ -204,7 +204,7 @@ type DB interface {
 	// For testing purpose
 	ExportDbEntries() map[string][]byte
 
-	IndexPubKeyBitLengthAndHeight(rebuild bool) error
+	IndexPubKeyBLHeight(rebuild bool) error
 
 	GetPubkeyBLHeightRecord(*pocec.PublicKey) ([]*BLHeight, error)
 }

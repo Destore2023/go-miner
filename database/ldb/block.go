@@ -741,11 +741,11 @@ func (db *ChainDb) NewestSha() (rawBlockSha *wire.Hash, rawBlockHeight uint64, e
 }
 
 // transition code that will be removed soon
-func (db *ChainDb) IndexPubKeyBitLengthAndHeight(rebuild bool) error {
+func (db *ChainDb) IndexPubKeyBLHeight(rebuild bool) error {
 	if db.dbStorageMeta.currentHeight == UnknownHeight {
 		return nil
 	}
-	height, err := db.fetchPubKeyBitLengthAndHeightIndexProgress()
+	height, err := db.fetchPubKeyBLHeightIndexProgress()
 	if err != nil {
 		return err
 	}
@@ -801,7 +801,7 @@ func (db *ChainDb) IndexPubKeyBitLengthAndHeight(rebuild bool) error {
 		if err != nil {
 			return err
 		}
-		err = db.updatePubKeyBitLengthAndHeightIndexProgress(block.Height())
+		err = db.updatePubKeyBLHeightIndexProgress(block.Height())
 		if err != nil {
 			return err
 		}
