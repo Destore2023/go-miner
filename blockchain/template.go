@@ -314,8 +314,9 @@ type BlockTemplate struct {
 
 // Miner Reward Tx Out
 // +--------------+
-// |              |
-// |              |
+// | staking pool |
+// +--------------+
+// | senate Reward|
 // +--------------+
 // | Miner Reward |
 // +--------------+
@@ -530,7 +531,7 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.Bin
 // createStakingPoolRewardTx
 // +-------------------------------+-----------------------------------+
 // | staking pool reward           |  staking pool accumulated out     |
-// +-------------------------------|-----------------------------------+
+// |                               |-----------------------------------+
 // |                               |  reward                           |
 // +-------------------------------+-----------------------------------+
 func createStakingPoolRewardTx(nextBlockHeight uint64, unspentPoolTxs []*database.TxReply) (*chainutil.Tx, error) {

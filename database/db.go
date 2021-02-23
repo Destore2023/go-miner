@@ -83,7 +83,7 @@ type DB interface {
 	// block chain.
 	FetchBlockShaByHeight(height uint64) (blockSha *wire.Hash, err error)
 	// FetchBlockLocByHeight
-	FetchBlockLocByHeight(height uint64) (*BlockLocation, error)
+	FetchBlockLocByHeight(height uint64) (*BlockLoc, error)
 	// ExistsTxSha returns whether or not the given tx hash is present in
 	// the database
 	ExistsTxSha(txSha *wire.Hash) (exists bool, err error)
@@ -91,7 +91,7 @@ type DB interface {
 	FetchTxByLoc(blockHeight uint64, txOffset int, txLen int) (*wire.MsgTx, error)
 	// FetchTxByFileLoc returns transactions saved in file, including
 	// those revoked with chain reorganization, for file is in APPEND mode.
-	FetchTxByFileLoc(blockLoc *BlockLocation, txLoc *wire.TxLoc) (*wire.MsgTx, error)
+	FetchTxByFileLoc(blockLoc *BlockLoc, txLoc *wire.TxLoc) (*wire.MsgTx, error)
 	// FetchTxBySha returns some data for the given transaction hash. The
 	// implementation may cache the underlying data if desired.
 	FetchTxBySha(txSha *wire.Hash) ([]*TxReply, error)
@@ -211,6 +211,7 @@ type DB interface {
 
 // TxReply is used to return individual transaction information when
 // data about multiple transactions is requested in a single call.
+// see also TxData
 type TxReply struct {
 	TxSha    *wire.Hash
 	Tx       *wire.MsgTx
@@ -362,8 +363,8 @@ type BitLengthAndHeight struct {
 	BlockHeight uint64 // Block Height
 }
 
-// BlockLocation
-type BlockLocation struct {
+// BlockLoc
+type BlockLoc struct {
 	Height uint64    // Block Height
 	Hash   wire.Hash // Block Hash
 	File   uint32    // Block File Number

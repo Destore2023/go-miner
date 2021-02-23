@@ -607,7 +607,7 @@ func (db *ChainDb) getBlockLocationByHeight(height uint64) (sha *wire.Hash, file
 }
 
 // getBlockByHeight
-// 1. get BlockLocation info from leveldb
+// 1. get BlockLoc info from leveldb
 // 2. get Block Info form file By Block Location info
 func (db *ChainDb) getBlockByHeight(blockHeight uint64) (rawBlockSha *wire.Hash, rawBuf []byte, err error) {
 
@@ -675,12 +675,12 @@ func (db *ChainDb) FetchBlockShaByHeight(height uint64) (rawBlockSha *wire.Hash,
 }
 
 // FetchBlockLocByHeight
-func (db *ChainDb) FetchBlockLocByHeight(height uint64) (*database.BlockLocation, error) {
+func (db *ChainDb) FetchBlockLocByHeight(height uint64) (*database.BlockLoc, error) {
 	blockHash, fileNo, offset, len, err := db.getBlockLocationByHeight(height)
 	if err != nil {
 		return nil, err
 	}
-	return &database.BlockLocation{
+	return &database.BlockLoc{
 		Height: height,
 		Hash:   *blockHash,
 		File:   fileNo,

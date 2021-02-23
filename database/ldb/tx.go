@@ -301,8 +301,8 @@ func (db *ChainDb) FetchTxByShaList(txShaList []*wire.Hash) []*database.TxReply 
 // and return them in a TxReply array.
 func (db *ChainDb) FetchUnSpentTxByShaList(txShaList []*wire.Hash) []*database.TxReply {
 	replies := make([]*database.TxReply, len(txShaList))
-	for i, txsha := range txShaList {
-		tx, blockSha, height, txSpent, err := db.fetchTxDataBySha(txsha)
+	for i, txSha := range txShaList {
+		tx, blockSha, height, txSpent, err := db.fetchTxDataBySha(txSha)
 		var btxSpent []bool
 		if err == nil {
 			btxSpent = make([]bool, len(tx.TxOut))
@@ -314,7 +314,7 @@ func (db *ChainDb) FetchUnSpentTxByShaList(txShaList []*wire.Hash) []*database.T
 		} else {
 			btxSpent = make([]bool, 0)
 		}
-		txlre := database.TxReply{TxSha: txsha, Tx: tx, BlockSha: blockSha, Height: height, TxSpent: btxSpent, Err: err}
+		txlre := database.TxReply{TxSha: txSha, Tx: tx, BlockSha: blockSha, Height: height, TxSpent: btxSpent, Err: err}
 		replies[i] = &txlre
 	}
 	return replies
@@ -420,7 +420,7 @@ func (db *ChainDb) FetchTxByLoc(blockHeight uint64, txOff int, txLen int) (*wire
 	return msgTx, nil
 }
 
-func (db *ChainDb) FetchTxByFileLoc(blockLocation *database.BlockLocation, txLoc *wire.TxLoc) (*wire.MsgTx, error) {
+func (db *ChainDb) FetchTxByFileLoc(blockLocation *database.BlockLoc, txLoc *wire.TxLoc) (*wire.MsgTx, error) {
 	buf, err := db.blockFileKeeper.ReadRawTx(blockLocation.File, int64(blockLocation.Offset), int64(txLoc.TxStart), txLoc.TxLen)
 	if err != nil {
 		return nil, err
