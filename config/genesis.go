@@ -28,8 +28,20 @@ var genesisCoinbaseTx = wire.MsgTx{
 	},
 	TxOut: []*wire.TxOut{
 		{
-			Value:    0x2FAF08000, //  128 0000 0000
-			PkScript: mustDecodeString("0020ba60494593fe65bea35fe9e118c129e5478ce660cec07c8ea8a7e2ec841fccd2"),
+			Value:    0x20EF7AC3840A00, //Investor sk1qqrz45pn0x7nmqsl386yv8z77gpstkchzdzmfrppprazfk3xudrq3samq95a
+			PkScript: mustDecodeString("002018ab40cde6f4f6087e27d118717bc80c176c5c4d16d2308423e893689b8d1823"),
+		},
+		{
+			Value:    0xD9D02F39EBB00, //Ecology sk1qqkla5a9a05pcfavtwnz8m2r296yzvlak26n7ksd7ev3q24j22qj9sr78w7w
+			PkScript: mustDecodeString("0020b7fb4e97afa0709eb16e988fb50d45d104cff6cad4fd6837d96440aac94a048b"),
+		},
+		{
+			Value:    0x15F4FC8454A700, //Team sk1qq2sv82wygyega90g3amckmtanxgcyaesn9r40zcqekq0yy7nyl6yqmkju74
+			PkScript: mustDecodeString("002054187538882651d2bd11eef16dafb332304ee61328eaf16019b01e427a64fe88"),
+		},
+		{
+			Value:    0xF5EB0C13E4B00, //Foundation sk1qq049qd3e48d2g0l520ldk4akut9vl7f4sr6a8pmfs57gth2swevkqghmmny
+			PkScript: mustDecodeString("00207d4a06c7353b5487fe8a7fdb6af6dc5959ff26b01eba70ed30a790bbaa0ecb2c"),
 		},
 	},
 	LockTime: 0,
@@ -37,13 +49,13 @@ var genesisCoinbaseTx = wire.MsgTx{
 }
 
 var genesisHeader = wire.BlockHeader{
-	ChainID:         mustDecodeHash("5433524b370b149007ba1d06225b5d8e53137a041869834cff5860b02bebc5c7"),
+	ChainID:         mustDecodeHash("8ecd463882c2ffcd9a82a6b85e52dcb3cb7e330819196334af7a9702ca2661ca"),
 	Version:         1,
 	Height:          0,
 	Timestamp:       time.Unix(0x5FEE6600, 0), // 2021-01-01 00:00:00 +0000 UTC, 1608250088 0x5FEE6600
 	Previous:        mustDecodeHash("0000000000000000000000000000000000000000000000000000000000000000"),
-	TransactionRoot: mustDecodeHash("639a508d6f42b8b0b284977210380dc83eac98e70822db58d1e3570b073a5069"),
-	WitnessRoot:     mustDecodeHash("639a508d6f42b8b0b284977210380dc83eac98e70822db58d1e3570b073a5069"),
+	TransactionRoot: mustDecodeHash("a4dc7ba67c6e75e87c0856071aaed9cb4e821f663b6bd84f37f6ac87dacdb676"),
+	WitnessRoot:     mustDecodeHash("a4dc7ba67c6e75e87c0856071aaed9cb4e821f663b6bd84f37f6ac87dacdb676"),
 	ProposalRoot:    mustDecodeHash("9663440551fdcd6ada50b1fa1b0003d19bc7944955820b54ab569eb9a7ab7999"),
 	Target:          hexToBigInt("b5e620f48000"), // 200000000000000
 	Challenge:       mustDecodeHash("5eb91b2d9fd6d5920ccc9610f0695509b60ccf764fab693ecab112f2edf1e3f0"),
@@ -68,9 +80,9 @@ var genesisBlock = wire.MsgBlock{
 	Transactions: []*wire.MsgTx{&genesisCoinbaseTx},
 }
 
-var genesisHash = mustDecodeHash("7878680ce618afe4db2f6b684d2476e14cc2f6edb515190c198e1964c3c168ac")
+var genesisHash = mustDecodeHash("b88c3b7bd49910541ea2e507dce3091ccc3b950c614c792a9cc9d7273d1600da")
 
-var genesisChainID = mustDecodeHash("5433524b370b149007ba1d06225b5d8e53137a041869834cff5860b02bebc5c7")
+var genesisChainID = mustDecodeHash("8ecd463882c2ffcd9a82a6b85e52dcb3cb7e330819196334af7a9702ca2661ca")
 
 func hexToBigInt(str string) *big.Int {
 	return new(big.Int).SetBytes(mustDecodeString(str))

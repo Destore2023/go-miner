@@ -14,8 +14,24 @@ const (
 	defaultCoinbaseMaturity    uint64 = 1000
 	defaultTransactionMaturity uint64 = 1
 
-	defaultMaxSkt        uint64 = 618033989 //206438400
-	defaultMinRelayTxFee uint64 = 10000
+	// +-----------+--------------------+
+	// | mining    | 381945005          |
+	// +-----------+--------------------+
+	// | investor  | 92705098           |
+	// +-----------+--------------------+
+	// | ecology   | 38318107           |
+	// +-----------+--------------------+
+	// | team      | 61803399           |
+	// +-----------+--------------------+
+	// | foundation| 43262379           |
+	// +-----------+--------------------+
+	defaultMiningMaxSkt     uint64 = 381945005 //38194500500000000  87B1B222AD0D00
+	defaultInvestorMaxSkt   uint64 = 92705098  //9270509800000000   20EF7AC3840A00
+	defaultEcologyMaxSkt    uint64 = 38318107  //3831810700000000   D9D02F39EBB00
+	defaultTeamMaxSkt       uint64 = 61803399  //6180339900000000   15F4FC8454A700
+	defaultFoundationMaxSkt uint64 = 43262379  //4326237900000000   F5EB0C13E4B00
+	defaultMaxSkt                  = defaultMiningMaxSkt + defaultInvestorMaxSkt + defaultEcologyMaxSkt + defaultTeamMaxSkt + defaultFoundationMaxSkt
+	defaultMinRelayTxFee    uint64 = 10000
 
 	defaultSubsidyHalvingInterval uint64 = 13440
 	defaultBaseSubsidy            uint64 = 128 * SukhavatiPerSkt
