@@ -67,7 +67,7 @@ func NewSktDBV1(rootPath string, ordinal int64, pubKey *pocec.PublicKey, bitLeng
 	return mdb.(*SktDBV1), nil
 }
 
-func (mdb *SktDBV1) executePlot(result chan error) {
+func (sdb *SktDBV1) executePlot(result chan error) {
 	var err error
 	var cache = NewMemCache(0)
 	defer func() {
@@ -75,41 +75,41 @@ func (mdb *SktDBV1) executePlot(result chan error) {
 		if result != nil {
 			result <- err
 		}
-		atomic.StoreInt32(&mdb.plotting, 0)
-		mdb.wg.Done()
+		atomic.StoreInt32(&sdb.plotting, 0)
+		sdb.wg.Done()
 	}()
 
 	logging.CPrint(logging.INFO, "start plotting",
-		logging.LogFormat{"bit_length": mdb.bl, "pub_key": hex.EncodeToString(mdb.pubKey.SerializeCompressed())})
-	if err = mdb.prePlotWork(cache); err != nil {
+		logging.LogFormat{"bit_length": sdb.bl, "pub_key": hex.EncodeToString(sdb.pubKey.SerializeCompressed())})
+	if err = sdb.prePlotWork(cache); err != nil {
 		if err == ErrStopPlotting {
 			err = nil
 			return
 		}
 		logging.CPrint(logging.ERROR, "pre plot fail",
-			logging.LogFormat{"bit_length": mdb.bl, "pub_key": hex.EncodeToString(mdb.pubKey.SerializeCompressed()), "err": err})
+			logging.LogFormat{"bit_length": sdb.bl, "pub_key": hex.EncodeToString(sdb.pubKey.SerializeCompressed()), "err": err})
 		return
 	}
-	if err = mdb.plotWork(cache); err != nil {
+	if err = sdb.plotWork(cache); err != nil {
 		if err == ErrStopPlotting {
 			err = nil
 			return
 		}
 		logging.CPrint(logging.ERROR, "plot fail",
-			logging.LogFormat{"bit_length": mdb.bl, "pub_key": hex.EncodeToString(mdb.pubKey.SerializeCompressed()), "err": err})
+			logging.LogFormat{"bit_length": sdb.bl, "pub_key": hex.EncodeToString(sdb.pubKey.SerializeCompressed()), "err": err})
 		return
 	}
 	logging.CPrint(logging.INFO, "remove hashMapA",
-		logging.LogFormat{"bit_length": mdb.bl, "pub_key": hex.EncodeToString(mdb.pubKey.SerializeCompressed())})
-	mdb.HashMapA.Close()
-	os.Remove(mdb.filePathA)
-	mdb.HashMapA = nil
+		logging.LogFormat{"bit_length": sdb.bl, "pub_key": hex.EncodeToString(sdb.pubKey.SerializeCompressed())})
+	sdb.HashMapA.Close()
+	os.Remove(sdb.filePathA)
+	sdb.HashMapA = nil
 	logging.CPrint(logging.INFO, "plot finished",
-		logging.LogFormat{"bit_length": mdb.bl, "pub_key": hex.EncodeToString(mdb.pubKey.SerializeCompressed())})
+		logging.LogFormat{"bit_length": sdb.bl, "pub_key": hex.EncodeToString(sdb.pubKey.SerializeCompressed())})
 }
 
-func (mdb *SktDBV1) prePlotWork(cache *MemCache) error {
-	var hmA = mdb.HashMapA
+func (sdb *SktDBV1) prePlotWork(cache *MemCache) error {
+	var hmA = sdb.HashMapA
 	var recordSize = hmA.recordSize
 	var bl = hmA.bl
 	var pkHash = hmA.pkHash
@@ -119,7 +119,7 @@ func (mdb *SktDBV1) prePlotWork(cache *MemCache) error {
 	var logCheckpointInterval = hmA.volume / 50
 	var checkpoint = hmA.ReadCheckpoint()
 	logging.CPrint(logging.INFO, fmt.Sprintf("load checkpoint for HashMapA: %d/%d (%d/%d)", checkpoint, hmA.volume, checkpoint/logCheckpointInterval, 50),
-		logging.LogFormat{"bit_length": mdb.bl, "pub_key": hex.EncodeToString(mdb.pubKey.SerializeCompressed())})
+		logging.LogFormat{"bit_length": sdb.bl, "pub_key": hex.EncodeToString(sdb.pubKey.SerializeCompressed())})
 
 	var ensureCacheMemory = func(startPoint pocutil.PoCValue) error {
 		return hmA.makeAvailableMemory(cache, uint64(hmA.volume-startPoint)*uint64(recordSize))
@@ -152,9 +152,9 @@ func (mdb *SktDBV1) prePlotWork(cache *MemCache) error {
 			// log and respond to quit signal
 			if x%waitQuitPlotInterval == 0 {
 				select {
-				case <-mdb.stopPlotCh:
+				case <-sdb.stopPlotCh:
 					logging.CPrint(logging.INFO, "pre plot aborted",
-						logging.LogFormat{"bit_length": mdb.bl, "pub_key": hex.EncodeToString(mdb.pubKey.SerializeCompressed())})
+						logging.LogFormat{"bit_length": sdb.bl, "pub_key": hex.EncodeToString(sdb.pubKey.SerializeCompressed())})
 					return ErrStopPlotting
 				default:
 				}
@@ -164,7 +164,7 @@ func (mdb *SktDBV1) prePlotWork(cache *MemCache) error {
 				logging.CPrint(logging.DEBUG, fmt.Sprintf("current round %d/%d (%d), total progress %f", x/logCheckpointInterval, 50, x, totalProgress))
 			}
 		}
-		if n, err := cache.WriteToWriter(mdb.stopPlotCh, hmA.data, 0, int64(hmA.offset)+int64(startPoint)*int64(recordSize), int64(cache.Len())); err != nil {
+		if n, err := cache.WriteToWriter(sdb.stopPlotCh, hmA.data, 0, int64(hmA.offset)+int64(startPoint)*int64(recordSize), int64(cache.Len())); err != nil {
 			logging.CPrint(logging.ERROR, "fail on writing cache to file", logging.LogFormat{"err": err, "n": n})
 			return err
 		}
@@ -182,8 +182,8 @@ func (mdb *SktDBV1) prePlotWork(cache *MemCache) error {
 	return nil
 }
 
-func (mdb *SktDBV1) plotWork(cache *MemCache) error {
-	var hmA, hmB = mdb.HashMapA, mdb.HashMapB
+func (sdb *SktDBV1) plotWork(cache *MemCache) error {
+	var hmA, hmB = sdb.HashMapA, sdb.HashMapB
 	var half = hmB.volume / 2
 	var bl = hmA.bl
 	var pkHash = hmA.pkHash
@@ -193,7 +193,7 @@ func (mdb *SktDBV1) plotWork(cache *MemCache) error {
 	var logCheckpointInterval = hmB.volume / (50 * 2)
 	var checkpoint = hmB.ReadCheckpoint()
 	logging.CPrint(logging.INFO, fmt.Sprintf("load checkpoint for HashMapB: %d/%d (%d/%d)", checkpoint*2, hmB.volume, checkpoint/logCheckpointInterval, 50),
-		logging.LogFormat{"bit_length": mdb.bl, "pub_key": hex.EncodeToString(mdb.pubKey.SerializeCompressed())})
+		logging.LogFormat{"bit_length": sdb.bl, "pub_key": hex.EncodeToString(sdb.pubKey.SerializeCompressed())})
 
 	var bytesEqualZero = func(bs []byte) bool {
 		for i := 0; i < recordSize; i++ {
@@ -242,9 +242,9 @@ func (mdb *SktDBV1) plotWork(cache *MemCache) error {
 
 			if y%waitQuitPlotInterval == 0 {
 				select {
-				case <-mdb.stopPlotCh:
+				case <-sdb.stopPlotCh:
 					logging.CPrint(logging.INFO, "plot aborted",
-						logging.LogFormat{"bit_length": mdb.bl, "pub_key": hex.EncodeToString(mdb.pubKey.SerializeCompressed())})
+						logging.LogFormat{"bit_length": sdb.bl, "pub_key": hex.EncodeToString(sdb.pubKey.SerializeCompressed())})
 					return ErrStopPlotting
 				default:
 				}
@@ -254,7 +254,7 @@ func (mdb *SktDBV1) plotWork(cache *MemCache) error {
 				logging.CPrint(logging.DEBUG, fmt.Sprintf("current round %d/%d (%d), total progress %f", y/logCheckpointInterval, 50, y, totalProgress))
 			}
 		}
-		if n, err := cache.WriteToWriter(mdb.stopPlotCh, hmB.data, 0, int64(hmB.offset)+int64(startPoint)*int64(recordSize)*4, int64(cache.Len())); err != nil {
+		if n, err := cache.WriteToWriter(sdb.stopPlotCh, hmB.data, 0, int64(hmB.offset)+int64(startPoint)*int64(recordSize)*4, int64(cache.Len())); err != nil {
 			logging.CPrint(logging.ERROR, "fail on writing cache to file", logging.LogFormat{"err": err, "n": n})
 			return err
 		}

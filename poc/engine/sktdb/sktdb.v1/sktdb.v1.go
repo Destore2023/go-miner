@@ -21,6 +21,7 @@ type MapType uint8
 const (
 	// TODO Compatible with multiple db formats
 	TypeSktDBV1             = "massdb.v1"
+	SuffixSktDBV1           = ".MASSDB"
 	MapTypeHashMapA MapType = iota
 	MapTypeHashMapB
 )
@@ -38,90 +39,90 @@ type SktDBV1 struct {
 	wg         sync.WaitGroup
 }
 
-func (mdb *SktDBV1) Type() string {
+func (sdb *SktDBV1) Type() string {
 	return TypeSktDBV1
 }
 
-func (mdb *SktDBV1) Close() error {
-	<-mdb.StopPlot()
+func (sdb *SktDBV1) Close() error {
+	<-sdb.StopPlot()
 
-	if mdb.HashMapA != nil {
-		mdb.HashMapA.Close()
+	if sdb.HashMapA != nil {
+		sdb.HashMapA.Close()
 	}
-	if mdb.HashMapB != nil {
-		mdb.HashMapB.Close()
+	if sdb.HashMapB != nil {
+		sdb.HashMapB.Close()
 	}
 	return nil
 }
 
 // Plot is concurrent safe, it starts the plotting work,
 // running actual plot func as a thread
-func (mdb *SktDBV1) Plot() chan error {
+func (sdb *SktDBV1) Plot() chan error {
 	result := make(chan error, 1)
 
-	if !atomic.CompareAndSwapInt32(&mdb.plotting, 0, 1) {
+	if !atomic.CompareAndSwapInt32(&sdb.plotting, 0, 1) {
 		result <- ErrAlreadyPlotting
 		return result
 	}
 
-	if mdb.HashMapA == nil {
+	if sdb.HashMapA == nil {
 		result <- nil
 		return result
 	}
 
-	mdb.stopPlotCh = make(chan struct{})
-	mdb.wg.Add(1)
-	go mdb.executePlot(result)
+	sdb.stopPlotCh = make(chan struct{})
+	sdb.wg.Add(1)
+	go sdb.executePlot(result)
 
 	return result
 }
 
 // StopPlot stops plot process
-func (mdb *SktDBV1) StopPlot() chan error {
+func (sdb *SktDBV1) StopPlot() chan error {
 	result := make(chan error, 1)
 
-	if atomic.LoadInt32(&mdb.plotting) == 0 {
+	if atomic.LoadInt32(&sdb.plotting) == 0 {
 		result <- nil
 		return result
 	}
 
 	go func() {
-		close(mdb.stopPlotCh)
-		mdb.wg.Wait()
+		close(sdb.stopPlotCh)
+		sdb.wg.Wait()
 		result <- nil
 	}()
 	return result
 }
 
-func (mdb *SktDBV1) Ready() bool {
-	plotted, _ := mdb.HashMapB.Progress()
+func (sdb *SktDBV1) Ready() bool {
+	plotted, _ := sdb.HashMapB.Progress()
 	return plotted
 }
 
-func (mdb *SktDBV1) BitLength() int {
-	return mdb.bl
+func (sdb *SktDBV1) BitLength() int {
+	return sdb.bl
 }
 
-func (mdb *SktDBV1) PubKeyHash() pocutil.Hash {
-	return mdb.pubKeyHash
+func (sdb *SktDBV1) PubKeyHash() pocutil.Hash {
+	return sdb.pubKeyHash
 }
 
-func (mdb *SktDBV1) PubKey() *pocec.PublicKey {
-	return mdb.pubKey
+func (sdb *SktDBV1) PubKey() *pocec.PublicKey {
+	return sdb.pubKey
 }
 
-func (mdb *SktDBV1) Get(z pocutil.PoCValue) (x, xp pocutil.PoCValue, err error) {
-	var bl = mdb.bl
-	xb, xpb, err := mdb.HashMapB.Get(z)
+func (sdb *SktDBV1) Get(z pocutil.PoCValue) (x, xp pocutil.PoCValue, err error) {
+	var bl = sdb.bl
+	xb, xpb, err := sdb.HashMapB.Get(z)
 	if err != nil {
 		return 0, 0, err
 	}
 	return pocutil.Bytes2PoCValue(xb, bl), pocutil.Bytes2PoCValue(xpb, bl), nil
 }
 
-func (mdb *SktDBV1) GetProof(challenge pocutil.Hash) (*poc.Proof, error) {
-	var bl = mdb.bl
-	x, xp, err := mdb.HashMapB.Get(pocutil.CutHash(challenge, bl))
+func (sdb *SktDBV1) GetProof(challenge pocutil.Hash) (*poc.Proof, error) {
+	var bl = sdb.bl
+	x, xp, err := sdb.HashMapB.Get(pocutil.CutHash(challenge, bl))
 	if err != nil {
 		return nil, err
 	}
@@ -130,19 +131,19 @@ func (mdb *SktDBV1) GetProof(challenge pocutil.Hash) (*poc.Proof, error) {
 		XPrime:    xp,
 		BitLength: bl,
 	}
-	err = poc.VerifyProof(proof, mdb.pubKeyHash, challenge)
+	err = poc.VerifyProof(proof, sdb.pubKeyHash, challenge)
 	if err != nil {
 		return nil, err
 	}
 	return proof, nil
 }
 
-func (mdb *SktDBV1) Progress() (prePlotted, plotted bool, progress float64) {
-	if mdb.HashMapA != nil {
-		prePlotted, progA := mdb.HashMapA.Progress()
-		plotted, progB := mdb.HashMapB.Progress()
+func (sdb *SktDBV1) Progress() (prePlotted, plotted bool, progress float64) {
+	if sdb.HashMapA != nil {
+		prePlotted, progA := sdb.HashMapA.Progress()
+		plotted, progB := sdb.HashMapB.Progress()
 
-		totalRecord := mdb.HashMapA.volume + mdb.HashMapB.volume
+		totalRecord := sdb.HashMapA.volume + sdb.HashMapB.volume
 		currentRecord := progA + progB*2
 		progress = float64(currentRecord*100) / float64(totalRecord)
 
@@ -152,29 +153,29 @@ func (mdb *SktDBV1) Progress() (prePlotted, plotted bool, progress float64) {
 	}
 }
 
-func (mdb *SktDBV1) Delete() chan error {
+func (sdb *SktDBV1) Delete() chan error {
 	result := make(chan error, 1)
 
 	var sendResult = func(err error) {
 		result <- err
 	}
 
-	if atomic.LoadInt32(&mdb.plotting) != 0 {
+	if atomic.LoadInt32(&sdb.plotting) != 0 {
 		sendResult(ErrAlreadyPlotting)
 		return result
 	}
 
-	if mdb.HashMapA != nil {
-		mdb.HashMapA.Close()
+	if sdb.HashMapA != nil {
+		sdb.HashMapA.Close()
 	}
-	mdb.HashMapB.Close()
+	sdb.HashMapB.Close()
 
 	go func() {
 		var errA, errB error
-		if mdb.HashMapA != nil {
-			errA = os.Remove(mdb.filePathA)
+		if sdb.HashMapA != nil {
+			errA = os.Remove(sdb.filePathA)
 		}
-		errB = os.Remove(mdb.filePathB)
+		errB = os.Remove(sdb.filePathB)
 
 		if errA == nil && errB == nil {
 			sendResult(nil)
@@ -275,8 +276,8 @@ func CreateDB(args ...interface{}) (sktdb.SktDB, error) {
 
 func getPath(rootPath string, ordinal int, pubKey *pocec.PublicKey, bitLength int) (pathA, pathB string) {
 	pubKeyString := hex.EncodeToString(pubKey.SerializeCompressed())
-	pathA = strings.Join([]string{strconv.Itoa(ordinal), pubKeyString, strconv.Itoa(bitLength), "a"}, "_") + ".sktdb"
-	pathB = strings.Join([]string{strconv.Itoa(ordinal), pubKeyString, strconv.Itoa(bitLength)}, "_") + ".sktdb"
+	pathA = strings.Join([]string{strconv.Itoa(ordinal), pubKeyString, strconv.Itoa(bitLength), "a"}, "_") + SuffixSktDBV1
+	pathB = strings.Join([]string{strconv.Itoa(ordinal), pubKeyString, strconv.Itoa(bitLength)}, "_") + SuffixSktDBV1
 	return filepath.Join(rootPath, pathA), filepath.Join(rootPath, pathB)
 }
 
