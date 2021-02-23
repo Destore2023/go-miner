@@ -1811,17 +1811,17 @@ func (chain *Blockchain) checkProposalContext(banList []*pocec.PublicKey, prevNo
 }
 
 func (chain *Blockchain) checkBitLength(prevNode *BlockNode, publicKey *pocec.PublicKey, bitLength int) error {
-	bitLengthAndHeightHs, err := chain.db.GetPubkeyBitLengthAndHeightRecord(publicKey)
+	bLHeightRecords, err := chain.db.GetPubkeyBLHeightRecord(publicKey)
 	if err != nil {
 		return err
 	}
 	if !prevNode.InMainChain {
 		_, attachNodes := chain.getReorganizeNodes(prevNode)
-		if len(bitLengthAndHeightHs) > 0 {
+		if len(bLHeightRecords) > 0 {
 			forkHeight := attachNodes.Front().Value.(*BlockNode).Height - 1
-			for i := len(bitLengthAndHeightHs) - 1; i >= 0; i-- {
-				if bitLengthAndHeightHs[i].BlockHeight > forkHeight {
-					bitLengthAndHeightHs = bitLengthAndHeightHs[:i]
+			for i := len(bLHeightRecords) - 1; i >= 0; i-- {
+				if bLHeightRecords[i].BlockHeight > forkHeight {
+					bLHeightRecords = bLHeightRecords[:i]
 				} else {
 					break
 				}
@@ -1830,8 +1830,9 @@ func (chain *Blockchain) checkBitLength(prevNode *BlockNode, publicKey *pocec.Pu
 		for e := attachNodes.Front(); e != nil; e = e.Next() {
 			n := e.Value.(*BlockNode)
 			if n.PubKey.IsEqual(publicKey) {
-				if len(bitLengthAndHeightHs) == 0 || n.Proof.BitLength > bitLengthAndHeightHs[len(bitLengthAndHeightHs)-1].BitLength {
-					bitLengthAndHeightHs = append(bitLengthAndHeightHs, &database.BitLengthAndHeight{
+				recordLen := len(bLHeightRecords)
+				if recordLen == 0 || n.Proof.BitLength > bLHeightRecords[recordLen-1].BitLength {
+					bLHeightRecords = append(bLHeightRecords, &database.BLHeight{
 						BitLength:   n.Proof.BitLength,
 						BlockHeight: n.Height,
 					})
@@ -1839,10 +1840,10 @@ func (chain *Blockchain) checkBitLength(prevNode *BlockNode, publicKey *pocec.Pu
 			}
 		}
 	}
-	if len(bitLengthAndHeightHs) == 0 {
+	if len(bLHeightRecords) == 0 {
 		return nil
 	}
-	if bitLength < bitLengthAndHeightHs[len(bitLengthAndHeightHs)-1].BitLength {
+	if bitLength < bLHeightRecords[len(bLHeightRecords)-1].BitLength {
 		return ErrInvalidBitLength
 	}
 	return nil

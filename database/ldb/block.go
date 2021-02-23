@@ -135,7 +135,7 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 	}
 
 	// put pk, bitLength and height into batch
-	if err = db.insertPubKeyBitLengthAndHeightToBatch(batch, block.MsgBlock().Header.PubKey, block.MsgBlock().Header.Proof.BitLength, block.Height()); err != nil {
+	if err = db.insertPubKeyBLHeightToBatch(batch, block.MsgBlock().Header.PubKey, block.MsgBlock().Header.Proof.BitLength, block.Height()); err != nil {
 		return err
 	}
 
@@ -797,7 +797,7 @@ func (db *ChainDb) IndexPubKeyBitLengthAndHeight(rebuild bool) error {
 			return err
 		}
 
-		err = db.insertPubKeyBitLengthAndHeight(block.MsgBlock().Header.PubKey, block.MsgBlock().Header.Proof.BitLength, block.Height())
+		err = db.insertPubKeyBLHeight(block.MsgBlock().Header.PubKey, block.MsgBlock().Header.Proof.BitLength, block.Height())
 		if err != nil {
 			return err
 		}

@@ -46,12 +46,12 @@ func serializeBitLengthAndBlockHeight(bitLength uint8, blockHeight uint64) []byt
 	return buf
 }
 
-// deserializeBitLengthAndHeight
-func deserializeBitLengthAndHeight(buf []byte) []*database.BitLengthAndHeight {
+// deserializeBLHeight
+func deserializeBLHeight(buf []byte) []*database.BLHeight {
 	count := len(buf) / bitLengthAndHeightLen
-	bitLengthAndHeights := make([]*database.BitLengthAndHeight, count)
+	bitLengthAndHeights := make([]*database.BLHeight, count)
 	for i := 0; i < count; i++ {
-		bitLengthAndHeights[i] = &database.BitLengthAndHeight{
+		bitLengthAndHeights[i] = &database.BLHeight{
 			BitLength:   int(buf[i*bitLengthAndHeightLen]),
 			BlockHeight: binary.LittleEndian.Uint64(buf[i*bitLengthAndHeightLen+1 : (i+1)*bitLengthAndHeightLen]),
 		}
@@ -60,7 +60,7 @@ func deserializeBitLengthAndHeight(buf []byte) []*database.BitLengthAndHeight {
 }
 
 // publicKey --> (bitLength + blockHeight)
-func (db *ChainDb) insertPubKeyBitLengthAndHeightToBatch(batch storage.Batch, publicKey *pocec.PublicKey, bitLength int, blockHeight uint64) error {
+func (db *ChainDb) insertPubKeyBLHeightToBatch(batch storage.Batch, publicKey *pocec.PublicKey, bitLength int, blockHeight uint64) error {
 	key := makePubKeyBitLengthKey(publicKey)
 	buf := serializeBitLengthAndBlockHeight(uint8(bitLength), blockHeight)
 	v, err := db.localStorage.Get(key)
@@ -70,7 +70,7 @@ func (db *ChainDb) insertPubKeyBitLengthAndHeightToBatch(batch storage.Batch, pu
 		}
 		return err
 	}
-	bitLengthAndHeights := deserializeBitLengthAndHeight(v)
+	bitLengthAndHeights := deserializeBLHeight(v)
 	lastBitLength := bitLengthAndHeights[len(bitLengthAndHeights)-1].BitLength
 	if bitLength < lastBitLength {
 		return errors.New(fmt.Sprintf("insertPubkblToBatch: unexpected bitLength %d, last %d, height %d",
@@ -102,21 +102,21 @@ func (db *ChainDb) removePubKeyBitLengthAndHeightWithCheck(batch storage.Batch, 
 	return nil
 }
 
-func (db *ChainDb) GetPubkeyBitLengthAndHeightRecord(publicKey *pocec.PublicKey) ([]*database.BitLengthAndHeight, error) {
+func (db *ChainDb) GetPubkeyBLHeightRecord(publicKey *pocec.PublicKey) ([]*database.BLHeight, error) {
 	key := makePubKeyBitLengthKey(publicKey)
 	v, err := db.localStorage.Get(key)
 	if err != nil {
 		if err == storage.ErrNotFound {
-			empty := make([]*database.BitLengthAndHeight, 0)
+			empty := make([]*database.BLHeight, 0)
 			return empty, nil
 		}
 		return nil, err
 	}
-	blh := deserializeBitLengthAndHeight(v)
+	blh := deserializeBLHeight(v)
 	return blh, nil
 }
 
-func (db *ChainDb) insertPubKeyBitLengthAndHeight(publicKey *pocec.PublicKey, bitLength int, blockHeight uint64) error {
+func (db *ChainDb) insertPubKeyBLHeight(publicKey *pocec.PublicKey, bitLength int, blockHeight uint64) error {
 	key := makePubKeyBitLengthKey(publicKey)
 	buf := serializeBitLengthAndBlockHeight(uint8(bitLength), blockHeight)
 	v, err := db.localStorage.Get(key)
@@ -126,7 +126,7 @@ func (db *ChainDb) insertPubKeyBitLengthAndHeight(publicKey *pocec.PublicKey, bi
 		}
 		return err
 	}
-	blhs := deserializeBitLengthAndHeight(v)
+	blhs := deserializeBLHeight(v)
 	lastBl := blhs[len(blhs)-1].BitLength
 	if bitLength < lastBl {
 		return errors.New(fmt.Sprintf("insertPubkbl: unexpected bl %d, last %d, height %d",

@@ -206,7 +206,7 @@ type DB interface {
 
 	IndexPubKeyBitLengthAndHeight(rebuild bool) error
 
-	GetPubkeyBitLengthAndHeightRecord(*pocec.PublicKey) ([]*BitLengthAndHeight, error)
+	GetPubkeyBLHeightRecord(*pocec.PublicKey) ([]*BLHeight, error)
 }
 
 // TxReply is used to return individual transaction information when
@@ -358,7 +358,7 @@ type AddrIndexData struct {
 	BindingTxSpentIndex BindingTxSpentAddrIndex
 }
 
-type BitLengthAndHeight struct {
+type BLHeight struct {
 	BitLength   int    // Bit Length Of Public Key
 	BlockHeight uint64 // Block Height
 }
