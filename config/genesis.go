@@ -2,6 +2,8 @@ package config
 
 import (
 	"encoding/hex"
+	"encoding/json"
+	"io/ioutil"
 	"math/big"
 	"time"
 
@@ -104,4 +106,19 @@ func mustDecodePoCSignature(str string) *pocec.Signature {
 		panic(err)
 	}
 	return sig
+}
+
+// GenesisDoc defines the initial conditions for a sukhavati blockchain, in particular its validator set.
+type GenesisDoc struct {
+	GenesisTime time.Time `json:"genesis_time"`
+	ChainID     string    `json:"chain_id"`
+}
+
+// SaveAs is a utility method for saving GenesisDoc as a JSON file.
+func (genDoc *GenesisDoc) SaveAs(file string) error {
+	genDocBytes, err := json.Marshal(genDoc)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(file, genDocBytes, 0644)
 }

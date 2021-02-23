@@ -21,27 +21,28 @@ import (
 )
 
 const (
-	defaultChainTag           = "mainnet"
-	DefaultConfigFilename     = "config.json"
-	defaultShowVersion        = false
-	DefaultDataDirname        = "chain"
-	DefaultLogLevel           = "info"
-	defaultLogDirname         = "logs"
-	defaultMinerFileDirname   = "miner"
-	defaultProofDirname       = "space"
-	DefaultLoggingFilename    = "skt"
-	defaultDbType             = "leveldb"
-	defaultPoCMinerBackend    = "sync"
-	defaultSpaceKeeperBackend = "spacekeeper.v1"
-	defaultBlockMinSize       = 0
-	defaultBlockMaxSize       = wire.MaxBlockPayload
-	defaultBlockPrioritySize  = consensus.DefaultBlockPrioritySize
-	defaultListenAddress      = "tcp://0.0.0.0:43453"
-	defaultDialTimeout        = 3
-	defaultHandshakeTimeout   = 30
-	MaxMiningPayoutAddresses  = 6000
-	defaultAPIPortGRPC        = "9685"
-	defaultAPIPortHttp        = "9686"
+	defaultChainTag            = "mainnet"
+	DefaultConfigFilename      = "config.json"
+	defaultGenesisJsonFilename = "genesis.json"
+	defaultShowVersion         = false
+	DefaultDataDirname         = "chain"
+	DefaultLogLevel            = "info"
+	defaultLogDirname          = "logs"
+	defaultMinerFileDirname    = "miner"
+	defaultProofDirname        = "space"
+	DefaultLoggingFilename     = "skt"
+	defaultDbType              = "leveldb"
+	defaultPoCMinerBackend     = "sync"
+	defaultSpaceKeeperBackend  = "spacekeeper.v1"
+	defaultBlockMinSize        = 0
+	defaultBlockMaxSize        = wire.MaxBlockPayload
+	defaultBlockPrioritySize   = consensus.DefaultBlockPrioritySize
+	defaultListenAddress       = "tcp://0.0.0.0:43453"
+	defaultDialTimeout         = 3
+	defaultHandshakeTimeout    = 30
+	MaxMiningPayoutAddresses   = 6000
+	defaultAPIPortGRPC         = "9685"
+	defaultAPIPortHttp         = "9686"
 )
 
 var (
