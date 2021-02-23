@@ -54,8 +54,8 @@ var genesisHeader = wire.BlockHeader{
 	Height:          0,
 	Timestamp:       time.Unix(0x5FEE6600, 0), // 2021-01-01 00:00:00 +0000 UTC, 1608250088 0x5FEE6600
 	Previous:        mustDecodeHash("0000000000000000000000000000000000000000000000000000000000000000"),
-	TransactionRoot: mustDecodeHash("a4dc7ba67c6e75e87c0856071aaed9cb4e821f663b6bd84f37f6ac87dacdb676"),
-	WitnessRoot:     mustDecodeHash("a4dc7ba67c6e75e87c0856071aaed9cb4e821f663b6bd84f37f6ac87dacdb676"),
+	TransactionRoot: mustDecodeHash("adaa0e925b02e85dbae928cc8953a173427eeb235c6f8873b0a0397d2a84700a"),
+	WitnessRoot:     mustDecodeHash("adaa0e925b02e85dbae928cc8953a173427eeb235c6f8873b0a0397d2a84700a"),
 	ProposalRoot:    mustDecodeHash("9663440551fdcd6ada50b1fa1b0003d19bc7944955820b54ab569eb9a7ab7999"),
 	Target:          hexToBigInt("b5e620f48000"), // 200000000000000
 	Challenge:       mustDecodeHash("5eb91b2d9fd6d5920ccc9610f0695509b60ccf764fab693ecab112f2edf1e3f0"),
