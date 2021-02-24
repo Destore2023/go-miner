@@ -71,9 +71,17 @@ out:
 				v.sendResult(ErrBadTxInput)
 				break out
 			}
-
+			info := originTx.Tx.GetPkScriptInfo(int(originTxIndex))
+			if txscript.PoolScriptHashTy == txscript.ScriptClass(info.Class) {
+				v.sendResult(nil)
+				break out
+			}
 			// Create a new script engine for the script pair.
 			//sigScript := txIn.SignatureScript
+
+			pkScript := originMsgTx.TxOut[originTxIndex].PkScript
+			inputAmount := originMsgTx.TxOut[originTxIndex].Value
+			//vm, err := txscript.NewEngine(pkScript, txVI.tx.MsgTx(),
 
 			//check witness length
 			witness := txIn.Witness
@@ -85,10 +93,6 @@ out:
 				break out
 			}
 
-			pkScript := originMsgTx.TxOut[originTxIndex].PkScript
-			inputAmount := originMsgTx.TxOut[originTxIndex].Value
-			//vm, err := txscript.NewEngine(pkScript, txVI.tx.MsgTx(),
-			//	txVI.txInIndex, v.flags, v.sigCache)
 			vm, err := txscript.NewEngine(pkScript, txVI.tx.MsgTx(),
 				txVI.txInIndex, v.flags, v.sigCache, txVI.sigHashes,
 				inputAmount)

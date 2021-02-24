@@ -562,6 +562,7 @@ func createStakingPoolMergeTx(nextBlockHeight uint64, unspentPoolTxs []*database
 				return nil, err
 			}
 			prevOut := wire.NewOutPoint(reply.TxSha, uint32(index))
+			//poolWitness, err = txscript.SignTxOutputWit(&config.ChainParams)
 			poolTxIn := wire.NewTxIn(prevOut, poolWitness)
 			stakingPoolMergeTx.AddTxIn(poolTxIn)
 		}
