@@ -74,7 +74,7 @@ out:
 			info := originTx.Tx.GetPkScriptInfo(int(originTxIndex))
 			if txscript.PoolScriptHashTy == txscript.ScriptClass(info.Class) {
 				v.sendResult(nil)
-				break out
+				continue
 			}
 			// Create a new script engine for the script pair.
 			//sigScript := txIn.SignatureScript
