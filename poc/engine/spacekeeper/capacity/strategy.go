@@ -25,8 +25,11 @@ const (
 	// TODO Compatible with multiple poc file db formats
 	typeSktDBV1       = sktdb_v1.TypeSktDBV1
 	regSktDBV1        = `^\d+_[A-F0-9]{66}_\d{2}\.MASSDB$`
-	suffixSktDBV1     = sktdb_v1.SuffixSktDBV1
 	TypeSpaceKeeperV1 = "spacekeeper.v1"
+)
+
+var (
+	suffixSktDBV1 = strings.ToUpper(sktdb_v1.SuffixSktDBV1)
 )
 
 var (

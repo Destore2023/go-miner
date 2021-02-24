@@ -21,7 +21,7 @@ type MapType uint8
 const (
 	// TODO Compatible with multiple db formats
 	TypeSktDBV1             = "massdb.v1"
-	SuffixSktDBV1           = ".MASSDB"
+	SuffixSktDBV1           = ".massdb"
 	MapTypeHashMapA MapType = iota
 	MapTypeHashMapB
 )
