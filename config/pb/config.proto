@@ -18,7 +18,7 @@ message AppConfig {
 
 message NetworkConfig {
   P2PConfig p2p = 1;
-  APIConfig api = 2;
+  RPCConfig rpc = 2;
 }
 
 message DataConfig {
@@ -55,7 +55,7 @@ message P2PConfig {
   string          listen_address = 7;
 }
 
-message APIConfig {
+message RPCConfig {
   string api_port_grpc = 1;
   string api_port_http = 2;
   repeated string api_whitelist = 3;
