@@ -528,6 +528,53 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.Bin
 	return
 }
 
+// createStakingPoolMergeTx
+// +-------------------------------+----------------------------------+
+// | staking pool reward           |                                  |
+// +-------------------------------+                                  |
+// | staking pool reward           | staking pool reward              |
+// +-------------------------------+                                  |
+// | staking pool reward           |                                  |
+// +-------------------------------+----------------------------------+
+func createStakingPoolMergeTx(nextBlockHeight uint64, unspentPoolTxs []*database.TxReply) (*chainutil.Tx, error) {
+	stakingPoolMergeTx := wire.NewMsgTx()
+	var poolWitness [][]byte
+	poolMaturityValue := safetype.NewUint128()
+	var err error
+	for _, reply := range unspentPoolTxs {
+		blocksSincePrev := nextBlockHeight - reply.Height
+		isCoinbase := reply.Tx.IsCoinBaseTx()
+		for index, txOut := range reply.Tx.TxOut {
+			if reply.TxSpent[index] {
+				continue
+			}
+			if !txscript.IsPayToPoolScriptHash(txOut.PkScript) {
+				continue
+			}
+			if blocksSincePrev < consensus.TransactionMaturity {
+				continue
+			}
+			if isCoinbase && blocksSincePrev < consensus.CoinbaseMaturity {
+				continue
+			}
+			poolMaturityValue, err = poolMaturityValue.AddInt(txOut.Value)
+			if err != nil {
+				return nil, err
+			}
+			prevOut := wire.NewOutPoint(reply.TxSha, uint32(index))
+			poolTxIn := wire.NewTxIn(prevOut, poolWitness)
+			stakingPoolMergeTx.AddTxIn(poolTxIn)
+		}
+	}
+	if !poolMaturityValue.IsZero() {
+		stakingPoolMergeTx.AddTxOut(&wire.TxOut{
+			Value:    poolMaturityValue.IntValue(),
+			PkScript: stakingPoolPubKeyScript,
+		})
+	}
+	return chainutil.NewTx(stakingPoolMergeTx), nil
+}
+
 // createStakingPoolRewardTx
 // +-------------------------------+-----------------------------------+
 // | staking pool reward           |  staking pool accumulated out     |
@@ -931,9 +978,9 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 	blockTxns := make([]*wire.MsgTx, 0, len(mempoolTxns))
 	blockTxns = append(blockTxns, coinbaseTx.MsgTx())
 
-	if len(rewardAddresses) > 0 {
+	if len(rewardAddresses) > 0 || nextBlockHeight%consensus.StakingPoolMergeEpoch == 0 {
 		// get unspent staking pool tx
-		startHeight := bestNode.Height - consensus.CoinbaseMaturity
+		startHeight := bestNode.Height - consensus.CoinbaseMaturity - consensus.StakingPoolMergeEpoch
 		if startHeight < 0 {
 			startHeight = 0
 		}
@@ -957,20 +1004,30 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 			unspentTxShaList = append(unspentTxShaList, block.Transactions()[0].Hash())
 		}
 		unspentStakingPoolTxs := chain.db.FetchUnSpentTxByShaList(unspentTxShaList)
-		stakingPoolRewardTx, err := createStakingPoolRewardTx(nextBlockHeight, unspentStakingPoolTxs)
-		if err != nil {
-			templateCh <- &PoCTemplate{
-				Err: err,
+		if len(rewardAddresses) > 0 {
+			stakingPoolRewardTx, err := createStakingPoolRewardTx(nextBlockHeight, unspentStakingPoolTxs)
+			if err != nil {
+				templateCh <- &PoCTemplate{
+					Err: err,
+				}
+				return
 			}
-			return
+			blockTxns = append(blockTxns, stakingPoolRewardTx.MsgTx())
+			numStakingPoolRewardTxSigOps := int64(CountSigOps(stakingPoolRewardTx))
+			txSigOpCounts = append(txSigOpCounts, numStakingPoolRewardTxSigOps)
+		} else {
+			stakingPoolMergeTx, err := createStakingPoolMergeTx(nextBlockHeight, unspentStakingPoolTxs)
+			if err != nil {
+				templateCh <- &PoCTemplate{
+					Err: err,
+				}
+				return
+			}
+			blockTxns = append(blockTxns, stakingPoolMergeTx.MsgTx())
+			numStakingPoolRewardTxSigOps := int64(CountSigOps(stakingPoolMergeTx))
+			txSigOpCounts = append(txSigOpCounts, numStakingPoolRewardTxSigOps)
 		}
-		blockTxns = append(blockTxns, stakingPoolRewardTx.MsgTx())
-		numStakingPoolRewardTxSigOps := int64(CountSigOps(stakingPoolRewardTx))
-		txSigOpCounts = append(txSigOpCounts, numStakingPoolRewardTxSigOps)
-	} else {
-
 	}
-
 	//blockTxStore := make(TxStore)
 	punishProposals := make([]*wire.FaultPubKey, 0, len(proposals))
 	otherProposals := make([]*wire.NormalProposal, 0)
