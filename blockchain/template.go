@@ -566,6 +566,9 @@ func createStakingPoolMergeTx(nextBlockHeight uint64, unspentPoolTxs []*database
 			stakingPoolMergeTx.AddTxIn(poolTxIn)
 		}
 	}
+	if len(stakingPoolMergeTx.TxIn) == 0 {
+		return nil, err
+	}
 	if !poolMaturityValue.IsZero() {
 		stakingPoolMergeTx.AddTxOut(&wire.TxOut{
 			Value:    poolMaturityValue.IntValue(),
@@ -980,10 +983,18 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 
 	if len(rewardAddresses) > 0 || nextBlockHeight%consensus.StakingPoolMergeEpoch == 0 {
 		// get unspent staking pool tx
-		startHeight := bestNode.Height - consensus.CoinbaseMaturity - consensus.StakingPoolMergeEpoch
-		if startHeight < 0 {
+		var startHeight = bestNode.Height
+		if startHeight > consensus.CoinbaseMaturity {
+			startHeight = startHeight - consensus.CoinbaseMaturity
+			if startHeight > consensus.StakingPoolMergeEpoch {
+				startHeight = startHeight - consensus.StakingPoolMergeEpoch
+			} else {
+				startHeight = 0
+			}
+		} else {
 			startHeight = 0
 		}
+
 		blockShaList, err := chain.db.FetchHeightRange(startHeight, nextBlockHeight)
 		if err != nil {
 			templateCh <- &PoCTemplate{
@@ -1004,28 +1015,32 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 			unspentTxShaList = append(unspentTxShaList, block.Transactions()[0].Hash())
 		}
 		unspentStakingPoolTxs := chain.db.FetchUnSpentTxByShaList(unspentTxShaList)
-		if len(rewardAddresses) > 0 {
-			stakingPoolRewardTx, err := createStakingPoolRewardTx(nextBlockHeight, unspentStakingPoolTxs)
-			if err != nil {
-				templateCh <- &PoCTemplate{
-					Err: err,
+		if len(unspentStakingPoolTxs) > 0 {
+			if len(rewardAddresses) > 0 {
+				stakingPoolRewardTx, err := createStakingPoolRewardTx(nextBlockHeight, unspentStakingPoolTxs)
+				if err != nil {
+					templateCh <- &PoCTemplate{
+						Err: err,
+					}
+					return
 				}
-				return
-			}
-			blockTxns = append(blockTxns, stakingPoolRewardTx.MsgTx())
-			numStakingPoolRewardTxSigOps := int64(CountSigOps(stakingPoolRewardTx))
-			txSigOpCounts = append(txSigOpCounts, numStakingPoolRewardTxSigOps)
-		} else {
-			stakingPoolMergeTx, err := createStakingPoolMergeTx(nextBlockHeight, unspentStakingPoolTxs)
-			if err != nil {
-				templateCh <- &PoCTemplate{
-					Err: err,
+				blockTxns = append(blockTxns, stakingPoolRewardTx.MsgTx())
+				numStakingPoolRewardTxSigOps := int64(CountSigOps(stakingPoolRewardTx))
+				txSigOpCounts = append(txSigOpCounts, numStakingPoolRewardTxSigOps)
+			} else {
+				stakingPoolMergeTx, err := createStakingPoolMergeTx(nextBlockHeight, unspentStakingPoolTxs)
+				if err != nil {
+					templateCh <- &PoCTemplate{
+						Err: err,
+					}
+					return
 				}
-				return
+				if stakingPoolMergeTx != nil {
+					blockTxns = append(blockTxns, stakingPoolMergeTx.MsgTx())
+					numStakingPoolRewardTxSigOps := int64(CountSigOps(stakingPoolMergeTx))
+					txSigOpCounts = append(txSigOpCounts, numStakingPoolRewardTxSigOps)
+				}
 			}
-			blockTxns = append(blockTxns, stakingPoolMergeTx.MsgTx())
-			numStakingPoolRewardTxSigOps := int64(CountSigOps(stakingPoolMergeTx))
-			txSigOpCounts = append(txSigOpCounts, numStakingPoolRewardTxSigOps)
 		}
 	}
 	//blockTxStore := make(TxStore)
