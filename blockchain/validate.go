@@ -948,8 +948,12 @@ func CountSigOps(tx *chainutil.Tx) int {
 	totalSigOps := 0
 
 	for _, txIn := range msgTx.TxIn {
-		numSigOps := txscript.GetSigOpCount(txIn.Witness[len(txIn.Witness)-1])
-		totalSigOps += numSigOps
+		// TODO check
+		witnessLen := len(txIn.Witness)
+		if witnessLen > 0 {
+			numSigOps := txscript.GetSigOpCount(txIn.Witness[witnessLen-1])
+			totalSigOps += numSigOps
+		}
 	}
 	//}
 
