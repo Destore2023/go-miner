@@ -65,7 +65,7 @@ var (
 	defaultMinerFileDir        = defaultMinerFileDirname
 	defaultProofDir            = defaultProofDirname
 	defaultLogDir              = defaultLogDirname
-	HDCoinTypeMainNet   uint32 = 2021
+	HDCoinTypeMainNet   uint32 = 297
 )
 
 // RunServiceCommand is only set to a real function on Windows.  It is used
