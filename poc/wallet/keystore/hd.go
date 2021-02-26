@@ -15,7 +15,7 @@ var (
 
 	MainnetKeyScope = KeyScope{
 		Purpose: 44,
-		Coin:    2021,
+		Coin:    297,
 	}
 
 	PocDerivationPath = DerivationPath{
@@ -29,7 +29,7 @@ var (
 	}
 )
 
-var Net2KeyScope = map[uint32]KeyScope{1: TestnetKeyScope, 2021: MainnetKeyScope}
+var Net2KeyScope = map[uint32]KeyScope{1: TestnetKeyScope, 297: MainnetKeyScope}
 
 type KeyScope struct {
 	Purpose uint32
