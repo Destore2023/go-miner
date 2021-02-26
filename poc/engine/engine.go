@@ -163,7 +163,7 @@ var (
 )
 
 const (
-	// UnknownOrdinal indicates that the ordinal of PocDB is unknown or non-existent
+	// UnknownOrdinal indicates that the ordinal of MassDB is unknown or non-existent
 	UnknownOrdinal int64 = -1
 )
 

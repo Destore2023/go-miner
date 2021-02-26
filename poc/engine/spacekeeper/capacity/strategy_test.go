@@ -21,11 +21,11 @@ func TestMatchMassDBName(t *testing.T) {
 		match bool
 	}{
 		{
-			str:   "88e55973485fd0b047c2e4fe682d9c9bb3e2c50e8c123d170c33b52c024932b4ab-10-a.sktdb",
+			str:   "88e55973485fd0b047c2e4fe682d9c9bb3e2c50e8c123d170c33b52c024932b4ab-10-a.massdb",
 			match: false,
 		},
 		{
-			str:   "88e55973485fd0b047c2e4fe682d9c9bb3e2c50e8c123d170c33b52c024932b4ab-10-b.sktdb",
+			str:   "88e55973485fd0b047c2e4fe682d9c9bb3e2c50e8c123d170c33b52c024932b4ab-10-b.massdb",
 			match: true,
 		},
 		{
@@ -33,15 +33,15 @@ func TestMatchMassDBName(t *testing.T) {
 			match: false,
 		},
 		{
-			str:   "88e55973485fd0b047c2e4fe682d9c9bb3e2c50e8c123d170c33b52c024932b4ab-10-b1.sktdb",
+			str:   "88e55973485fd0b047c2e4fe682d9c9bb3e2c50e8c123d170c33b52c024932b4ab-10-b1.massdb",
 			match: false,
 		},
 		{
-			str:   "088e55973485fd0b047c2e4fe682d9c9bb3e2c50e8c123d170c33b52c024932b4ab-10-b.sktdb",
+			str:   "088e55973485fd0b047c2e4fe682d9c9bb3e2c50e8c123d170c33b52c024932b4ab-10-b.massdb",
 			match: false,
 		},
 		{
-			str:   "8e55973485fd0b047c2e4fe682d9c9bb3e2c50e8c123d170c33b52c024932b4ab-10-b.sktdb",
+			str:   "8e55973485fd0b047c2e4fe682d9c9bb3e2c50e8c123d170c33b52c024932b4ab-10-b.massdb",
 			match: false,
 		},
 	}

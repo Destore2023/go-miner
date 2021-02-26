@@ -82,7 +82,7 @@ func (ck *CryptoKey) Zero() {
 	zero.Bytea32((*[KeySize]byte)(ck))
 }
 
-// GenerateCryptoKey generates a new cryptographically random key.
+// GenerateCryptoKey generates a new crypotgraphically random key.
 func GenerateCryptoKey() (*CryptoKey, error) {
 	var key CryptoKey
 	_, err := io.ReadFull(prng, key[:])

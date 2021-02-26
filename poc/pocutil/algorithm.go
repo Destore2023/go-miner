@@ -17,7 +17,7 @@ var (
 	PoCPrefix = []byte("MASS")
 )
 
-// P calculates SktSHA256(PoCPrefix || PubKeyHash || X).CutByBitLength(bitLength),
+// P calculates MASSSHA256(PoCPrefix || PubKeyHash || X).CutByBitLength(bitLength),
 // it takes in x as PoCValue.
 func P(x PoCValue, bl int, pubKeyHash Hash) PoCValue {
 	var xb [8]byte
@@ -26,7 +26,7 @@ func P(x PoCValue, bl int, pubKeyHash Hash) PoCValue {
 	return PB(xb[:], bl, pubKeyHash)
 }
 
-// PB calculates SktSHA256(PoCPrefix || PubKeyHash || X).CutByBitLength(bitLength),
+// PB calculates MASSSHA256(PoCPrefix || PubKeyHash || X).CutByBitLength(bitLength),
 // it takes in x as Byte Slice.
 func PB(x []byte, bl int, pubKeyHash Hash) PoCValue {
 	var raw [PoCPrefixLen + 32 + 8]byte
@@ -35,10 +35,10 @@ func PB(x []byte, bl int, pubKeyHash Hash) PoCValue {
 	copy(raw[PoCPrefixLen+32:], x)
 	NormalizePoCBytes(raw[PoCPrefixLen+32:], bl)
 
-	return CutHash(SktSHA256(raw[:]), bl)
+	return CutHash(MASSSHA256(raw[:]), bl)
 }
 
-// F calculates SktSHA256(PoCPrefix || PubKeyHash || X || XP).CutByBitLength(bitLength),
+// F calculates MASSSHA256(PoCPrefix || PubKeyHash || X || XP).CutByBitLength(bitLength),
 // it takes in (x, xp) as PoCValue.
 func F(x, xp PoCValue, bl int, pubKeyHash Hash) PoCValue {
 	var xb, xpb [8]byte
@@ -48,7 +48,7 @@ func F(x, xp PoCValue, bl int, pubKeyHash Hash) PoCValue {
 	return FB(xb[:], xpb[:], bl, pubKeyHash)
 }
 
-// FB calculates SktSHA256(PoCPrefix || PubKeyHash || X || XP).CutByBitLength(bitLength),
+// FB calculates MASSSHA256(PoCPrefix || PubKeyHash || X || XP).CutByBitLength(bitLength),
 // it takes in (x, xp) as Byte Slice.
 func FB(x, xp []byte, bl int, pubKeyHash Hash) PoCValue {
 	var raw [PoCPrefixLen + 32 + 8*2]byte
@@ -59,5 +59,5 @@ func FB(x, xp []byte, bl int, pubKeyHash Hash) PoCValue {
 	NormalizePoCBytes(raw[PoCPrefixLen+32:PoCPrefixLen+32+8], bl)
 	NormalizePoCBytes(raw[PoCPrefixLen+32+8:], bl)
 
-	return CutHash(SktSHA256(raw[:]), bl)
+	return CutHash(MASSSHA256(raw[:]), bl)
 }

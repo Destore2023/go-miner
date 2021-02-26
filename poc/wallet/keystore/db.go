@@ -47,7 +47,7 @@ const (
 	// accountDefault is the current "default" account type within the
 	// database. This is an account that re-uses the key derivation schema
 	// of BIP0044-like accounts.
-	accountSkt accountType = 0 // not iota as they need to be stable
+	accountMASS accountType = 0 // not iota as they need to be stable
 )
 
 // dbAccountRow houses information stored about an account in the database.
@@ -391,7 +391,7 @@ func putAccountInfo(b db.Bucket, account uint32, encryptedPubKey, encryptedPrivK
 	}
 
 	acctRow := dbAccountRow{
-		acctType: accountSkt,
+		acctType: accountMASS,
 		rawData:  rawData,
 	}
 	if err := putAccountRow(b, account, &acctRow); err != nil {
@@ -417,7 +417,7 @@ func fetchAccountInfo(b db.Bucket, account uint32) (interface{}, error) {
 	}
 
 	switch row.acctType {
-	case accountSkt:
+	case accountMASS:
 		return deserializeHDAccountKey(accountID, row)
 	}
 

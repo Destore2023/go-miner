@@ -27,15 +27,13 @@ const (
 
 var (
 	// BitLengthDiskSize stores the disk size in byte of different BitLengths.
-	// int.max is 1<<32 -1 = 4,294,967,295
-	//           1<<40 = 1,099,511,627,776
 	BitLengthDiskSize map[int]int
 
 	// MinDiskSize represents the disk size in byte of the smallest BitLength.
 	MinDiskSize = pocutil.RecordSize(MinValidBitLength) * 2 * (1 << uint(MinValidBitLength))
 
 	// validBitLength represents a slice of valid BitLength in increasing order.
-	validBitLength []int // 24,26,28,30,32,34,36,38,40    len:9
+	validBitLength []int
 )
 
 func init() {
@@ -43,25 +41,21 @@ func init() {
 	for i := MinValidBitLength; i <= MaxValidBitLength; i = i + 2 {
 		validBitLength = append(validBitLength, i)
 	}
-	// TODO
-	// CPU:
-	//   1. x86 int Only 32 bits
-	//   2. x86_64 int 64 bits
-	for _, bitLength := range validBitLength {
-		BitLengthDiskSize[bitLength] = pocutil.RecordSize(bitLength) * 2 * (1 << uint(bitLength))
+	for _, bl := range validBitLength {
+		BitLengthDiskSize[bl] = pocutil.RecordSize(bl) * 2 * (1 << uint(bl))
 	}
 }
 
 // Proof represents a single PoC Proof.
 type Proof struct {
-	X         []byte // 8 bytes
-	XPrime    []byte // 8 bytes
-	BitLength int    // 4 bytes | save 1 byte
+	X         []byte
+	XPrime    []byte
+	BitLength int
 }
 
 // EnsureBitLength returns whether it is a valid bitLength.
-func EnsureBitLength(bitLength int) bool {
-	if bitLength >= MinValidBitLength && bitLength <= MaxValidBitLength && bitLength%2 == 0 {
+func EnsureBitLength(bl int) bool {
+	if bl >= MinValidBitLength && bl <= MaxValidBitLength && bl%2 == 0 {
 		return true
 	}
 	return false
@@ -75,11 +69,8 @@ func ValidBitLength() []int {
 }
 
 // Encode encodes proof to 17 bytes:
-// +---------+---------+-------------+
-// |    X    | XPrime  |  BitLength  |
-// +---------+---------+-------------+
-// | 8 bytes | 8 bytes |   1 byte    |
-// +---------+---------+-------------+
+// |    X    | XPrime  | BitLength |
+// | 8 bytes | 8 bytes |   1 byte  |
 // X & XPrime is encoded in little endian
 func (proof *Proof) Encode() []byte {
 	var data [17]byte
@@ -91,11 +82,8 @@ func (proof *Proof) Encode() []byte {
 }
 
 // Decode decodes proof from a 17-byte slice:
-// +---------+---------+-------------+
-// |    X    | XPrime  |  BitLength  |
-// +---------+---------+-------------+
-// | 8 bytes | 8 bytes |   1 byte    |
-// +---------+---------+-------------+
+// |    X    | XPrime  | BitLength |
+// | 8 bytes | 8 bytes |   1 byte  |
 // X & XPrime is encoded in little endian
 func (proof *Proof) Decode(data []byte) error {
 	if len(data) != 17 {
@@ -145,7 +133,7 @@ func VerifyProof(proof *Proof, pubKeyHash pocutil.Hash, challenge pocutil.Hash) 
 // which means the more space you have, the bigger prob you get to
 // generate a higher quality.
 //
-// In Sukhavati we use an equivalent quality formula : Quality = (SIZE * BitLength) / [256 - log2(H)],
+// In MASS we use an equivalent quality formula : Quality = (SIZE * BitLength) / [256 - log2(H)],
 // which means the more space you have, the bigger prob you get to
 // generate a higher Quality.
 //

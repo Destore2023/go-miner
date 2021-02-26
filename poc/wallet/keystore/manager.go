@@ -26,9 +26,9 @@ const (
 	PoCUsage    AddrUse = iota //0
 	WalletUsage                //1
 
-	keystoreMgrBucket = "km"  // keystore manager
-	accountIDBucket   = "aid" // account id
-	pubKeyBucket      = "pub" // public key
+	ksMgrBucket     = "km"
+	accountIDBucket = "aid"
+	pubKeyBucket    = "pub"
 
 	// MaxAccountNum is the maximum allowed account number.  This value was
 	// chosen because accounts are hardened children and therefore must not
@@ -45,7 +45,6 @@ const (
 	// ExternalBranch is the child number to use when performing BIP0044
 	// style hierarchical deterministic key derivation for the external
 	// branch.
-	// https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
 	ExternalBranch uint32 = 0
 
 	// InternalBranch is the child number to use when performing BIP0044
@@ -1774,9 +1773,6 @@ func (kmc *KeystoreManagerForPoC) ChangePrivPassphrase(oldPrivPass, newPrivPass 
 	return nil
 }
 
-// NewKeystoreManagerForPoC
-// pubPassphrase read form config.app.pub_password
-//
 func NewKeystoreManagerForPoC(store db.DB, pubPassphrase []byte, net *config.Params) (*KeystoreManagerForPoC, error) {
 	if store == nil || net == nil || pubPassphrase == nil {
 		return nil, ErrNilPointer
@@ -1795,7 +1791,7 @@ func NewKeystoreManagerForPoC(store db.DB, pubPassphrase []byte, net *config.Par
 	var kmBucketMeta db.BucketMeta
 	var accountIDBucketMeta db.BucketMeta
 	err := db.Update(store, func(tx db.DBTransaction) error {
-		kmBucket, err := db.GetOrCreateTopLevelBucket(tx, keystoreMgrBucket)
+		kmBucket, err := db.GetOrCreateTopLevelBucket(tx, ksMgrBucket)
 		if err != nil {
 			return err
 		}

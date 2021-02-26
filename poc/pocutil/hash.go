@@ -25,15 +25,15 @@ func DoubleSHA256(raw []byte) Hash {
 	return SHA256(h[:])
 }
 
-// SktSHA256 represents the unique Skt sha256.
-func SktSHA256(raw []byte) Hash {
+// MASSSHA256 represents the unique MASS sha256.
+func MASSSHA256(raw []byte) Hash {
 	return sha256.Sum256(raw)
 }
 
-// SktDoubleSHA256 represents the unique Skt double sha256.
-func SktDoubleSHA256(raw []byte) Hash {
-	h := SktSHA256(raw)
-	return SktSHA256(h[:])
+// MASSDoubleSHA256 represents the unique MASS double sha256.
+func MASSDoubleSHA256(raw []byte) Hash {
+	h := MASSSHA256(raw)
+	return MASSSHA256(h[:])
 }
 
 // Bytes converts Hash to Byte Slice.

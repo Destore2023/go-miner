@@ -15,23 +15,22 @@ import (
 	"github.com/Sukhavati-Labs/go-miner/logging"
 	"github.com/Sukhavati-Labs/go-miner/poc"
 	"github.com/Sukhavati-Labs/go-miner/poc/engine"
-	sktdb_v1 "github.com/Sukhavati-Labs/go-miner/poc/engine/sktdb/sktdb.v1"
+	massdb_v1 "github.com/Sukhavati-Labs/go-miner/poc/engine/massdb/massdb.v1"
 	"github.com/Sukhavati-Labs/go-miner/poc/engine/spacekeeper"
 	"github.com/Sukhavati-Labs/go-miner/pocec"
 	"github.com/panjf2000/ants"
 )
 
 const (
-	// TODO Compatible with multiple poc file db formats
-	typeSktDBV1       = sktdb_v1.TypeSktDBV1
-	regSktDBV1        = `^\d+_[A-F0-9]{66}_\d{2}\.MASSDB$`
+	typeMassDBV1      = massdb_v1.TypeMassDBV1
+	regMassDBV1       = `^\d+_[A-F0-9]{66}_\d{2}\.MASSDB$`
+	suffixMassDBV1    = ".MASSDB"
 	TypeSpaceKeeperV1 = "spacekeeper.v1"
-	suffixSktDBV1     = ".MASSDB"
 )
 
 var (
-	dbType2RegStr  = map[string]string{typeSktDBV1: regSktDBV1}
-	dbType2SuffixB = map[string]string{typeSktDBV1: suffixSktDBV1}
+	dbType2RegStr  = map[string]string{typeMassDBV1: regMassDBV1}
+	dbType2SuffixB = map[string]string{typeMassDBV1: suffixMassDBV1}
 )
 
 // NewSpaceKeeperV1
@@ -47,7 +46,7 @@ func NewSpaceKeeperV1(args ...interface{}) (spacekeeper.SpaceKeeper, error) {
 	sk := &SpaceKeeper{
 		allowGenerateNewSpace: true,
 		dbDirs:                cfg.Miner.ProofDir,
-		dbType:                typeSktDBV1,
+		dbType:                typeMassDBV1,
 		wallet:                poCWallet,
 		workSpaceIndex:        make([]*WorkSpaceMap, 0),
 		workSpacePaths:        make(map[string]*WorkSpacePath),
@@ -58,9 +57,9 @@ func NewSpaceKeeperV1(args ...interface{}) (spacekeeper.SpaceKeeper, error) {
 		fileWatcher:           func() {},
 	}
 	sk.BaseService = service.NewBaseService(sk, TypeSpaceKeeperV1)
-	sk.generateInitialIndex = func() error { return generateInitialIndex(sk, typeSktDBV1, regSktDBV1, suffixSktDBV1) }
+	sk.generateInitialIndex = func() error { return generateInitialIndex(sk, typeMassDBV1, regMassDBV1, suffixMassDBV1) }
 
-	if err = upgradeSktDBFile(sk); err != nil {
+	if err = upgradeMassDBFile(sk); err != nil {
 		return nil, err
 	}
 	if err = sk.generateInitialIndex(); err != nil {
@@ -136,9 +135,9 @@ func generateInitialIndex(sk *SpaceKeeper, dbType, regStrB, suffixB string) erro
 			filePath := filepath.Join(dbDir, fileName)
 			// extract args
 			args := strings.Split(fileName[:len(fileName)-len(suffixB)], "_")
-			dbIndex, pubKey, bitLength, err := parseSktDBArgsFromString(args[0], args[1], args[2])
+			dbIndex, pubKey, bitLength, err := parseMassDBArgsFromString(args[0], args[1], args[2])
 			if err != nil {
-				logging.CPrint(logging.ERROR, "cannot parse SktDB args from filename", logging.LogFormat{"filepath": filePath, "err": err})
+				logging.CPrint(logging.ERROR, "cannot parse MassDB args from filename", logging.LogFormat{"filepath": filePath, "err": err})
 				continue
 			}
 
@@ -150,11 +149,11 @@ func generateInitialIndex(sk *SpaceKeeper, dbType, regStrB, suffixB string) erro
 				continue
 			}
 
-			// prevent duplicate SktDB
+			// prevent duplicate MassDB
 			sid := NewSpaceID(int64(ordinal), pubKey, bitLength).String()
 			if _, ok := sk.workSpaceIndex[allState].Get(sid); ok {
-				logging.CPrint(logging.WARN, "duplicate sktdb in root dirs",
-					logging.LogFormat{"filepath": filePath, "err": ErrSktDBDuplicate})
+				logging.CPrint(logging.WARN, "duplicate massdb in root dirs",
+					logging.LogFormat{"filepath": filePath, "err": ErrMassDBDuplicate})
 				continue
 			}
 
@@ -174,8 +173,7 @@ func generateInitialIndex(sk *SpaceKeeper, dbType, regStrB, suffixB string) erro
 	return nil
 }
 
-func upgradeSktDBFile(sk *SpaceKeeper) error {
-	// TODO Compatible with multiple poc file db formats
+func upgradeMassDBFile(sk *SpaceKeeper) error {
 	var oldRegStrB, oldRegStrA = `^[A-F0-9]{66}-\d{2}-B\.MASSDB$`, `^[A-F0-9]{66}-\d{2}-A\.MASSDB$`
 	regExpB, err := regexp.Compile(oldRegStrB)
 	if err != nil {
@@ -190,9 +188,9 @@ func upgradeSktDBFile(sk *SpaceKeeper) error {
 		filePath := filepath.Join(dir, filename)
 		// extract args
 		args := strings.Split(filename[:len(filename)-len(".MASSDB")], "-")
-		_, pubKey, bitLength, err := parseSktDBArgsFromString("0", args[0], args[1])
+		_, pubKey, bitLength, err := parseMassDBArgsFromString("0", args[0], args[1])
 		if err != nil {
-			logging.CPrint(logging.TRACE, "cannot parse SktDB args from filename",
+			logging.CPrint(logging.TRACE, "cannot parse MassDB args from filename",
 				logging.LogFormat{"filepath": filePath, "err": err})
 			return
 		}
@@ -207,7 +205,7 @@ func upgradeSktDBFile(sk *SpaceKeeper) error {
 		newFilename := fmt.Sprintf("%d_%s_%d%s.massdb", ordinal, args[0], bitLength, tagA)
 		newFilepath := filepath.Join(dir, newFilename)
 		if err = os.Rename(filePath, newFilepath); err != nil {
-			logging.CPrint(logging.ERROR, "fail to rename sktdb",
+			logging.CPrint(logging.ERROR, "fail to rename massdb",
 				logging.LogFormat{"dir": dir, "old_name": filename, "new_name": newFilename, "err": err})
 		}
 	}
@@ -264,7 +262,7 @@ func prepareDirs(dirs []string) ([]string, [][]os.FileInfo) {
 	return resultDir, resultDirFileInfo
 }
 
-func parseSktDBArgsFromString(ordinalStr, pkStr, blStr string) (ordinal int, pubKey *pocec.PublicKey, bitLength int, err error) {
+func parseMassDBArgsFromString(ordinalStr, pkStr, blStr string) (ordinal int, pubKey *pocec.PublicKey, bitLength int, err error) {
 	// parse ordinal
 	ordinal, err = strconv.Atoi(ordinalStr)
 	if err != nil {
@@ -292,7 +290,7 @@ func parseSktDBArgsFromString(ordinalStr, pkStr, blStr string) (ordinal int, pub
 	return
 }
 
-func peekSktDBInfosByDir(dbDir, dbType string) ([]engine.WorkSpaceInfo, error) {
+func peekMassDBInfosByDir(dbDir, dbType string) ([]engine.WorkSpaceInfo, error) {
 	regStrB, suffixB := dbType2RegStr[dbType], dbType2SuffixB[dbType]
 	regExpB, err := regexp.Compile(regStrB)
 	if err != nil {
@@ -312,7 +310,7 @@ func peekSktDBInfosByDir(dbDir, dbType string) ([]engine.WorkSpaceInfo, error) {
 
 		// extract args
 		args := strings.Split(fileName[:len(fileName)-len(suffixB)], "_")
-		dbIndex, pubKey, bitLength, err := parseSktDBArgsFromString(args[0], args[1], args[2])
+		dbIndex, pubKey, bitLength, err := parseMassDBArgsFromString(args[0], args[1], args[2])
 		if err != nil {
 			continue
 		}

@@ -22,7 +22,7 @@ func NewSpaceKeeperPlasterer(args ...interface{}) (spacekeeper.SpaceKeeper, erro
 	sk := &SpaceKeeper{
 		allowGenerateNewSpace: false,
 		dbDirs:                cfg.Miner.ProofDir,
-		dbType:                typeSktDBV1,
+		dbType:                typeMassDBV1,
 		wallet:                poCWallet,
 		workSpaceIndex:        make([]*WorkSpaceMap, 0),
 		workSpacePaths:        make(map[string]*WorkSpacePath),
@@ -33,7 +33,7 @@ func NewSpaceKeeperPlasterer(args ...interface{}) (spacekeeper.SpaceKeeper, erro
 		fileWatcher:           func() {},
 	}
 	sk.BaseService = service.NewBaseService(sk, TypeSpaceKeeperV1)
-	sk.generateInitialIndex = func() error { return generateInitialIndex(sk, typeSktDBV1, regSktDBV1, suffixSktDBV1) }
+	sk.generateInitialIndex = func() error { return generateInitialIndex(sk, typeMassDBV1, regMassDBV1, suffixMassDBV1) }
 
 	if err = sk.generateInitialIndex(); err != nil {
 		return nil, err

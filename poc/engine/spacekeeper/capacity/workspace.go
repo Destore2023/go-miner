@@ -4,7 +4,7 @@ import (
 	"bytes"
 
 	"github.com/Sukhavati-Labs/go-miner/poc/engine"
-	"github.com/Sukhavati-Labs/go-miner/poc/engine/sktdb"
+	"github.com/Sukhavati-Labs/go-miner/poc/engine/massdb"
 	"github.com/Sukhavati-Labs/go-miner/poc/pocutil"
 	"github.com/Sukhavati-Labs/go-miner/pocec"
 	"github.com/orcaman/concurrent-map"
@@ -12,23 +12,23 @@ import (
 
 type WorkSpace struct {
 	id      *SpaceID
-	db      sktdb.SktDB
+	db      massdb.MassDB
 	state   engine.WorkSpaceState
 	using   bool
 	rootDir string
 }
 
-// NewWorkSpace loads SktDB from given rootDir with PubKey&BitLength,
+// NewWorkSpace loads MassDB from given rootDir with PubKey&BitLength,
 // and set proper state for WorkSpace by its progress
-// To prevent accident, double check PubKey&BitLength on loaded SktDB
-// If SktDB does not exist, create new SktDB.
+// To prevent accident, double check PubKey&BitLength on loaded MassDB
+// If MassDB does not exist, create new MassDB.
 func NewWorkSpace(dbType string, rootDir string, ordinal int64, pubKey *pocec.PublicKey, bitLength int) (*WorkSpace, error) {
-	mdb, err := sktdb.OpenDB(dbType, rootDir, ordinal, pubKey, bitLength)
+	mdb, err := massdb.OpenDB(dbType, rootDir, ordinal, pubKey, bitLength)
 	if err != nil {
-		if err != sktdb.ErrDBDoesNotExist {
+		if err != massdb.ErrDBDoesNotExist {
 			return nil, err
 		}
-		mdb, err = sktdb.CreateDB(dbType, rootDir, ordinal, pubKey, bitLength)
+		mdb, err = massdb.CreateDB(dbType, rootDir, ordinal, pubKey, bitLength)
 		if err != nil {
 			return nil, err
 		}
@@ -36,7 +36,7 @@ func NewWorkSpace(dbType string, rootDir string, ordinal int64, pubKey *pocec.Pu
 
 	if !bytes.Equal(pubKey.SerializeCompressed(), mdb.PubKey().SerializeCompressed()) ||
 		bitLength != mdb.BitLength() {
-		return nil, ErrSktDBDoesNotMatchWithName
+		return nil, ErrMassDBDoesNotMatchWithName
 	}
 
 	ws := &WorkSpace{
