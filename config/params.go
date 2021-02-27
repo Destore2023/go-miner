@@ -106,6 +106,8 @@ type Params struct {
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
 	HDCoinType uint32
+	// compatible hd cointype for mine
+	CompatibleHDCoinTypes []uint32
 }
 
 // ChainParams defines the network parameters for the main skt network.
@@ -145,7 +147,8 @@ var ChainParams = Params{
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
 	// https://github.com/satoshilabs/slips/blob/master/slip-0044.md
-	HDCoinType: HDCoinTypeMainNet,
+	HDCoinType:            HDCoinTypeMainNet,
+	CompatibleHDCoinTypes: []uint32{297},
 }
 
 // IsPubKeyHashAddrID returns whether the id is an identifier known to prefix a

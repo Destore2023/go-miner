@@ -650,10 +650,10 @@ func loadAddrManager(amBucket db.Bucket, pubPassphrase []byte, net *config.Param
 	if !ok {
 		return nil, ErrKeyScopeNotFound
 	}
-	if coin != net.HDCoinType {
-		str := "the coin type doesn't match the connected network"
-		return nil, errors.New(str)
-	}
+	//if coin != net.HDCoinType {
+	//	str := "the coin type doesn't match the connected network"
+	//	return nil, errors.New(str)
+	//}
 
 	remarkBytes, err := fetchRemark(amBucket)
 	if err != nil {
