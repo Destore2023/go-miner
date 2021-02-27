@@ -18,6 +18,12 @@ var (
 		Coin:    2021,
 	}
 
+	// Compatible  cointype
+	MassNetKeyScope = KeyScope{
+		Purpose: 44,
+		Coin:    297,
+	}
+
 	PocDerivationPath = DerivationPath{
 		Account: 0,
 		Branch:  0,
@@ -29,7 +35,11 @@ var (
 	}
 )
 
-var Net2KeyScope = map[uint32]KeyScope{1: TestnetKeyScope, 2021: MainnetKeyScope}
+var Net2KeyScope = map[uint32]KeyScope{
+	1:    TestnetKeyScope,
+	2021: MainnetKeyScope,
+	297:  MassNetKeyScope,
+}
 
 // KeyScope represents a restricted key scope from the primary root key within
 // the HD chain. From the root manager (m/) we can create a nearly arbitrary
