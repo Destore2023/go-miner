@@ -35,6 +35,7 @@ require (
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/fatih/set.v0 v0.2.1
 	gopkg.in/karalabe/cookiejar.v2 v2.0.0-20150724131613-8dcd6a7f4951
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 replace github.com/Sukhavati-Labs/go-miner => ./

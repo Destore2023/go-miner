@@ -5,7 +5,7 @@ import "google/api/annotations.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 
 import "google/protobuf/empty.proto";
-import "google/protobuf/any.proto";
+
 
 // API Framework general options
 
@@ -139,6 +139,12 @@ service ApiService {
   rpc ConfigureCapacity (ConfigureSpaceKeeperRequest) returns (WorkSpacesResponse) {
     option (google.api.http) = {
       post: "/v1/spaces"
+      body: "*"
+    };
+  }
+  rpc ImportCapacityWallet(ImportCapacityWalletRequest) returns (ImportCapacityWalletResponse){
+    option (google.api.http) = {
+      post : "/v1/spaces/wallet/import"
       body: "*"
     };
   }
@@ -344,7 +350,7 @@ message TxRawResult {
   repeated InputsInTx inputs = 9;
   string payload = 10;
   uint64 confirmations = 11;
-  uint32 size = 12;
+  uint32 tx_size = 12;
   string fee = 13;
   int32 status = 14;
   int32 type = 15;
@@ -408,7 +414,7 @@ message GetBlockResponse {
   ProposalArea proposal_area = 19;
   repeated string tx = 20;
   repeated TxRawResult raw_tx = 21;
-  uint32 size = 22;
+  uint32 block_size = 22;
   string time_utc = 23;
   uint32 tx_count = 24;
 }
@@ -489,7 +495,7 @@ message GetRawTransactionResponse {
   repeated Vout vout = 7;
   string payload = 8;
   uint64 confirmations = 9;
-  int32 size = 10;
+  uint32 tx_size = 10;
   string fee = 11;
   int32 status = 12;
   bool coinbase = 13;
@@ -585,6 +591,15 @@ message StakingTxPoolAwardRecord {
 
 message GetStakingTxPoolAwardRecordResponse {
   repeated StakingTxPoolAwardRecord records = 1;
+}
+
+message  ImportCapacityWalletRequest {
+  string miner_dir  = 1;
+  string passphrase = 2;
+}
+
+message  ImportCapacityWalletResponse {
+
 }
 
 message ConfigureSpaceKeeperRequest {
@@ -710,7 +725,7 @@ message GetCoinbaseResponse {
   repeated CoinbaseVout vout = 7;
   string payload = 8;
   uint64 confirmations = 9;
-  uint32 size = 10;
+  uint32 tx_size = 10;
   string total_fees = 11;
   int32 status = 12;
 }

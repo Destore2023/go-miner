@@ -208,6 +208,11 @@ func (s *Server) GetCapacitySpacesByDirs(ctx context.Context, in *empty.Empty) (
 	return &pb.WorkSpacesByDirsResponse{DirectoryCount: uint32(len(allocations)), Allocations: allocations}, nil
 }
 
+func (s *Server) ImportCapacityWallet(ctx context.Context, in *pb.ImportCapacityWalletRequest) (*pb.ImportCapacityWalletResponse, error) {
+	logging.CPrint(logging.INFO, "ImportCapacityWalletRequest called")
+	return &pb.ImportCapacityWalletResponse{}, nil
+}
+
 func (s *Server) GetCapacitySpace(ctx context.Context, in *pb.WorkSpaceRequest) (*pb.WorkSpaceResponse, error) {
 	logging.CPrint(logging.INFO, "Received a request for GetCapacitySpace", logging.LogFormat{"in": in.String()})
 	err := checkSpaceIDLen(in.SpaceId)

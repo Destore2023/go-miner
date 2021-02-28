@@ -5,7 +5,7 @@ set ver=v1.16.0
 protoc -I=%~dp0 ^
     -I %GOPATH%/pkg/mod/github.com/grpc-ecosystem/grpc-gateway@%ver%/third_party/googleapis ^
     -I %GOPATH%/pkg/mod/github.com/grpc-ecosystem/grpc-gateway@%ver% ^
-    --go_out=plugins=grpc:. ^
+    --gogo_out=plugins=grpc:. ^
     %~dp0\api.proto
 
 protoc -I=%~dp0 ^

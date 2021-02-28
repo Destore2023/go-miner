@@ -150,7 +150,7 @@ func (s *Server) marshalGetBlockResponse(block *chainutil.Block) (*pb.GetBlockRe
 		Proof:           &pb.Proof{X: hex.EncodeToString(proof.X), XPrime: hex.EncodeToString(proof.XPrime), BitLength: uint32(proof.BitLength)},
 		BlockSignature:  &pb.PoCSignature{R: hex.EncodeToString(blockHeader.Signature.R.Bytes()), S: hex.EncodeToString(blockHeader.Signature.S.Bytes())},
 		BanList:         banList,
-		Size:            uint32(block.Size()),
+		BlockSize:       uint32(block.Size()),
 		TimeUtc:         blockHeader.Timestamp.UTC().Format(time.RFC3339),
 		TxCount:         uint32(len(block.Transactions())),
 	}
