@@ -85,8 +85,9 @@ func (tp *TxPool) SetNewTxCh(ch chan *chainutil.Tx) {
 // This function is safe for concurrent access.
 func (tp *TxPool) RemoveOrphan(txHash *wire.Hash) {
 	tp.Lock()
+	defer tp.Unlock()
 	tp.orphanTxPool.removeOrphan(txHash)
-	tp.Unlock()
+
 }
 
 // isTransactionInPool returns whether or not the passed transaction already
@@ -540,6 +541,7 @@ func (tp *TxPool) maybeAcceptTransaction(tx *chainutil.Tx, isNew, rateLimit bool
 			logging.LogFormat{"txHash": txHash})
 		return nil, ErrCoinbaseTx
 	}
+	// TODO disable staking pool tx
 
 	// Don't accept transactions with a lock time after the maximum int64
 	// value for now.
@@ -828,8 +830,9 @@ func (tp *TxPool) processOrphans(hash *wire.Hash) {
 // This function is safe for concurrent access.
 func (tp *TxPool) ProcessOrphans(hash *wire.Hash) {
 	tp.Lock()
+	defer tp.Unlock()
 	tp.processOrphans(hash)
-	tp.Unlock()
+	//tp.Unlock()
 }
 
 // ProcessTransaction is the main workhorse for handling insertion of new
