@@ -1,8 +1,8 @@
 {
 	"info": {
-		"_postman_id": "1c4c7b6d-afe6-407f-8435-8812c3d96e37",
-		"name": "miner",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"_postman_id": "7352c952-7612-4e72-a299-f34f8d8e1cdb",
+		"name": "skt-miner",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
 	},
 	"item": [
 		{
@@ -10,18 +10,7 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/client/status",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"client",
-						"status"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/client/status"
 			},
 			"response": []
 		},
@@ -30,18 +19,7 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/blocks/best",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"blocks",
-						"best"
-					]
-				},
+				"url": "http://{{miner-url}}/v1/blocks/best",
 				"description": "query best block"
 			},
 			"response": []
@@ -51,18 +29,7 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/blocks/ee26300e0f068114a680a772e080507c0f9c0ca4335c382c42b78e2eafbebaa3",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"blocks",
-						"ee26300e0f068114a680a772e080507c0f9c0ca4335c382c42b78e2eafbebaa3"
-					]
-				},
+				"url": "http://{{miner-url}}/v1/blocks/ee26300e0f068114a680a772e080507c0f9c0ca4335c382c42b78e2eafbebaa3",
 				"description": "query block info"
 			},
 			"response": []
@@ -72,19 +39,7 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/blocks/hash/0",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"blocks",
-						"hash",
-						"0"
-					]
-				},
+				"url": "http://{{miner-url}}/v1/blocks/hash/0",
 				"description": "query block hash"
 			},
 			"response": []
@@ -94,19 +49,7 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/blocks/height/0",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"blocks",
-						"height",
-						"0"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/blocks/height/0"
 			},
 			"response": []
 		},
@@ -115,19 +58,7 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/blocks/ee26300e0f068114a680a772e080507c0f9c0ca4335c382c42b78e2eafbebaa3/header",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"blocks",
-						"ee26300e0f068114a680a772e080507c0f9c0ca4335c382c42b78e2eafbebaa3",
-						"header"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/blocks/ee26300e0f068114a680a772e080507c0f9c0ca4335c382c42b78e2eafbebaa3/header"
 			},
 			"response": []
 		},
@@ -136,18 +67,7 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/transactions/pool",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"transactions",
-						"pool"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/transactions/pool"
 			},
 			"response": []
 		},
@@ -156,19 +76,7 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/transactions/coinbase/2",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"transactions",
-						"coinbase",
-						"2"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/transactions/coinbase/2"
 			},
 			"response": []
 		},
@@ -177,20 +85,7 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/transactions/staking/award/record",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"transactions",
-						"staking",
-						"award",
-						"record"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/transactions/staking/award/record"
 			},
 			"response": []
 		},
@@ -199,18 +94,7 @@
 			"request": {
 				"method": "POST",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/spaces/plot",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"spaces",
-						"plot"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/spaces/plot"
 			},
 			"response": []
 		},
@@ -219,24 +103,12 @@
 			"request": {
 				"method": "POST",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}} /v1/spaces/03097f7a83c8f6fe3340e28d251cfaaab5e60995be6d45cf83aaf4d7866710a3d2-28/plot",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}} "
-					],
-					"path": [
-						"v1",
-						"spaces",
-						"03097f7a83c8f6fe3340e28d251cfaaab5e60995be6d45cf83aaf4d7866710a3d2-28",
-						"plot"
-					]
-				}
+				"url": "http://{{miner-url}} /v1/spaces/03097f7a83c8f6fe3340e28d251cfaaab5e60995be6d45cf83aaf4d7866710a3d2-28/plot"
 			},
 			"response": []
 		},
 		{
-			"name": "spaces-GetCapacitySpacesByDirs",
+			"name": "spaces-ConfigureCapacityByDirs",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -249,19 +121,26 @@
 						}
 					}
 				},
-				"url": {
-					"raw": "http://{{miner-url}}/v1/spaces/directory",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"spaces",
-						"directory"
-					]
-				},
+				"url": "http://{{miner-url}}/v1/spaces/directory",
 				"description": "config miner spaces dir"
+			},
+			"response": []
+		},
+		{
+			"name": "spaces-ImportCapactiyWallet",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"wallet_dir\":\"\",\r\n    \"import_wallet_passphrase\":\"\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://{{miner-url}}/v1/spaces/wallet/import"
 			},
 			"response": []
 		},
@@ -272,28 +151,14 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"payout_addresses\": [\r\n        \"sk1qqekrzwzvgzqt04yyc7hqt3h47pztk4k6ck0qmz5ltgw5vgu5rktgqg7mfvj\"\r\n    ],\r\n    \"capacity\": 2048,\r\n    \"passphrase\": \"123456\"\r\n}",
+					"raw": "{\r\n    \"payout_addresses\": [\r\n        \"sk1qqxkjrjy4s9hm8f8y6vcg37uv98cwrj4ul9pam5ewdx500t0qe7lyqacl7pl\"\r\n    ],\r\n    \"capacity\": 10240,\r\n    \"passphrase\": \"123456\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
 						}
 					}
 				},
-				"url": {
-					"raw": "http://127.0.0.1:9686/v1/spaces",
-					"protocol": "http",
-					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
-					],
-					"port": "9686",
-					"path": [
-						"v1",
-						"spaces"
-					]
-				},
+				"url": "http://127.0.0.1:9686/v1/spaces",
 				"description": "setting spaces"
 			},
 			"response": []
@@ -303,37 +168,16 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/spaces",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"spaces"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/spaces"
 			},
 			"response": []
 		},
 		{
-			"name": "spaces-ConfigureCapacityByDirs",
+			"name": "spaces-GetCapacitySpacesByDirs",
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/spaces/directory",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"spaces",
-						"directory"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/spaces/directory"
 			},
 			"response": []
 		},
@@ -342,18 +186,7 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/spaces/03097f7a83c8f6fe3340e28d251cfaaab5e60995be6d45cf83aaf4d7866710a3d2-28",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"spaces",
-						"03097f7a83c8f6fe3340e28d251cfaaab5e60995be6d45cf83aaf4d7866710a3d2-28"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/spaces/03097f7a83c8f6fe3340e28d251cfaaab5e60995be6d45cf83aaf4d7866710a3d2-28"
 			},
 			"response": []
 		},
@@ -362,18 +195,7 @@
 			"request": {
 				"method": "POST",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/spaces/mine",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"spaces",
-						"mine"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/spaces/mine"
 			},
 			"response": []
 		},
@@ -382,19 +204,7 @@
 			"request": {
 				"method": "POST",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/spaces/{space_id}/mine",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"spaces",
-						"{space_id}",
-						"mine"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/spaces/{space_id}/mine"
 			},
 			"response": []
 		},
@@ -403,18 +213,7 @@
 			"request": {
 				"method": "POST",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/spaces/stop",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"spaces",
-						"stop"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/spaces/stop"
 			},
 			"response": []
 		},
@@ -423,19 +222,7 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": {
-					"raw": "http://{{miner-url}}/v1/governance/config/1",
-					"protocol": "http",
-					"host": [
-						"{{miner-url}}"
-					],
-					"path": [
-						"v1",
-						"governance",
-						"config",
-						"1"
-					]
-				}
+				"url": "http://{{miner-url}}/v1/governance/config/1"
 			},
 			"response": []
 		}
