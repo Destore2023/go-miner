@@ -26,7 +26,7 @@ import (
 // |  4096    |       ...       | ProofData   | Proof Data, different decode/encode strategy in HashMap(A/B) |
 type HashMap struct {
 	data       *os.File
-	bl         int
+	bitLength  int
 	volume     pocutil.PoCValue
 	checkpoint pocutil.PoCValue
 	offset     int
@@ -170,6 +170,11 @@ func openMapFile(filePath string) (*os.File, error) {
 	return f, nil
 }
 
+// loadHashMap
+// 4096 bytes
+// +-------------------+-----------------+------------------+---------------+--------------------+--------------------+--
+// | fileCode 32 bytes | version 8 bytes | bitLength 1 byte | dbType 1 byte | checkPoint 8 bytes | publicKey 32 bytes | reserved
+// +-------------------+-----------------+------------------+---------------+--------------------+--------------------+---
 func loadHashMap(filePath string) (*HashMap, MapType, error) {
 	f, err := openMapFile(filePath)
 	if nil != err {
@@ -211,7 +216,7 @@ func loadHashMap(filePath string) (*HashMap, MapType, error) {
 	}
 	// Get BitLength
 	copy(b1[:], fileHeaderBytes[PosBitLength:])
-	hm.bl = int(b1[0])
+	hm.bitLength = int(b1[0])
 	// Get Type
 	copy(b1[:], fileHeaderBytes[PosType:])
 	typ := MapType(b1[0])
@@ -238,8 +243,8 @@ func loadHashMap(filePath string) (*HashMap, MapType, error) {
 	}
 	hm.offset = offset
 	hm.step = step
-	hm.volume = 1 << uint(hm.bl)
-	hm.recordSize = pocutil.RecordSize(hm.bl)
+	hm.volume = 1 << uint(hm.bitLength)
+	hm.recordSize = pocutil.RecordSize(hm.bitLength)
 
 	return hm, typ, nil
 }
@@ -330,7 +335,7 @@ func (hm *HashMapA) Get(key pocutil.PoCValue) ([]byte, error) {
 	if key < hm.half {
 		key = key * 2
 	} else {
-		key = pocutil.FlipValue(key, hm.bl)*2 + 1
+		key = pocutil.FlipValue(key, hm.bitLength)*2 + 1
 	}
 
 	var recordSize = hm.recordSize
@@ -346,7 +351,7 @@ func (hm *HashMapA) Set(key pocutil.PoCValue, value []byte) error {
 	if key < hm.half {
 		key = key * 2
 	} else {
-		key = pocutil.FlipValue(key, hm.bl)*2 + 1
+		key = pocutil.FlipValue(key, hm.bitLength)*2 + 1
 	}
 
 	var recordSize = hm.recordSize

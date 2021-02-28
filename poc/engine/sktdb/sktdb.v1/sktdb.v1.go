@@ -22,8 +22,8 @@ const (
 	// TODO Compatible with multiple db formats
 	TypeSktDBV1             = "massdb.v1"
 	SktDBV1Suffix           = ".massdb"
-	MapTypeHashMapA MapType = iota
-	MapTypeHashMapB
+	MapTypeHashMapA MapType = iota // 0
+	MapTypeHashMapB                // 1
 )
 
 type SktDBV1 struct {
@@ -326,7 +326,7 @@ func NewSktDBV1ForTest(filePath string) (*SktDBV1, error) {
 	return &SktDBV1{
 		HashMapB:   hmB,
 		filePathB:  filePath,
-		bl:         hmB.bl,
+		bl:         hmB.bitLength,
 		pubKeyHash: hmB.pkHash,
 		pubKey:     hmB.pk,
 	}, nil
@@ -346,7 +346,7 @@ func NewSktDBV1MapA(filePath string) (*HashMapA, error) {
 }
 
 func (hm *HashMapA) BitLength() int {
-	return hm.bl
+	return hm.bitLength
 }
 
 func (hm *HashMapA) PubKey() *pocec.PublicKey {

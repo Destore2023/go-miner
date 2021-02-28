@@ -111,7 +111,7 @@ func (sdb *SktDBV1) executePlot(result chan error) {
 func (sdb *SktDBV1) prePlotWork(cache *MemCache) error {
 	var hmA = sdb.HashMapA
 	var recordSize = hmA.recordSize
-	var bl = hmA.bl
+	var bl = hmA.bitLength
 	var pkHash = hmA.pkHash
 	var b8 [8]byte
 	var half = hmA.volume / 2
@@ -185,7 +185,7 @@ func (sdb *SktDBV1) prePlotWork(cache *MemCache) error {
 func (sdb *SktDBV1) plotWork(cache *MemCache) error {
 	var hmA, hmB = sdb.HashMapA, sdb.HashMapB
 	var half = hmB.volume / 2
-	var bl = hmA.bl
+	var bl = hmA.bitLength
 	var pkHash = hmA.pkHash
 	var recordSize = pocutil.RecordSize(bl)
 	var bs = make([]byte, recordSize*2)
