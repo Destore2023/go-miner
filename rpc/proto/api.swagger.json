@@ -2442,6 +2442,9 @@
         "import_wallet_passphrase": {
           "type": "string"
         },
+        "import_passphrase": {
+          "type": "string"
+        },
         "passphrase": {
           "type": "string"
         }

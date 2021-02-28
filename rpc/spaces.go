@@ -212,7 +212,7 @@ func (s *Server) GetCapacitySpacesByDirs(ctx context.Context, in *empty.Empty) (
 func (s *Server) ImportCapacityWallet(ctx context.Context, in *pb.ImportCapacityWalletRequest) (*pb.ImportCapacityWalletResponse, error) {
 	logging.CPrint(logging.INFO, "ImportCapacityWalletRequest called")
 	walletConfig := pocwallet.NewPocWalletConfig(in.ImportWalletDir, "leveldb")
-	importWallet, err := pocwallet.NewPoCWallet(walletConfig, []byte(in.ImportWalletPassphrase))
+	importWallet, err := pocwallet.NewPoCWallet(walletConfig, []byte(in.ImportPassphrase))
 	if err != nil {
 		return nil, err
 	}

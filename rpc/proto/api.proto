@@ -596,7 +596,8 @@ message GetStakingTxPoolAwardRecordResponse {
 message  ImportCapacityWalletRequest {
   string import_wallet_dir         = 1; // wallet dir
   string import_wallet_passphrase  = 2; // wallet passphrase
-  string passphrase                = 3; // current miner application passphrase
+  string import_passphrase         = 3; // passphrase for miner application
+  string passphrase                = 4; // current miner application passphrase
 }
 
 message  ImportCapacityWalletResponse {
