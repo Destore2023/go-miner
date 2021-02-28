@@ -45,6 +45,10 @@ func NewPoCWallet(cfg *PoCWalletConfig, password []byte) (*PoCWallet, error) {
 	}, nil
 }
 
+func (walllet *PoCWallet) ImportOtherWallet(otherWallet *PoCWallet) error {
+	return nil
+}
+
 func (wallet *PoCWallet) Close() error {
 	return wallet.store.Close()
 }

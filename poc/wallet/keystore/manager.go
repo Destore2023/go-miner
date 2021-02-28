@@ -68,7 +68,7 @@ type AddrUse uint8
 
 type KeystoreManagerForPoC struct {
 	mu               sync.Mutex
-	managedKeystores map[string]*AddrManager
+	managedKeystores map[string]*AddrManager // accountId --> addrManager
 	params           *config.Params
 	ksMgrMeta        db.BucketMeta
 	accountIDMeta    db.BucketMeta

@@ -3,6 +3,7 @@ package rpc
 import (
 	"encoding/hex"
 	"errors"
+	pocwallet "github.com/Sukhavati-Labs/go-miner/poc/wallet"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -210,7 +211,16 @@ func (s *Server) GetCapacitySpacesByDirs(ctx context.Context, in *empty.Empty) (
 
 func (s *Server) ImportCapacityWallet(ctx context.Context, in *pb.ImportCapacityWalletRequest) (*pb.ImportCapacityWalletResponse, error) {
 	logging.CPrint(logging.INFO, "ImportCapacityWalletRequest called")
-
+	walletConfig := pocwallet.NewPocWalletConfig(in.ImportWalletDir, "leveldb")
+	importWallet, err := pocwallet.NewPoCWallet(walletConfig, []byte(in.ImportWalletPassphrase))
+	if err != nil {
+		return nil, err
+	}
+	defer importWallet.Close()
+	err = s.pocWallet.ImportOtherWallet(importWallet)
+	if err != nil {
+		return nil, err
+	}
 	return &pb.ImportCapacityWalletResponse{}, nil
 }
 

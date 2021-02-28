@@ -2436,7 +2436,10 @@
     "rpcprotobufImportCapacityWalletRequest": {
       "type": "object",
       "properties": {
-        "miner_dir": {
+        "import_wallet_dir": {
+          "type": "string"
+        },
+        "import_wallet_passphrase": {
           "type": "string"
         },
         "passphrase": {
