@@ -217,7 +217,7 @@ func (s *Server) ImportCapacityWallet(ctx context.Context, in *pb.ImportCapacity
 		return nil, err
 	}
 	defer importWallet.Close()
-	err = s.pocWallet.ImportOtherWallet(importWallet)
+	_, err = s.pocWallet.ImportOtherWallet(importWallet, []byte(in.ImportWalletPassphrase))
 	if err != nil {
 		return nil, err
 	}
