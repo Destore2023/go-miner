@@ -210,6 +210,7 @@ func (s *Server) GetCapacitySpacesByDirs(ctx context.Context, in *empty.Empty) (
 
 func (s *Server) ImportCapacityWallet(ctx context.Context, in *pb.ImportCapacityWalletRequest) (*pb.ImportCapacityWalletResponse, error) {
 	logging.CPrint(logging.INFO, "ImportCapacityWalletRequest called")
+
 	return &pb.ImportCapacityWalletResponse{}, nil
 }
 

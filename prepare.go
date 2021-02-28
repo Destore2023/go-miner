@@ -132,8 +132,8 @@ func InitPoCWallet(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
-
-	manager, err := wallet.NewPoCWallet(cfg.Config, pub)
+	walletConfig := wallet.NewPocWalletConfig(cfg.Miner.MinerDir, cfg.Db.DbType)
+	manager, err := wallet.NewPoCWallet(walletConfig, pub)
 	if err != nil {
 		return err
 	}
@@ -162,8 +162,8 @@ func OpenPoCWallet(cfg *config.Config) (*wallet.PoCWallet, error) {
 			return nil, err
 		}
 	}
-
-	manager, err := wallet.NewPoCWallet(cfg.Config, pub)
+	walletConfig := wallet.NewPocWalletConfig(cfg.Miner.MinerDir, cfg.Db.DbType)
+	manager, err := wallet.NewPoCWallet(walletConfig, pub)
 	if err != nil {
 		return nil, err
 	}
@@ -180,8 +180,8 @@ func NewOrOpenPoCWallet(cfg *config.Config) (*wallet.PoCWallet, error) {
 	if len(pub) == 0 {
 		return nil, errors.New("missing pubpass")
 	}
-
-	manager, err := wallet.NewPoCWallet(cfg.Config, pub)
+	walletConfig := wallet.NewPocWalletConfig(cfg.Miner.MinerDir, cfg.Db.DbType)
+	manager, err := wallet.NewPoCWallet(walletConfig, pub)
 	if err != nil {
 		return nil, err
 	}

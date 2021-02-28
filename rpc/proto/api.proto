@@ -594,8 +594,9 @@ message GetStakingTxPoolAwardRecordResponse {
 }
 
 message  ImportCapacityWalletRequest {
-  string miner_dir  = 1;
-  string passphrase = 2;
+  string wallet_dir  = 1;
+  string db_type     = 2;
+  string passphrase  = 3;
 }
 
 message  ImportCapacityWalletResponse {
