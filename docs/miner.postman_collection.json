@@ -127,24 +127,6 @@
 			"response": []
 		},
 		{
-			"name": "spaces-ImportCapactiyWallet",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"wallet_dir\":\"\",\r\n    \"import_wallet_passphrase\":\"\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": "http://{{miner-url}}/v1/spaces/wallet/import"
-			},
-			"response": []
-		},
-		{
 			"name": "spaces-ConfigureCapacity",
 			"request": {
 				"method": "POST",
@@ -223,6 +205,114 @@
 				"method": "GET",
 				"header": [],
 				"url": "http://{{miner-url}}/v1/governance/config/1"
+			},
+			"response": []
+		},
+		{
+			"name": "wallets-ExportKeystore",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"wallet_id\":\"\",\r\n    \r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://{{miner-url}}/v1/wallets/export"
+			},
+			"response": []
+		},
+		{
+			"name": "wallets-ExportKeystoreByDir",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"wallet_dir\":\"C:\\\\Users\\\\cui\\\\Downloads\\\\miner.mass\\\\miner\",\r\n    \"passphrase\":\"pub1234\",\r\n    \"wallet_passphrase\":\"priv1234\",\r\n    \"export_path\":\"d:\\\\\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://{{miner-url}}/v1/wallets/export/directory"
+			},
+			"response": []
+		},
+		{
+			"name": "wallets-GetWallets",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://{{miner-url}}/v1/wallets"
+			},
+			"response": []
+		},
+		{
+			"name": "wallets-ImportKeystore",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": "http://{{miner-url}}/v1/wallets/import"
+			},
+			"response": []
+		},
+		{
+			"name": "wallets-ImportKeystoreByDir",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"wallet_dir\":\"C:\\\\Users\\\\cui\\\\Downloads\\\\miner.mass\\\\miner\",\r\n    \"import_passphrase\":\"pub1234\",\r\n    \"import_wallet_passphrase\":\"priv1234\",\r\n    \"wallet_passphrase\":\"\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://{{miner-url}}/v1/wallets/import/directory"
+			},
+			"response": []
+		},
+		{
+			"name": "wallets-UnlockWallet",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": "http://{{miner-url}}/v1/wallets/unlocking"
+			},
+			"response": []
+		},
+		{
+			"name": "wallets-LockWallet",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": "http://{{miner-url}}/v1/wallets/locking"
+			},
+			"response": []
+		},
+		{
+			"name": "wallets-ChangePrivatePass",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": "http://{{miner-url}}/v1/wallets/privpass/changing"
+			},
+			"response": []
+		},
+		{
+			"name": "wallets-ChangePublicPass",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": "http://{{miner-url}}/v1/wallets/pubpass/changing"
 			},
 			"response": []
 		}
