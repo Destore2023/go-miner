@@ -33,29 +33,21 @@ func (s *Server) GetKeystore(ctx context.Context, msg *empty.Empty) (*pb.GetKeys
 	}, nil
 }
 
-func getKeystoreDetail(addrMgr *keystore.AddrManager) *pb.PocWallet {
-	hdPath := &pb.HDWalletPath{
-		Purpose: addrMgr.KeyScope().Purpose,
-		Coin:    addrMgr.KeyScope().Coin,
-	}
-	walletInfo := &pb.PocWallet{
-		AccountId: addrMgr.Name(),
-		Remark:    addrMgr.Remarks(),
-		HDPath:    hdPath,
-	}
-	return walletInfo
+func getKeystoreDetail(keystore *keystore.Keystore) *pb.PocWallet {
+	return &pb.PocWallet{}
 }
 
 func (s *Server) GetKeystoreDetail(ctx context.Context, in *pb.GetKeystoreDetailRequest) (*pb.GetKeystoreDetailResponse, error) {
-	accountId := in.AccountId
-	manager, ok := s.pocWallet.GetAddrManager(accountId)
-	if !ok {
-		return nil, fmt.Errorf("can't find this account")
+	keystore, err := s.pocWallet.ExportKeystore(in.WalletId, []byte(in.Passphrase))
+	if err != nil {
+		return nil, err
 	}
-	walletInfo := getKeystoreDetail(manager)
+	detail := getKeystoreDetail(keystore)
+	detail.WalletId = in.WalletId
+
 	return &pb.GetKeystoreDetailResponse{
-		AccountId: accountId,
-		Wallet:    walletInfo,
+		WalletId: in.WalletId,
+		Wallet:   detail,
 	}, nil
 }
 
@@ -70,14 +62,14 @@ func (s *Server) ExportKeystore(ctx context.Context, in *pb.ExportKeystoreReques
 		return nil, err
 	}
 	// get keystore json from wallet
-	keystoreJSON, err := s.pocWallet.ExportKeystore(in.WalletId, []byte(in.Passphrase))
+	keystore, err := s.pocWallet.ExportKeystore(in.WalletId, []byte(in.Passphrase))
 	if err != nil {
 		logging.CPrint(logging.ERROR, ErrCode[ErrAPIExportWallet], logging.LogFormat{
 			"err": err,
 		})
 		return nil, status.New(ErrAPIExportWallet, ErrCode[ErrAPIExportWallet]).Err()
 	}
-
+	keystoreJSON := keystore.Bytes()
 	// write keystore json file to disk
 	exportFileName := fmt.Sprintf("%s/%s-%s.json", in.ExportPath, keystoreFileNamePrefix, in.WalletId)
 	file, err := os.OpenFile(exportFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)

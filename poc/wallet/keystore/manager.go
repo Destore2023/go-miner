@@ -1123,11 +1123,11 @@ func (kmc *KeystoreManagerForPoC) ImportKeystore(keystoreJson []byte, oldPrivPas
 }
 
 // ExportKeystore
-func (kmc *KeystoreManagerForPoC) ExportKeystore(accountID string, privPassphrase []byte) ([]byte, error) {
+func (kmc *KeystoreManagerForPoC) ExportKeystore(accountID string, privPassphrase []byte) (keystore *Keystore, err error) {
 	kmc.mu.Lock()
 	defer kmc.mu.Unlock()
 
-	keystoreBytes := make([]byte, 0)
+	//keystoreBytes := make([]byte, 0)
 	addrManager, found := kmc.managedKeystores[accountID]
 	if !found {
 		logging.CPrint(logging.ERROR, "account not exists",
@@ -1136,18 +1136,19 @@ func (kmc *KeystoreManagerForPoC) ExportKeystore(accountID string, privPassphras
 			})
 		return nil, ErrAccountNotFound
 	}
-	err := db.View(kmc.db, func(dbTransaction db.ReadTransaction) error {
-		keystore, err := addrManager.exportKeystore(dbTransaction, privPassphrase)
+	err = db.View(kmc.db, func(dbTransaction db.ReadTransaction) error {
+		keystore, err = addrManager.exportKeystore(dbTransaction, privPassphrase)
 		if err != nil {
 			return err
 		}
-		keystoreBytes = keystore.Bytes()
+		//keystoreBytes = keystore.Bytes()
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return keystoreBytes, nil
+	return keystore, nil
+	//return keystoreBytes, nil
 }
 
 func (kmc *KeystoreManagerForPoC) ExportKeystores(privPassphrase []byte) (map[string]string, error) {

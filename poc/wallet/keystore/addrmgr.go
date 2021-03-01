@@ -143,7 +143,7 @@ func GetKeystoreFromJson(keysJson []byte) (*Keystore, error) {
 
 // NOTE: this func will leave the masterKeyPriv derived
 //  unlocked --> check hashedPassphrase
-//  locked   -->
+//  locked   --> check masterKeyPriv
 func (a *AddrManager) checkPassword(passphrase []byte) error {
 	if a.unlocked {
 		saltedPassphrase := append(a.privPassphraseSalt[:],

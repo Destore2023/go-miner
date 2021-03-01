@@ -239,7 +239,8 @@ service ApiService {
 
   rpc GetKeystoreDetail (GetKeystoreDetailRequest) returns (GetKeystoreDetailResponse){
     option (google.api.http) = {
-       get: "/v1/wallets/{account_id}/detail"
+       post: "/v1/wallets/detail"
+       body: "*"
     };
   }
 
@@ -295,7 +296,7 @@ message WalletCrypto {
 }
 
 message PocWallet {
-  string account_id     = 1;
+  string wallet_id      = 1;
   string remark         = 2;
   WalletCrypto crypto   = 3;
   HDWalletPath h_d_path = 4;
@@ -812,11 +813,12 @@ message WalletSummary {
 }
 
 message GetKeystoreDetailRequest {
-  string account_id = 1;
+  string wallet_id  = 1;
+  string passphrase = 2;
 }
 
 message GetKeystoreDetailResponse {
-  string account_id = 1;
+  string wallet_id = 1;
   PocWallet wallet  = 2;
 }
 
