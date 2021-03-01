@@ -1450,7 +1450,10 @@ It is to export keystore.
 
 #### ImportKeystore
 
-    POST /v1/wallets/import
+``` 
+POST /v1/wallets/import
+```
+
 
 It is to import keystore.
 
@@ -1459,6 +1462,51 @@ It is to import keystore.
 | Parameter | Type | Attribute | Usage | Note |
 | :----: | :----: | :----: | ------ | ------|
 | import_path | string | required | filepath of target keystore | |
+| old_passphrase | string | required | old passphrase | |
+| new_passphrase | string | required | new passphrase | |
+
+##### Returns
+
+- `Boolean` - `status`
+- `String` - `wallet_id`
+- `String` - `remark`
+
+##### Example
+
+**request**
+
+```json
+{
+	"import_path": "./keystore-ac108dg4my870c0t07u22y6kurkfwjvk2580lk98m0.json",
+	"old_passphrase": "654321",
+	"new_passphrase": "123456"
+}
+```
+
+**response**
+
+```json
+{
+    "status": true,
+    "wallet_id": "ac108dg4my870c0t07u22y6kurkfwjvk2580lk98m0",
+    "remark": ""
+}
+```
+
+#### ImportKeystoreByDir
+
+``` 
+POST /v1/wallets/import/directory
+```
+
+
+It is to import other keystore by a directory.
+
+##### Parameters
+
+| Parameter | Type | Attribute | Usage | Note |
+| :----: | :----: | :----: | ------ | ------|
+| wallet_dir | string | required | filepath of target keystore | |
 | old_passphrase | string | required | old passphrase | |
 | new_passphrase | string | required | new passphrase | |
 

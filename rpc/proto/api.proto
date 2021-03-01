@@ -267,8 +267,34 @@ service ApiService {
   }
 }
 
+// ========= wallet ====================
 
+message HDWalletPath {
+  uint32  purpose            = 1;
+  uint32  coin               = 2;
+  uint32  account            = 3;
+  uint32  external_child_num = 4;
+  uint32  internal_child_num = 5;
+}
 
+message WalletCrypto {
+  string cipher                   = 1;
+  string master_h_d_priv_key_enc  = 2;
+  string kdf                      = 3;
+  string pub_params               = 4;
+  string priv_params              = 5;
+  string crypto_key_pub_enc       = 6;
+  string crypto_key_priv_enc      = 7;
+}
+
+message PocWallet {
+  string account_id    = 1;
+  string remark        = 2;
+  WalletCrypto crypto  = 3;
+  HDWalletPath hd_path = 4;
+}
+
+// ========== block ====================
 message GetBlockHashByHeightRequest {
   uint64 height = 1;
 }

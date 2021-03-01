@@ -1538,20 +1538,6 @@ func (kmc *KeystoreManagerForPoC) GetManagedAddrManager() []*AddrManager {
 	return ret
 }
 
-func (kmc *KeystoreManagerForPoC) ImportManagedAddrManager(importKeystore *KeystoreManagerForPoC) (map[string]string, error) {
-	kmc.mu.Lock()
-	defer kmc.mu.Unlock()
-	ret := make(map[string]string, 0)
-	for ac, m := range importKeystore.managedKeystores {
-		_, ok := kmc.managedKeystores[ac]
-		if ok {
-			return ret, fmt.Errorf("Duplicate account id ")
-		}
-		kmc.managedKeystores[ac] = m
-	}
-	return ret, nil
-}
-
 func (kmc *KeystoreManagerForPoC) ChainParams() *config.Params {
 	kmc.mu.Lock()
 	defer kmc.mu.Unlock()

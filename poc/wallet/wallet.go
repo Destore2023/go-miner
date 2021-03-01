@@ -45,14 +45,6 @@ func NewPoCWallet(cfg *PoCWalletConfig, password []byte) (*PoCWallet, error) {
 	}, nil
 }
 
-func (walllet *PoCWallet) ImportOtherWallet(otherWallet *PoCWallet, privPass []byte) (map[string]string, error) {
-	err := otherWallet.Unlock(privPass)
-	if err != nil {
-		return nil, err
-	}
-	return walllet.ImportManagedAddrManager(otherWallet.KeystoreManagerForPoC)
-}
-
 func (wallet *PoCWallet) Close() error {
 	return wallet.store.Close()
 }
