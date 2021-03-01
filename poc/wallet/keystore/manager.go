@@ -1538,6 +1538,13 @@ func (kmc *KeystoreManagerForPoC) GetManagedAddrManager() []*AddrManager {
 	return ret
 }
 
+func (kmc *KeystoreManagerForPoC) GetAddrManager(accountId string) (*AddrManager, bool) {
+	kmc.mu.Lock()
+	defer kmc.mu.Unlock()
+	manager, ok := kmc.managedKeystores[accountId]
+	return manager, ok
+}
+
 func (kmc *KeystoreManagerForPoC) ChainParams() *config.Params {
 	kmc.mu.Lock()
 	defer kmc.mu.Unlock()

@@ -1336,6 +1336,43 @@
         ]
       }
     },
+    "/v1/wallets/{account_id}/detail": {
+      "get": {
+        "operationId": "ApiService_GetKeystoreDetail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetKeystoreDetailResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
     "/v2/blocks/{id}": {
       "get": {
         "operationId": "ApiService_GetBlockV2",
@@ -2115,6 +2152,17 @@
         }
       }
     },
+    "rpcprotobufGetKeystoreDetailResponse": {
+      "type": "object",
+      "properties": {
+        "account_id": {
+          "type": "string"
+        },
+        "wallet": {
+          "$ref": "#/definitions/rpcprotobufPocWallet"
+        }
+      }
+    },
     "rpcprotobufGetKeystoreResponse": {
       "type": "object",
       "properties": {
@@ -2441,6 +2489,31 @@
         }
       }
     },
+    "rpcprotobufHDWalletPath": {
+      "type": "object",
+      "properties": {
+        "purpose": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "coin": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "account": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "external_child_num": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "internal_child_num": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
     "rpcprotobufHeader": {
       "type": "object",
       "properties": {
@@ -2500,19 +2573,16 @@
     "rpcprotobufImportKeystoreByDirRequest": {
       "type": "object",
       "properties": {
-        "wallet_dir": {
+        "import_keystore_dir": {
           "type": "string"
         },
-        "passphrase": {
+        "import_pubpass": {
           "type": "string"
         },
-        "wallet_passphrase": {
+        "import_privpass": {
           "type": "string"
         },
-        "import_wallet_passphrase": {
-          "type": "string"
-        },
-        "import_passphrase": {
+        "new_privpass": {
           "type": "string"
         }
       }
@@ -2609,6 +2679,23 @@
         },
         "s": {
           "type": "string"
+        }
+      }
+    },
+    "rpcprotobufPocWallet": {
+      "type": "object",
+      "properties": {
+        "account_id": {
+          "type": "string"
+        },
+        "remark": {
+          "type": "string"
+        },
+        "crypto": {
+          "$ref": "#/definitions/rpcprotobufWalletCrypto"
+        },
+        "h_d_path": {
+          "$ref": "#/definitions/rpcprotobufHDWalletPath"
         }
       }
     },
@@ -2852,6 +2939,32 @@
         },
         "script_public_key": {
           "$ref": "#/definitions/rpcprotobufScriptPubKeyResult"
+        }
+      }
+    },
+    "rpcprotobufWalletCrypto": {
+      "type": "object",
+      "properties": {
+        "cipher": {
+          "type": "string"
+        },
+        "master_h_d_priv_key_enc": {
+          "type": "string"
+        },
+        "kdf": {
+          "type": "string"
+        },
+        "pub_params": {
+          "type": "string"
+        },
+        "priv_params": {
+          "type": "string"
+        },
+        "crypto_key_pub_enc": {
+          "type": "string"
+        },
+        "crypto_key_priv_enc": {
+          "type": "string"
         }
       }
     },

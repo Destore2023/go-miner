@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Sukhavati-Labs/go-miner/poc/wallet"
+	"github.com/Sukhavati-Labs/go-miner/poc/wallet/keystore"
 	"io"
 	"os"
 
@@ -29,6 +30,32 @@ func (s *Server) GetKeystore(ctx context.Context, msg *empty.Empty) (*pb.GetKeys
 	}
 	return &pb.GetKeystoreResponse{
 		Wallets: keystores,
+	}, nil
+}
+
+func getKeystoreDetail(addrMgr *keystore.AddrManager) *pb.PocWallet {
+	hdPath := &pb.HDWalletPath{
+		Purpose: addrMgr.KeyScope().Purpose,
+		Coin:    addrMgr.KeyScope().Coin,
+	}
+	walletInfo := &pb.PocWallet{
+		AccountId: addrMgr.Name(),
+		Remark:    addrMgr.Remarks(),
+		HDPath:    hdPath,
+	}
+	return walletInfo
+}
+
+func (s *Server) GetKeystoreDetail(ctx context.Context, in *pb.GetKeystoreDetailRequest) (*pb.GetKeystoreDetailResponse, error) {
+	accountId := in.AccountId
+	manager, ok := s.pocWallet.GetAddrManager(accountId)
+	if !ok {
+		return nil, fmt.Errorf("can't find this account")
+	}
+	walletInfo := getKeystoreDetail(manager)
+	return &pb.GetKeystoreDetailResponse{
+		AccountId: accountId,
+		Wallet:    walletInfo,
 	}, nil
 }
 
@@ -170,18 +197,18 @@ func (s *Server) ImportKeystore(ctx context.Context, in *pb.ImportKeystoreReques
 
 func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreByDirRequest) (*pb.ImportKeystoreByDirResponse, error) {
 	logging.CPrint(logging.INFO, "rpc ImportKeystoreByDirs called")
-	pocWalletConfig := wallet.NewPocWalletConfig(in.WalletDir, "leveldb")
-	exportWallet, err := wallet.NewPoCWallet(pocWalletConfig, []byte(in.ImportPassphrase))
+	pocWalletConfig := wallet.NewPocWalletConfig(in.ImportKeystoreDir, "leveldb")
+	exportWallet, err := wallet.NewPoCWallet(pocWalletConfig, []byte(in.ImportPubpass))
 	if err != nil {
 		return nil, err
 	}
 	defer exportWallet.Close()
-	keystores, err := exportWallet.ExportKeystores([]byte(in.ImportWalletPassphrase))
+	keystores, err := exportWallet.ExportKeystores([]byte(in.ImportPrivpass))
 	if err != nil {
 		return nil, err
 	}
 	for _, keystoreJson := range keystores {
-		_, _, err := s.pocWallet.ImportKeystore([]byte(keystoreJson), []byte(in.ImportWalletPassphrase), []byte(in.WalletPassphrase))
+		_, _, err := s.pocWallet.ImportKeystore([]byte(keystoreJson), []byte(in.ImportPrivpass), []byte(in.NewPrivpass))
 		if err != nil {
 			return nil, err
 		}

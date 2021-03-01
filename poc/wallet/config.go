@@ -1,17 +1,20 @@
 package wallet
 
-import "path/filepath"
+import (
+	"path/filepath"
+	"strings"
+)
+
+const (
+	DBDirName = "keystore"
+)
 
 type PoCWalletConfig struct {
-	dataDir string
-	dbType  string
-	dbPath  string
+	dbType string
+	dbPath string
 }
 
 func (c *PoCWalletConfig) DBPath() string {
-	if c.dbPath == "" {
-		c.dbPath = filepath.Join(c.dataDir, "keystore")
-	}
 	return c.dbPath
 }
 
@@ -20,8 +23,11 @@ func (c PoCWalletConfig) DBType() string {
 }
 
 func NewPocWalletConfig(root string, dbType string) *PoCWalletConfig {
+	if !strings.HasSuffix(root, DBDirName) {
+		root = filepath.Join(root, DBDirName)
+	}
 	return &PoCWalletConfig{
-		dataDir: root,
-		dbType:  dbType,
+		dbPath: root,
+		dbType: dbType,
 	}
 }

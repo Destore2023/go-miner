@@ -236,6 +236,13 @@ service ApiService {
       get:"/v1/wallets"
     };
   }
+
+  rpc GetKeystoreDetail (GetKeystoreDetailRequest) returns (GetKeystoreDetailResponse){
+    option (google.api.http) = {
+       get: "/v1/wallets/{account_id}/detail"
+    };
+  }
+
   rpc UnlockWallet (UnlockWalletRequest) returns (UnlockWalletResponse) {
     option (google.api.http) = {
       post:"/v1/wallets/unlocking"
@@ -288,10 +295,10 @@ message WalletCrypto {
 }
 
 message PocWallet {
-  string account_id    = 1;
-  string remark        = 2;
-  WalletCrypto crypto  = 3;
-  HDWalletPath hd_path = 4;
+  string account_id     = 1;
+  string remark         = 2;
+  WalletCrypto crypto   = 3;
+  HDWalletPath h_d_path = 4;
 }
 
 // ========== block ====================
@@ -789,11 +796,10 @@ message ImportKeystoreResponse {
 }
 
 message ImportKeystoreByDirRequest {
-  string wallet_dir                = 1;  // wallet dir which you want import
-  string passphrase                = 2;  // miner application passphrase
-  string wallet_passphrase         = 3;  //
-  string import_wallet_passphrase  = 4;  //
-  string import_passphrase         = 5;  //
+  string import_keystore_dir       = 1;  // wallet keystore dir which you want import
+  string import_pubpass            = 2;  // import wallet public passphrase
+  string import_privpass           = 3;  // import wallet private passphrase
+  string new_privpass              = 4;  // miner application passphrase
 }
 
 message ImportKeystoreByDirResponse {
@@ -803,6 +809,15 @@ message ImportKeystoreByDirResponse {
 message WalletSummary {
   string wallet_id = 1;
   string remark = 2; // optional
+}
+
+message GetKeystoreDetailRequest {
+  string account_id = 1;
+}
+
+message GetKeystoreDetailResponse {
+  string account_id = 1;
+  PocWallet wallet  = 2;
 }
 
 message GetKeystoreResponse {
