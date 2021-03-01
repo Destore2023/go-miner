@@ -763,11 +763,15 @@ message ImportKeystoreResponse {
 }
 
 message ImportKeystoreByDirRequest {
-
+  string wallet_dir                = 1;  // wallet dir which you want import
+  string passphrase                = 2;  // miner application passphrase
+  string wallet_passphrase         = 3;  //
+  string import_wallet_passphrase  = 4;  //
+  string import_passphrase         = 5;  //
 }
 
 message ImportKeystoreByDirResponse {
-
+  string keystore = 1;
 }
 
 message WalletSummary {

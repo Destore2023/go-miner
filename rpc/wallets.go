@@ -170,7 +170,30 @@ func (s *Server) ImportKeystore(ctx context.Context, in *pb.ImportKeystoreReques
 
 func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreByDirRequest) (*pb.ImportKeystoreByDirResponse, error) {
 	logging.CPrint(logging.INFO, "rpc ImportKeystoreByDirs called")
-	return &pb.ImportKeystoreByDirResponse{}, nil
+	pocWalletConfig := wallet.NewPocWalletConfig(in.WalletDir, "leveldb")
+	exportWallet, err := wallet.NewPoCWallet(pocWalletConfig, []byte(in.ImportPassphrase))
+	if err != nil {
+		return nil, err
+	}
+	defer exportWallet.Close()
+	keystores, err := exportWallet.ExportKeystores([]byte(in.ImportWalletPassphrase))
+	if err != nil {
+		return nil, err
+	}
+	for _, keystoreJson := range keystores {
+		_, _, err := s.pocWallet.ImportKeystore([]byte(keystoreJson), []byte(in.ImportWalletPassphrase), []byte(in.WalletPassphrase))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	keystoreJSON, err := json.Marshal(keystores)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ImportKeystoreByDirResponse{
+		Keystore: string(keystoreJSON),
+	}, nil
 }
 
 func (s *Server) UnlockWallet(ctx context.Context, in *pb.UnlockWalletRequest) (*pb.UnlockWalletResponse, error) {

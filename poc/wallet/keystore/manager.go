@@ -1047,6 +1047,7 @@ func (kmc *KeystoreManagerForPoC) allocAddrMgrNamespace(dbTransaction db.DBTrans
 	return amBucketMeta, nil
 }
 
+//ImportKeystore
 func (kmc *KeystoreManagerForPoC) ImportKeystore(keystoreJson []byte, oldPrivPass, newPrivPass []byte) (string, string, error) {
 	kmc.mu.Lock()
 	defer kmc.mu.Unlock()

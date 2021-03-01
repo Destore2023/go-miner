@@ -2498,10 +2498,32 @@
       }
     },
     "rpcprotobufImportKeystoreByDirRequest": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "wallet_dir": {
+          "type": "string"
+        },
+        "passphrase": {
+          "type": "string"
+        },
+        "wallet_passphrase": {
+          "type": "string"
+        },
+        "import_wallet_passphrase": {
+          "type": "string"
+        },
+        "import_passphrase": {
+          "type": "string"
+        }
+      }
     },
     "rpcprotobufImportKeystoreByDirResponse": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "keystore": {
+          "type": "string"
+        }
+      }
     },
     "rpcprotobufImportKeystoreRequest": {
       "type": "object",
