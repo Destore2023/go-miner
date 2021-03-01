@@ -3,7 +3,9 @@ package rpc
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/Sukhavati-Labs/go-miner/poc/wallet"
 	"io"
 	"os"
 
@@ -81,6 +83,53 @@ func (s *Server) ExportKeystore(ctx context.Context, in *pb.ExportKeystoreReques
 	}, nil
 }
 
+func (s *Server) ExportKeystoreByDir(ctx context.Context, in *pb.ExportKeystoreByDirRequest) (*pb.ExportKeystoreByDirResponse, error) {
+	logging.CPrint(logging.INFO, "rpc ExportKeystoreByDirs called")
+	pocWalletConfig := wallet.NewPocWalletConfig(in.WalletDir, "leveldb")
+	exportWallet, err := wallet.NewPoCWallet(pocWalletConfig, []byte(in.Passphrase))
+	if err != nil {
+		return nil, err
+	}
+	defer exportWallet.Close()
+	keystores, err := exportWallet.ExportKeystores([]byte(in.WalletPassphrase))
+	if err != nil {
+		return nil, err
+	}
+	keystoreJSON, err := json.Marshal(keystores)
+	if err != nil {
+		return nil, err
+	}
+	// write keystore json file to disk
+	exportFileName := fmt.Sprintf("%s/%s-all.json", in.ExportPath, keystoreFileNamePrefix)
+	file, err := os.OpenFile(exportFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		logging.CPrint(logging.ERROR, ErrCode[ErrAPIOpenFile], logging.LogFormat{
+			"error": err,
+		})
+		return nil, status.New(ErrAPIOpenFile, ErrCode[ErrAPIOpenFile]).Err()
+	}
+	defer file.Close()
+	writer := bufio.NewWriter(file)
+	_, err = writer.WriteString(string(keystoreJSON))
+	if err != nil {
+		logging.CPrint(logging.ERROR, ErrCode[ErrAPIWriteFile], logging.LogFormat{
+			"error": err,
+		})
+		return nil, status.New(ErrAPIWriteFile, ErrCode[ErrAPIWriteFile]).Err()
+	}
+	err = writer.Flush()
+	if err != nil {
+		logging.CPrint(logging.ERROR, ErrCode[ErrAPIFlush], logging.LogFormat{
+			"error": err,
+		})
+		return nil, status.New(ErrAPIFlush, ErrCode[ErrAPIFlush]).Err()
+	}
+	logging.CPrint(logging.INFO, "the request to export keystore was successfully answered")
+	return &pb.ExportKeystoreByDirResponse{
+		Keystore: string(keystoreJSON),
+	}, nil
+}
+
 func (s *Server) ImportKeystore(ctx context.Context, in *pb.ImportKeystoreRequest) (*pb.ImportKeystoreResponse, error) {
 	err := checkPassLen(in.OldPassphrase)
 	if err != nil {
@@ -117,6 +166,11 @@ func (s *Server) ImportKeystore(ctx context.Context, in *pb.ImportKeystoreReques
 		WalletId: accountID,
 		Remark:   remark,
 	}, nil
+}
+
+func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreByDirRequest) (*pb.ImportKeystoreByDirResponse, error) {
+	logging.CPrint(logging.INFO, "rpc ImportKeystoreByDirs called")
+	return &pb.ImportKeystoreByDirResponse{}, nil
 }
 
 func (s *Server) UnlockWallet(ctx context.Context, in *pb.UnlockWalletRequest) (*pb.UnlockWalletResponse, error) {

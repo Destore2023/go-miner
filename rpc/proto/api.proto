@@ -142,12 +142,6 @@ service ApiService {
       body: "*"
     };
   }
-  rpc ImportCapacityWallet(ImportCapacityWalletRequest) returns (ImportCapacityWalletResponse){
-    option (google.api.http) = {
-      post : "/v1/spaces/wallet/import"
-      body: "*"
-    };
-  }
   rpc GetCapacitySpacesByDirs (google.protobuf.Empty) returns (WorkSpacesByDirsResponse) {
     option (google.api.http) = {
       get: "/v1/spaces/directory"
@@ -211,10 +205,16 @@ service ApiService {
       body: "*"
     };
   }
-  rpc ExportKeystore (ExportKeystoreRequest) returns (ExportKeystoreResponse) {
+  rpc ExportKeystore (ExportKeystoreRequest) returns(ExportKeystoreResponse) {
     option (google.api.http) = {
-      post:"/v1/wallets/export"
-      body:"*"
+      post: "/v1/wallets/export"
+      body: "*"
+    };
+  }
+  rpc ExportKeystoreByDir (ExportKeystoreByDirRequest) returns (ExportKeystoreByDirResponse){
+    option (google.api.http) = {
+      post: "/v1/wallets/export/directory"
+      body: "*"
     };
   }
   rpc ImportKeystore (ImportKeystoreRequest) returns (ImportKeystoreResponse) {
@@ -223,6 +223,14 @@ service ApiService {
       body:"*"
     };
   }
+
+  rpc ImportKeystoreByDir (ImportKeystoreByDirRequest) returns (ImportKeystoreByDirResponse) {
+    option (google.api.http) = {
+      post: "/v1/wallets/import/directory"
+      body: "*"
+    };
+  }
+
   rpc GetKeystore (google.protobuf.Empty) returns (GetKeystoreResponse) {
     option (google.api.http) = {
       get:"/v1/wallets"
@@ -593,17 +601,6 @@ message GetStakingTxPoolAwardRecordResponse {
   repeated StakingTxPoolAwardRecord records = 1;
 }
 
-message  ImportCapacityWalletRequest {
-  string import_wallet_dir         = 1; // wallet dir
-  string import_wallet_passphrase  = 2; // wallet passphrase
-  string import_passphrase         = 3; // passphrase for miner application
-  string passphrase                = 4; // current miner application passphrase
-}
-
-message  ImportCapacityWalletResponse {
-
-}
-
 message ConfigureSpaceKeeperRequest {
   uint64          capacity         = 1;
   repeated string payout_addresses = 2;
@@ -742,6 +739,17 @@ message ExportKeystoreResponse {
   string keystore = 1;
 }
 
+message ExportKeystoreByDirRequest {
+  string wallet_dir        = 1;
+  string passphrase        = 2;
+  string wallet_passphrase = 3;
+  string export_path       = 4;
+}
+
+message ExportKeystoreByDirResponse {
+  string keystore = 1;
+}
+
 message ImportKeystoreRequest {
   string import_path = 1;
   string old_passphrase = 2;
@@ -752,6 +760,14 @@ message ImportKeystoreResponse {
   bool status = 1;
   string wallet_id = 2;
   string remark = 3;
+}
+
+message ImportKeystoreByDirRequest {
+
+}
+
+message ImportKeystoreByDirResponse {
+
 }
 
 message WalletSummary {

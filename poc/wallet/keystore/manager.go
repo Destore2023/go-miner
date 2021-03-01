@@ -1149,6 +1149,26 @@ func (kmc *KeystoreManagerForPoC) ExportKeystore(accountID string, privPassphras
 	}
 }
 
+func (kmc *KeystoreManagerForPoC) ExportKeystores(privPassphrase []byte) (map[string]string, error) {
+	kmc.mu.Lock()
+	defer kmc.mu.Unlock()
+	ret := make(map[string]string)
+	for ac, addrManager := range kmc.managedKeystores {
+		err := db.View(kmc.db, func(dbTransaction db.ReadTransaction) error {
+			keystore, err := addrManager.exportKeystore(dbTransaction, privPassphrase)
+			if err != nil {
+				return err
+			}
+			ret[ac] = string(keystore.Bytes())
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return ret, nil
+}
+
 func (kmc *KeystoreManagerForPoC) DeleteKeystore(accountID string, privPassphrase []byte) (bool, error) {
 	kmc.mu.Lock()
 	defer kmc.mu.Unlock()

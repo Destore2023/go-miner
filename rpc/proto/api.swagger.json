@@ -593,45 +593,6 @@
         ]
       }
     },
-    "/v1/spaces/wallet/import": {
-      "post": {
-        "operationId": "ApiService_ImportCapacityWallet",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/rpcprotobufImportCapacityWalletResponse"
-            }
-          },
-          "404": {
-            "description": "Not found.",
-            "schema": {
-              "type": "string",
-              "format": "string"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/rpcprotobufImportCapacityWalletRequest"
-            }
-          }
-        ],
-        "tags": [
-          "ApiService"
-        ]
-      }
-    },
     "/v1/spaces/{space_id}": {
       "get": {
         "operationId": "ApiService_GetCapacitySpace",
@@ -1102,6 +1063,45 @@
         ]
       }
     },
+    "/v1/wallets/export/directory": {
+      "post": {
+        "operationId": "ApiService_ExportKeystoreByDir",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufExportKeystoreByDirResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufExportKeystoreByDirRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
     "/v1/wallets/import": {
       "post": {
         "operationId": "ApiService_ImportKeystore",
@@ -1133,6 +1133,45 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/rpcprotobufImportKeystoreRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/wallets/import/directory": {
+      "post": {
+        "operationId": "ApiService_ImportKeystoreByDir",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufImportKeystoreByDirResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufImportKeystoreByDirRequest"
             }
           }
         ],
@@ -1609,6 +1648,31 @@
           }
         },
         "passphrase": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufExportKeystoreByDirRequest": {
+      "type": "object",
+      "properties": {
+        "wallet_dir": {
+          "type": "string"
+        },
+        "passphrase": {
+          "type": "string"
+        },
+        "wallet_passphrase": {
+          "type": "string"
+        },
+        "export_path": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufExportKeystoreByDirResponse": {
+      "type": "object",
+      "properties": {
+        "keystore": {
           "type": "string"
         }
       }
@@ -2433,24 +2497,10 @@
         }
       }
     },
-    "rpcprotobufImportCapacityWalletRequest": {
-      "type": "object",
-      "properties": {
-        "import_wallet_dir": {
-          "type": "string"
-        },
-        "import_wallet_passphrase": {
-          "type": "string"
-        },
-        "import_passphrase": {
-          "type": "string"
-        },
-        "passphrase": {
-          "type": "string"
-        }
-      }
+    "rpcprotobufImportKeystoreByDirRequest": {
+      "type": "object"
     },
-    "rpcprotobufImportCapacityWalletResponse": {
+    "rpcprotobufImportKeystoreByDirResponse": {
       "type": "object"
     },
     "rpcprotobufImportKeystoreRequest": {
