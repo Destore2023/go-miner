@@ -1504,11 +1504,12 @@ It is to import other keystore by a directory.
 
 ##### Parameters
 
-| Parameter | Type | Attribute | Usage | Note |
-| :----: | :----: | :----: | ------ | ------|
-| wallet_dir | string | required | filepath of target keystore | |
-| old_passphrase | string | required | old passphrase | |
-| new_passphrase | string | required | new passphrase | |
+| Parameter         |  Type  | Attribute | Usage                            | Note  |
+| :---------------: | :----: | :-------: |:-------------------------------: | ------|
+| wallet_dir        | string | required  | the directory of target keystore |       |
+| import_passphrase | string | required  | wallet passphrase                |       |
+| import_wallet_passphrase | string | required | import wallet passphrase   |       |
+| wallet_passphrase | string | required  | new passphrase                   |       |
 
 ##### Returns
 
@@ -1522,9 +1523,10 @@ It is to import other keystore by a directory.
 
 ```json
 {
-	"import_path": "./keystore-ac108dg4my870c0t07u22y6kurkfwjvk2580lk98m0.json",
-	"old_passphrase": "654321",
-	"new_passphrase": "123456"
+  "wallet_dir":"C:\\Users\\jack\\Downloads\\miner.mass\\miner",
+  "import_passphrase":"pub1234",
+  "import_wallet_passphrase":"priv1234",
+  "wallet_passphrase":"123456"
 }
 ```
 
