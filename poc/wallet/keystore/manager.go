@@ -1122,32 +1122,32 @@ func (kmc *KeystoreManagerForPoC) ImportKeystore(keystoreJson []byte, oldPrivPas
 	return acctManager.keystoreName, acctManager.remark, nil
 }
 
+// ExportKeystore
 func (kmc *KeystoreManagerForPoC) ExportKeystore(accountID string, privPassphrase []byte) ([]byte, error) {
 	kmc.mu.Lock()
 	defer kmc.mu.Unlock()
 
 	keystoreBytes := make([]byte, 0)
 	addrManager, found := kmc.managedKeystores[accountID]
-	if found {
-		err := db.View(kmc.db, func(dbTransaction db.ReadTransaction) error {
-			keystore, err := addrManager.exportKeystore(dbTransaction, privPassphrase)
-			if err != nil {
-				return err
-			}
-			keystoreBytes = keystore.Bytes()
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-		return keystoreBytes, nil
-	} else {
+	if !found {
 		logging.CPrint(logging.ERROR, "account not exists",
 			logging.LogFormat{
 				"err": ErrAccountNotFound,
 			})
 		return nil, ErrAccountNotFound
 	}
+	err := db.View(kmc.db, func(dbTransaction db.ReadTransaction) error {
+		keystore, err := addrManager.exportKeystore(dbTransaction, privPassphrase)
+		if err != nil {
+			return err
+		}
+		keystoreBytes = keystore.Bytes()
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return keystoreBytes, nil
 }
 
 func (kmc *KeystoreManagerForPoC) ExportKeystores(privPassphrase []byte) (map[string]string, error) {
@@ -1231,49 +1231,46 @@ func (kmc *KeystoreManagerForPoC) DeleteKeystore(accountID string, privPassphras
 	}
 }
 
+// useKeystore updatePriv --> true
 func (kmc *KeystoreManagerForPoC) useKeystore(name string, privPassphrase []byte, updatePriv bool) error {
 	addrManager, found := kmc.managedKeystores[name]
-	if found {
-		// check privPasspharse
-		if err := addrManager.checkPassword(privPassphrase); err != nil {
-			if err == ErrInvalidPassphrase {
-				logging.CPrint(logging.ERROR, "password wrong",
-					logging.LogFormat{
-						"error": err,
-					})
-			} else {
-				logging.CPrint(logging.ERROR, "failed to derive master private key",
-					logging.LogFormat{
-						"error": err,
-					})
-			}
-			return err
-		}
-
-		// hash salted passphrase
-		saltPassphrase := append(addrManager.privPassphraseSalt[:], privPassphrase...)
-		addrManager.hashedPrivPassphrase = sha512.Sum512(saltPassphrase)
-		zero.Bytes(saltPassphrase)
-
-		if updatePriv {
-			err := addrManager.updatePrivKeys()
-			if err != nil {
-				logging.CPrint(logging.ERROR, "update privKeys failed",
-					logging.LogFormat{
-						"err": err,
-					})
-				return err
-			}
-		}
-
-	} else {
+	if !found {
 		logging.CPrint(logging.ERROR, "account not exists",
 			logging.LogFormat{
 				"err": ErrAccountNotFound,
 			})
 		return ErrAccountNotFound
 	}
+	// check privPasspharse
+	if err := addrManager.checkPassword(privPassphrase); err != nil {
+		if err == ErrInvalidPassphrase {
+			logging.CPrint(logging.ERROR, "password wrong",
+				logging.LogFormat{
+					"error": err,
+				})
+		} else {
+			logging.CPrint(logging.ERROR, "failed to derive master private key",
+				logging.LogFormat{
+					"error": err,
+				})
+		}
+		return err
+	}
+	// hash salted passphrase
+	saltPassphrase := append(addrManager.privPassphraseSalt[:], privPassphrase...)
+	addrManager.hashedPrivPassphrase = sha512.Sum512(saltPassphrase)
+	zero.Bytes(saltPassphrase)
 
+	if updatePriv {
+		err := addrManager.updatePrivKeys()
+		if err != nil {
+			logging.CPrint(logging.ERROR, "update privKeys failed",
+				logging.LogFormat{
+					"err": err,
+				})
+			return err
+		}
+	}
 	return nil
 }
 
@@ -1774,8 +1771,7 @@ func (kmc *KeystoreManagerForPoC) ChangePrivPassphrase(oldPrivPass, newPrivPass 
 		// passphrase and salt.
 		var hashedPassphrase [sha512.Size]byte
 		if addrManager.unlocked {
-			saltedPassphrase := append(passphraseSalt[:],
-				newPrivPass...)
+			saltedPassphrase := append(passphraseSalt[:], newPrivPass...)
 			hashedPassphrase = sha512.Sum512(saltedPassphrase)
 			zero.Bytes(saltedPassphrase)
 		}

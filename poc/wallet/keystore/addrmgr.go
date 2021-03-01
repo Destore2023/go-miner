@@ -27,12 +27,14 @@ type AddrManager struct {
 
 	// in number of second
 	expires time.Duration
-	addrs   map[string]*ManagedAddress
-	use     AddrUse
+	//
+	addrs map[string]*ManagedAddress
+	use   AddrUse
 
 	acctInfo   *accountInfo
 	branchInfo *branchInfo
 
+	//
 	hdScope KeyScope
 
 	storage db.BucketMeta
@@ -78,7 +80,7 @@ type Keystore struct {
 }
 type hdPath struct {
 	Purpose          uint32
-	Coin             uint32 // 1-testnet,  297-mainnet
+	Coin             uint32 // 1-testnet,  2021-mainnet  297-mass
 	Account          uint32
 	ExternalChildNum uint32
 	InternalChildNum uint32
@@ -140,6 +142,8 @@ func GetKeystoreFromJson(keysJson []byte) (*Keystore, error) {
 }
 
 // NOTE: this func will leave the masterKeyPriv derived
+//  unlocked --> check hashedPassphrase
+//  locked   -->
 func (a *AddrManager) checkPassword(passphrase []byte) error {
 	if a.unlocked {
 		saltedPassphrase := append(a.privPassphraseSalt[:],

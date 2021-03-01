@@ -201,7 +201,6 @@ func (sk *SecretKey) DeriveKey(password *[]byte) error {
 	if err := sk.deriveKey(password); err != nil {
 		return err
 	}
-
 	// verify password
 	digest := sha256.Sum256(sk.Key[:])
 	if subtle.ConstantTimeCompare(digest[:], sk.Parameters.Digest[:]) != 1 {
