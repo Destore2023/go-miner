@@ -96,3 +96,7 @@ func (mAddr *ManagedAddress) PubKey() *pocec.PublicKey {
 func (mAddr *ManagedAddress) PrivKey() *pocec.PrivateKey {
 	return mAddr.privKey
 }
+
+func (mAddr *ManagedAddress) DerivationPath() DerivationPath {
+	return mAddr.derivationPath
+}

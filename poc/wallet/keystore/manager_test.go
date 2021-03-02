@@ -478,12 +478,12 @@ func TestKeystoreManagerForPoC_ExportKeystore_DeleteKeystore_ImportKeystore(t *t
 	t.Logf("internal address: %v, in: %v\n", kmc.managedKeystores[acctID0].branchInfo.nextExternalIndex, kmc.managedKeystores[acctID0].branchInfo.nextInternalIndex)
 
 	//for right example
-	keystoreBytes, err := kmc.ExportKeystore(acctID0, privPassphrase)
+	keystore, _, err := kmc.ExportKeystore(acctID0, privPassphrase)
 	if err != nil {
 		t.Fatalf("exportKeystore failed: %v", err)
 	}
 	//t.Log("keystoreBytes:", keystoreBytes)
-	t.Log("ketstore string: ", string(keystoreBytes))
+	t.Log("ketstore string: ", string(keystore.Bytes()))
 
 	res, err := kmc.DeleteKeystore(acctID0, privPassphrase)
 	if err != nil {
@@ -494,7 +494,7 @@ func TestKeystoreManagerForPoC_ExportKeystore_DeleteKeystore_ImportKeystore(t *t
 	}
 	t.Logf("successfully delete the keystore, %v", acctID0)
 	// do not change privpass
-	_, _, err = kmc.ImportKeystore(keystoreBytes, privPassphrase, privPassphrase)
+	_, _, err = kmc.ImportKeystore(keystore.Bytes(), privPassphrase, privPassphrase)
 	if err != nil {
 		t.Fatalf("failed to import keystore, %v", err)
 	}
@@ -632,7 +632,7 @@ func TestKeystoreManagerForPoC_ChangePubPassphrase(t *testing.T) {
 
 	t.Logf("after change, master public pass, %v", kmc.managedKeystores[accountID0].masterKeyPub)
 
-	keystoreJson, err := kmc.ExportKeystore(accountID0, privPassphrase)
+	keystore, _, err := kmc.ExportKeystore(accountID0, privPassphrase)
 	if err != nil {
 		t.Fatalf("failed to export keystore, %v", err)
 	}
@@ -650,7 +650,7 @@ func TestKeystoreManagerForPoC_ChangePubPassphrase(t *testing.T) {
 		t.Fatalf("failed to new keystore manager, %v", err)
 	}
 
-	_, _, err = kmc2.ImportKeystore(keystoreJson, privPassphrase, privPassphrase)
+	_, _, err = kmc2.ImportKeystore(keystore.Bytes(), privPassphrase, privPassphrase)
 	if err != nil {
 		t.Fatalf("failed to import keystore, %v", err)
 	}
@@ -1078,11 +1078,11 @@ func TestKeystoreManagerForPoC_ExportKeystore(t *testing.T) {
 		t.Fatalf("failed to new keystore, %v", cerr)
 	}
 
-	keystoreBytes, err := kmc.ExportKeystore(acctID0, privPassphrase)
+	keystore, _, err := kmc.ExportKeystore(acctID0, privPassphrase)
 	if err != nil {
 		t.Fatalf("exportKeystore failed: %v", err)
 	}
-	t.Log("ketstore string: ", string(keystoreBytes))
+	t.Log("ketstore string: ", string(keystore.Bytes()))
 
 	// write json file
 	exportFileName := fmt.Sprintf("%s/%s-%s.json", exportFilePath, exportFileNamePerfix, acctID0)
@@ -1099,7 +1099,7 @@ func TestKeystoreManagerForPoC_ExportKeystore(t *testing.T) {
 	}
 	defer file.Close()
 	writer := bufio.NewWriter(file)
-	num, err := writer.WriteString(string(keystoreBytes))
+	num, err := writer.WriteString(string(keystore.Bytes()))
 	if err != nil {
 		t.Fatalf("failed to write export file, %v", err)
 	}

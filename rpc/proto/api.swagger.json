@@ -1569,6 +1569,31 @@
         }
       }
     },
+    "rpcprotobufAddrManager": {
+      "type": "object",
+      "properties": {
+        "keystore_name": {
+          "type": "string"
+        },
+        "remark": {
+          "type": "string"
+        },
+        "expires": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "addresses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufPocAddress"
+          }
+        },
+        "use": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
     "rpcprotobufBlockInfoForTx": {
       "type": "object",
       "properties": {
@@ -1688,6 +1713,23 @@
         },
         "passphrase": {
           "type": "string"
+        }
+      }
+    },
+    "rpcprotobufDerivationPath": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "branch": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "index": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -2695,6 +2737,26 @@
         }
       }
     },
+    "rpcprotobufPocAddress": {
+      "type": "object",
+      "properties": {
+        "pub_key": {
+          "type": "string"
+        },
+        "priv_key": {
+          "type": "string"
+        },
+        "script_hash": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "derivation_path": {
+          "$ref": "#/definitions/rpcprotobufDerivationPath"
+        }
+      }
+    },
     "rpcprotobufPocWallet": {
       "type": "object",
       "properties": {
@@ -2709,6 +2771,9 @@
         },
         "h_d_path": {
           "$ref": "#/definitions/rpcprotobufHDWalletPath"
+        },
+        "addrManager": {
+          "$ref": "#/definitions/rpcprotobufAddrManager"
         }
       }
     },
@@ -2964,7 +3029,7 @@
         "master_h_d_priv_key_enc": {
           "type": "string"
         },
-        "kdf": {
+        "k_d_f": {
           "type": "string"
         },
         "pub_params": {

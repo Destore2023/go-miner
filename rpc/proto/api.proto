@@ -288,7 +288,7 @@ message HDWalletPath {
 message WalletCrypto {
   string cipher                   = 1;
   string master_h_d_priv_key_enc  = 2;
-  string kdf                      = 3;
+  string k_d_f                    = 3;
   string pub_params               = 4;
   string priv_params              = 5;
   string crypto_key_pub_enc       = 6;
@@ -296,10 +296,33 @@ message WalletCrypto {
 }
 
 message PocWallet {
-  string wallet_id      = 1;
-  string remark         = 2;
-  WalletCrypto crypto   = 3;
-  HDWalletPath h_d_path = 4;
+  string wallet_id        = 1;
+  string remark           = 2;
+  WalletCrypto crypto     = 3;
+  HDWalletPath h_d_path   = 4;
+  AddrManager addrManager = 5;
+}
+
+message DerivationPath {
+  uint32 account = 1;
+  uint32 branch  = 2;
+  uint32 index   = 3;
+}
+
+message PocAddress {
+  string pub_key                 = 1;
+  string priv_key                = 2;
+  string script_hash             = 3;
+  string address                 = 4;
+  DerivationPath derivation_path = 5;
+}
+
+message AddrManager {
+  string keystore_name             = 1;
+  string remark                    = 2;
+  uint64 expires                   = 3;
+  repeated PocAddress addresses    = 4;
+  uint32 use                       = 5;
 }
 
 // ========== block ====================

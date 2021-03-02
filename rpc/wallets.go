@@ -3,6 +3,7 @@ package rpc
 import (
 	"bufio"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/Sukhavati-Labs/go-miner/poc/wallet"
@@ -34,16 +35,64 @@ func (s *Server) GetKeystore(ctx context.Context, msg *empty.Empty) (*pb.GetKeys
 }
 
 func getKeystoreDetail(keystore *keystore.Keystore) *pb.PocWallet {
-	return &pb.PocWallet{}
+
+	walletCrypto := &pb.WalletCrypto{
+		Cipher:             keystore.Crypto.Cipher,
+		MasterHDPrivKeyEnc: keystore.Crypto.MasterHDPrivKeyEnc,
+		KDF:                keystore.Crypto.KDF,
+		PubParams:          keystore.Crypto.PubParams,
+		PrivParams:         keystore.Crypto.PrivParams,
+		CryptoKeyPubEnc:    keystore.Crypto.CryptoKeyPubEnc,
+		CryptoKeyPrivEnc:   keystore.Crypto.CryptoKeyPrivEnc,
+	}
+	HdWalletPath := &pb.HDWalletPath{
+		Purpose:          keystore.HDpath.Purpose,
+		Coin:             keystore.HDpath.Coin,
+		Account:          keystore.HDpath.Account,
+		ExternalChildNum: keystore.HDpath.ExternalChildNum,
+		InternalChildNum: keystore.HDpath.InternalChildNum,
+	}
+
+	return &pb.PocWallet{
+		Remark: keystore.Remark,
+		Crypto: walletCrypto,
+		HDPath: HdWalletPath,
+	}
 }
 
 func (s *Server) GetKeystoreDetail(ctx context.Context, in *pb.GetKeystoreDetailRequest) (*pb.GetKeystoreDetailResponse, error) {
-	keystore, err := s.pocWallet.ExportKeystore(in.WalletId, []byte(in.Passphrase))
+	keystore, addrManager, err := s.pocWallet.ExportKeystore(in.WalletId, []byte(in.Passphrase))
 	if err != nil {
 		return nil, err
 	}
+	addrManager.KeyScope()
 	detail := getKeystoreDetail(keystore)
 	detail.WalletId = in.WalletId
+	addresses := make([]*pb.PocAddress, 0)
+	for _, addr := range addrManager.ManagedAddresses() {
+		HdPath := addr.DerivationPath()
+		address := &pb.PocAddress{
+			PubKey:     hex.EncodeToString(addr.PubKey().SerializeCompressed()),
+			ScriptHash: hex.EncodeToString(addr.ScriptAddress()),
+			Address:    addr.String(),
+			DerivationPath: &pb.DerivationPath{
+				Account: HdPath.Account,
+				Branch:  HdPath.Branch,
+				Index:   HdPath.Index,
+			},
+		}
+		if addr.PrivKey() != nil {
+			address.PrivKey = hex.EncodeToString(addr.PrivKey().Serialize())
+		}
+		addresses = append(addresses, address)
+	}
+	detail.AddrManager = &pb.AddrManager{
+		KeystoreName: addrManager.Name(),
+		Remark:       addrManager.Remarks(),
+		Expires:      0,
+		Addresses:    addresses,
+		Use:          uint32(addrManager.AddrUse()),
+	}
 
 	return &pb.GetKeystoreDetailResponse{
 		WalletId: in.WalletId,
@@ -62,7 +111,7 @@ func (s *Server) ExportKeystore(ctx context.Context, in *pb.ExportKeystoreReques
 		return nil, err
 	}
 	// get keystore json from wallet
-	keystore, err := s.pocWallet.ExportKeystore(in.WalletId, []byte(in.Passphrase))
+	keystore, _, err := s.pocWallet.ExportKeystore(in.WalletId, []byte(in.Passphrase))
 	if err != nil {
 		logging.CPrint(logging.ERROR, ErrCode[ErrAPIExportWallet], logging.LogFormat{
 			"err": err,
