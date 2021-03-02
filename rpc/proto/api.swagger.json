@@ -1683,6 +1683,10 @@
         },
         "passphrase": {
           "type": "string"
+        },
+        "coin": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -1713,6 +1717,10 @@
         },
         "passphrase": {
           "type": "string"
+        },
+        "coin": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

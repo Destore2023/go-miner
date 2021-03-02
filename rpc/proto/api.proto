@@ -662,6 +662,7 @@ message ConfigureSpaceKeeperRequest {
   uint64          capacity         = 1;
   repeated string payout_addresses = 2;
   string          passphrase       = 3;
+  uint32          coin             = 4;
 }
 
 message WorkSpace {
@@ -703,6 +704,7 @@ message ConfigureSpaceKeeperByDirsRequest {
   repeated Allocation allocations = 1;
   repeated string payout_addresses = 2;
   string passphrase = 3;
+  uint32       coin = 4;
 }
 
 message WorkSpacesByDirsResponse {

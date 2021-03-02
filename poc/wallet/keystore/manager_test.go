@@ -238,7 +238,7 @@ func TestNewKeystoreManagerForPoC(t *testing.T) {
 	}
 
 	for i := 0; i < 10; i++ {
-		_, _, err := kmc.GenerateNewPublicKey()
+		_, _, err := kmc.GenerateNewPublicKeyByCointype(2021)
 		if err != nil {
 			t.Fatalf("failed to generate new public key, %v", err)
 		}
@@ -911,7 +911,7 @@ func TestKeystoreManagerForPoC_SignMessage(t *testing.T) {
 		t.Fatalf("failed to unlock, %v", err)
 	}
 
-	pk1, _, err := kmc.GenerateNewPublicKey()
+	pk1, _, err := kmc.GenerateNewPublicKeyByCointype(2021)
 	if err != nil {
 		t.Fatalf("failed to generate new public key, %v", err)
 	}
@@ -1044,13 +1044,13 @@ func TestKeystoreManagerForPoC_GenerateNewPublicKeys(t *testing.T) {
 
 	fmt.Printf("first: %v, second: %v\n", acctID1, acctID2)
 
-	pk, _, err := kmc.GenerateNewPublicKey()
+	pk, _, err := kmc.GenerateNewPublicKeyByCointype(2021)
 	if err != nil {
 		t.Fatalf("failed to generate new public keys for poc, %v", err)
 	}
 	t.Logf("new pk: %v", pk.SerializeCompressed())
 
-	pk, _, err = kmc.GenerateNewPublicKey()
+	pk, _, err = kmc.GenerateNewPublicKeyByCointype(2021)
 	if err != nil {
 		t.Fatalf("failed to generate new public keys for poc, %v", err)
 	}
@@ -1320,7 +1320,7 @@ func TestKeystoreManagerForPoC_GetPublicKeyOrdinal(t *testing.T) {
 		t.Fatalf("failed to new keystore, %v", err)
 	}
 
-	pk, ordinal, err := kmc.GenerateNewPublicKey()
+	pk, ordinal, err := kmc.GenerateNewPublicKeyByCointype(2021)
 	if err != nil {
 		t.Fatalf("failed to generate new public key, %v", err)
 	}
@@ -1375,7 +1375,7 @@ func TestKeystoreManagerForPoC_GetAddressByPubKey(t *testing.T) {
 		t.Fatalf("failed to new keystore, %v", err)
 	}
 
-	pk, _, err := kmc.GenerateNewPublicKey()
+	pk, _, err := kmc.GenerateNewPublicKeyByCointype(2021)
 	if err != nil {
 		t.Fatalf("failed to generate new public key, %v", err)
 	}

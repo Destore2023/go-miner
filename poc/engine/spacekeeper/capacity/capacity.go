@@ -24,7 +24,8 @@ const (
 )
 
 type PoCWallet interface {
-	GenerateNewPublicKey() (*pocec.PublicKey, uint32, error)
+	GenerateNewPublicKeyByCointype(cointype uint32) (*pocec.PublicKey, uint32, error)
+	GenerateNewPublicKey(accountID string) (*pocec.PublicKey, uint32, error)
 	GetPublicKeyOrdinal(*pocec.PublicKey) (uint32, bool)
 	SignMessage(pubKey *pocec.PublicKey, hash []byte) (*pocec.Signature, error)
 	Unlock(password []byte) error
@@ -692,13 +693,13 @@ func (sk *SpaceKeeper) addWorkSpaceToIndex(ws *WorkSpace) {
 }
 
 // generateNewWorkSpace is not thread safe, should use lock in upper functions
-func (sk *SpaceKeeper) generateNewWorkSpace(bitLength int) (*WorkSpace, error) {
-	return sk.generateNewWorkSpaceByPath(sk.dbDirs[0], bitLength)
+func (sk *SpaceKeeper) generateNewWorkSpace(bitLength int, cointype uint32) (*WorkSpace, error) {
+	return sk.generateNewWorkSpaceByPath(sk.dbDirs[0], bitLength, cointype)
 }
 
 // generateNewWorkSpaceByPath is not thread safe, should use lock in upper functions
-func (sk *SpaceKeeper) generateNewWorkSpaceByPath(rootDir string, bitLength int) (*WorkSpace, error) {
-	pubKey, ordinal, err := sk.wallet.GenerateNewPublicKey()
+func (sk *SpaceKeeper) generateNewWorkSpaceByPath(rootDir string, bitLength int, cointype uint32) (*WorkSpace, error) {
+	pubKey, ordinal, err := sk.wallet.GenerateNewPublicKeyByCointype(cointype)
 	if err != nil {
 		return nil, err
 	}
@@ -739,7 +740,7 @@ func (sk *SpaceKeeper) applyConfiguredWorkSpaces(wsList []*WorkSpace, execPlot, 
 	return wsiList, nil
 }
 
-func (sk *SpaceKeeper) ConfigureByBitLength(BlCount map[int]int, execPlot, execMine bool) ([]engine.WorkSpaceInfo, error) {
+func (sk *SpaceKeeper) ConfigureByBitLength(BlCount map[int]int, execPlot, execMine bool, cointype uint32) ([]engine.WorkSpaceInfo, error) {
 	if sk.Started() {
 		return nil, ErrSpaceKeeperIsRunning
 	}
@@ -784,7 +785,7 @@ func (sk *SpaceKeeper) ConfigureByBitLength(BlCount map[int]int, execPlot, execM
 
 	// try to generate new WorkSpace to fill list
 	var err error
-	resultList, err = sk.generateFillSpaceListByBitLength(resultList, currentCount, BlCount)
+	resultList, err = sk.generateFillSpaceListByBitLength(resultList, currentCount, BlCount, cointype)
 	if err != nil {
 		return failureReturn(err)
 	}
@@ -820,7 +821,7 @@ func fillSpaceListByBitLength(dstList []*WorkSpace, srcMap map[int][]*WorkSpace,
 	return dstList, currentCount, finished
 }
 
-func (sk *SpaceKeeper) generateFillSpaceListByBitLength(dstList []*WorkSpace, currentCount, targetCount map[int]int) ([]*WorkSpace, error) {
+func (sk *SpaceKeeper) generateFillSpaceListByBitLength(dstList []*WorkSpace, currentCount, targetCount map[int]int, cointype uint32) ([]*WorkSpace, error) {
 	if !sk.allowGenerateNewSpace {
 		return nil, ErrWorkSpaceCannotGenerate
 	}
@@ -840,7 +841,7 @@ func (sk *SpaceKeeper) generateFillSpaceListByBitLength(dstList []*WorkSpace, cu
 			if currentCount[bl] == count {
 				break out
 			}
-			newWS, err := sk.generateNewWorkSpace(bl)
+			newWS, err := sk.generateNewWorkSpace(bl, cointype)
 			if err != nil {
 				return nil, err
 			}
@@ -853,7 +854,7 @@ func (sk *SpaceKeeper) generateFillSpaceListByBitLength(dstList []*WorkSpace, cu
 	return dstList, nil
 }
 
-func (sk *SpaceKeeper) ConfigureBySize(targetSize uint64, execPlot, execMine bool) ([]engine.WorkSpaceInfo, error) {
+func (sk *SpaceKeeper) ConfigureBySize(targetSize uint64, execPlot, execMine bool, cointype uint32) ([]engine.WorkSpaceInfo, error) {
 	if sk.Started() {
 		return nil, ErrSpaceKeeperIsRunning
 	}
@@ -899,7 +900,7 @@ func (sk *SpaceKeeper) ConfigureBySize(targetSize uint64, execPlot, execMine boo
 
 	// try to generate new WorkSpace to fill list
 	var err error
-	resultList, _, err = sk.generateFillSpaceListBySize(resultList, currentSize, int(targetSize))
+	resultList, _, err = sk.generateFillSpaceListBySize(resultList, currentSize, int(targetSize), cointype)
 	if err != nil {
 		return failureReturn(err)
 	}
@@ -938,7 +939,7 @@ func fillSpaceListBySize(dstList []*WorkSpace, srcMap map[int][]*WorkSpace, curr
 	return dstList, currentSize, false
 }
 
-func (sk *SpaceKeeper) generateFillSpaceListBySize(dstList []*WorkSpace, currentSize, targetSize int) ([]*WorkSpace, int, error) {
+func (sk *SpaceKeeper) generateFillSpaceListBySize(dstList []*WorkSpace, currentSize, targetSize int, cointype uint32) ([]*WorkSpace, int, error) {
 	if !sk.allowGenerateNewSpace {
 		return nil, currentSize, ErrWorkSpaceCannotGenerate
 	}
@@ -961,7 +962,7 @@ func (sk *SpaceKeeper) generateFillSpaceListBySize(dstList []*WorkSpace, current
 				break out
 			}
 			currentSize += poc.BitLengthDiskSize[bl]
-			newWS, err := sk.generateNewWorkSpace(bl)
+			newWS, err := sk.generateNewWorkSpace(bl, cointype)
 			if err != nil {
 				return nil, currentSize, err
 			}
@@ -1108,7 +1109,7 @@ func (sk *SpaceKeeper) WorkSpaceInfosByDirs() (dirs []string, results [][]engine
 	return
 }
 
-func (sk *SpaceKeeper) ConfigureByPath(paths []string, sizes []int, execPlot, execMine bool) ([]engine.WorkSpaceInfo, error) {
+func (sk *SpaceKeeper) ConfigureByPath(paths []string, sizes []int, execPlot, execMine bool, cointype uint32) ([]engine.WorkSpaceInfo, error) {
 	if sk.Started() {
 		return nil, ErrSpaceKeeperIsRunning
 	}
@@ -1188,7 +1189,7 @@ func (sk *SpaceKeeper) ConfigureByPath(paths []string, sizes []int, execPlot, ex
 		}
 		// try to generate new WorkSpace to fill list
 		var err error
-		pathResultList, _, err = sk.generateFillSpaceListByPathSize(absDirs[i], pathResultList, currentSize, targetSize)
+		pathResultList, _, err = sk.generateFillSpaceListByPathSize(absDirs[i], pathResultList, currentSize, targetSize, cointype)
 		if err != nil {
 			return failureReturn(err)
 		}
@@ -1232,7 +1233,7 @@ func fillSpaceListByPathSize(path string, dstList []*WorkSpace, srcMap map[int][
 	return dstList, currentSize, false
 }
 
-func (sk *SpaceKeeper) generateFillSpaceListByPathSize(path string, dstList []*WorkSpace, currentSize, targetSize int) ([]*WorkSpace, int, error) {
+func (sk *SpaceKeeper) generateFillSpaceListByPathSize(path string, dstList []*WorkSpace, currentSize, targetSize int, cointype uint32) ([]*WorkSpace, int, error) {
 	if !sk.allowGenerateNewSpace {
 		return nil, currentSize, ErrWorkSpaceCannotGenerate
 	}
@@ -1255,7 +1256,7 @@ func (sk *SpaceKeeper) generateFillSpaceListByPathSize(path string, dstList []*W
 				break out
 			}
 			currentSize += poc.BitLengthDiskSize[bl]
-			newWS, err := sk.generateNewWorkSpaceByPath(path, bl)
+			newWS, err := sk.generateNewWorkSpaceByPath(path, bl, cointype)
 			if err != nil {
 				return nil, currentSize, err
 			}

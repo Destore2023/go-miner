@@ -41,6 +41,10 @@ func (s *Server) ConfigureCapacity(ctx context.Context, in *pb.ConfigureSpaceKee
 			return nil, err
 		}
 	}
+	cointype := in.Coin
+	if cointype == 0 {
+		cointype = config.ChainParams.HDCoinType
+	}
 	payoutAddresses, err := chainutil.NewAddressesFromStringList(in.PayoutAddresses, &config.ChainParams)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "fail to decode coinbase_address", logging.LogFormat{"addr_list": in.PayoutAddresses})
@@ -73,7 +77,7 @@ func (s *Server) ConfigureCapacity(ctx context.Context, in *pb.ConfigureSpaceKee
 			logging.LogFormat{"err": err})
 		return nil, status.New(ErrAPIMinerWrongPassphrase, ErrCode[ErrAPIMinerWrongPassphrase]).Err()
 	}
-	_, err = s.spaceKeeper.ConfigureBySize(diskSize, false, false)
+	_, err = s.spaceKeeper.ConfigureBySize(diskSize, false, false, cointype)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "fail to configure spaceKeeper", logging.LogFormat{"err": err})
 		return nil, status.New(ErrAPIMinerInternal, err.Error()).Err()
@@ -120,6 +124,10 @@ func (s *Server) ConfigureCapacityByDirs(ctx context.Context, in *pb.ConfigureSp
 		if err != nil {
 			return nil, err
 		}
+	}
+	cointype := in.Coin
+	if cointype == 0 {
+		cointype = config.ChainParams.HDCoinType
 	}
 	payoutAddresses, err := chainutil.NewAddressesFromStringList(in.PayoutAddresses, &config.ChainParams)
 	if err != nil {
@@ -180,7 +188,7 @@ func (s *Server) ConfigureCapacityByDirs(ctx context.Context, in *pb.ConfigureSp
 			logging.LogFormat{"err": err})
 		return nil, status.New(ErrAPIMinerWrongPassphrase, ErrCode[ErrAPIMinerWrongPassphrase]).Err()
 	}
-	_, err = s.spaceKeeper.ConfigureByPath(dirs, capacities, false, false)
+	_, err = s.spaceKeeper.ConfigureByPath(dirs, capacities, false, false, cointype)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "fail to configure spaceKeeper", logging.LogFormat{"err": err})
 		return nil, status.New(ErrAPIMinerInternal, err.Error()).Err()

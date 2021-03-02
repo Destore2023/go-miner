@@ -156,6 +156,7 @@ func createManagerKeyScope(km db.Bucket, root *hdkeychain.ExtendedKey,
 	cryptoKeyPub, cryptoKeyPriv EncryptorDecryptor, hdPath *hdPath, net *config.Params) (db.BucketMeta, error) {
 
 	scope := Net2KeyScope[net.HDCoinType]
+	// Compatibility cointype
 	if hdPath.Coin > 0 {
 		scope = Net2KeyScope[hdPath.Coin]
 	}
@@ -1352,59 +1353,71 @@ func (kmc *KeystoreManagerForPoC) NextAddresses(accountID string, internal bool,
 		return nil, ErrAccountNotFound
 	}
 }
-
-func (kmc *KeystoreManagerForPoC) GenerateNewPublicKey() (*pocec.PublicKey, uint32, error) {
-	managedAddresses := make([]*ManagedAddress, 0)
+func (kmc *KeystoreManagerForPoC) GenerateNewPublicKeyByCointype(cointype uint32) (*pocec.PublicKey, uint32, error) {
 	var accountID string
-	var pubkey *pocec.PublicKey
-	var index uint32
-	for accountID = range kmc.managedKeystores {
-		break
-	}
-	addrManager, found := kmc.managedKeystores[accountID]
-	if found {
-
-		err := db.Update(kmc.db, func(dbTransaction db.DBTransaction) error {
-			var err error
-			managedAddresses, err = addrManager.nextAddresses(dbTransaction, false, 1, kmc.params)
-			if err != nil {
-				logging.CPrint(logging.ERROR, "new address failed",
-					logging.LogFormat{
-						"err": err,
-					})
-				return err
-			}
-			return nil
-		})
-		if err != nil {
-			return nil, 0, err
-		}
-
-		err = db.View(kmc.db, func(tx db.ReadTransaction) error {
-			return addrManager.updateManagedAddress(tx, managedAddresses)
-		})
-		if err != nil {
-			return nil, 0, err
-		}
-
-		for _, managedAddr := range managedAddresses {
-			var err error
-			pkbytes := managedAddr.pubKey.SerializeCompressed()
-			pubkey, err = pocec.ParsePubKey(pkbytes, pocec.S256())
-			if err != nil {
-				return nil, 0, err
-			}
-			index = managedAddr.derivationPath.Index
+	for acId, account := range kmc.managedKeystores {
+		if account.hdScope.Coin == cointype {
+			accountID = acId
 			break
 		}
-		return pubkey, index, nil
-	} else {
+	}
+	if accountID == "" {
+		return nil, 0, ErrAccountNotFound
+	}
+	return kmc.GenerateNewPublicKey(accountID)
+}
+func (kmc *KeystoreManagerForPoC) GenerateNewPublicKey(accountID string) (*pocec.PublicKey, uint32, error) {
+	managedAddresses := make([]*ManagedAddress, 0)
+	var pubkey *pocec.PublicKey
+	var index uint32
+	if accountID == "" {
+		for accountID = range kmc.managedKeystores {
+			break
+		}
+	}
+	addrManager, found := kmc.managedKeystores[accountID]
+	if !found {
 		logging.CPrint(logging.ERROR, "account not exists",
 			logging.LogFormat{
 				"err": ErrAccountNotFound,
 			})
 		return nil, 0, ErrAccountNotFound
 	}
+
+	err := db.Update(kmc.db, func(dbTransaction db.DBTransaction) error {
+		var err error
+		managedAddresses, err = addrManager.nextAddresses(dbTransaction, false, 1, kmc.params)
+		if err != nil {
+			logging.CPrint(logging.ERROR, "new address failed",
+				logging.LogFormat{
+					"err": err,
+				})
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	err = db.View(kmc.db, func(tx db.ReadTransaction) error {
+		return addrManager.updateManagedAddress(tx, managedAddresses)
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for _, managedAddr := range managedAddresses {
+		var err error
+		pkbytes := managedAddr.pubKey.SerializeCompressed()
+		pubkey, err = pocec.ParsePubKey(pkbytes, pocec.S256())
+		if err != nil {
+			return nil, 0, err
+		}
+		index = managedAddr.derivationPath.Index
+		break
+	}
+	return pubkey, index, nil
 }
 
 func (kmc *KeystoreManagerForPoC) SignMessage(pubKey *pocec.PublicKey, message []byte) (*pocec.Signature, error) {

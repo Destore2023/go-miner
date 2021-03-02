@@ -78,7 +78,8 @@ func NewSpaceKeeperV1(args ...interface{}) (spacekeeper.SpaceKeeper, error) {
 			if err != nil {
 				return nil, err
 			}
-			wsiList, err = sk.ConfigureByBitLength(spaceConf, cfg.Miner.Plot, cfg.Miner.Generate)
+			// use net hd cointype
+			wsiList, err = sk.ConfigureByBitLength(spaceConf, cfg.Miner.Plot, cfg.Miner.Generate, config.ChainParams.HDCoinType)
 			if err != nil {
 				return nil, err
 			}
