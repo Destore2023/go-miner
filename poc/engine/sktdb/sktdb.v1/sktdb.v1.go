@@ -21,8 +21,8 @@ type MapType uint8
 const (
 	// TODO Compatible with multiple db formats
 	TypeSktDBV1             = "massdb.v1"
-	MapTypeHashMapA MapType = iota // 0
-	MapTypeHashMapB                // 1
+	MapTypeHashMapA MapType = 1 // 1 keep compatible with MASS (which uses iota)
+	MapTypeHashMapB MapType = 2 // 2
 )
 
 type SktDBV1 struct {
