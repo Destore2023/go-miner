@@ -142,7 +142,7 @@ func generateInitialIndex(sk *SpaceKeeper, dbType, regStrB, suffixB string) erro
 				logging.CPrint(logging.ERROR, "cannot parse SktDB args from filename", logging.LogFormat{"filepath": filePath, "err": err})
 				continue
 			}
-
+			logging.CPrint(logging.WARN, "load public key", logging.LogFormat{"pubkey": args[1]})
 			// verify db ordinal
 			ordinal, exists := sk.wallet.GetPublicKeyOrdinal(pubKey)
 			if !exists || dbIndex != int(ordinal) {
