@@ -9,8 +9,8 @@ import (
 )
 
 type ManagedAddress struct {
-	pubKey         *pocec.PublicKey
-	privKey        *pocec.PrivateKey
+	pubKey         *pocec.PublicKey  `json:"PubKey"`
+	privKey        *pocec.PrivateKey `json:"PrivKey"`
 	scriptHash     []byte
 	derivationPath DerivationPath
 	address        string

@@ -59,15 +59,7 @@ func getKeystoreDetail(keystore *keystore.Keystore) *pb.PocWallet {
 		HDPath: HdWalletPath,
 	}
 }
-
-func (s *Server) GetKeystoreDetail(ctx context.Context, in *pb.GetKeystoreDetailRequest) (*pb.GetKeystoreDetailResponse, error) {
-	keystore, addrManager, err := s.pocWallet.ExportKeystore(in.WalletId, []byte(in.Passphrase))
-	if err != nil {
-		return nil, err
-	}
-	addrManager.KeyScope()
-	detail := getKeystoreDetail(keystore)
-	detail.WalletId = in.WalletId
+func getAddrManagerDetail(addrManager *keystore.AddrManager) *pb.AddrManager {
 	addresses := make([]*pb.PocAddress, 0)
 	for _, addr := range addrManager.ManagedAddresses() {
 		HdPath := addr.DerivationPath()
@@ -86,14 +78,23 @@ func (s *Server) GetKeystoreDetail(ctx context.Context, in *pb.GetKeystoreDetail
 		}
 		addresses = append(addresses, address)
 	}
-	detail.AddrManager = &pb.AddrManager{
+	return &pb.AddrManager{
 		KeystoreName: addrManager.Name(),
 		Remark:       addrManager.Remarks(),
 		Expires:      0,
 		Addresses:    addresses,
 		Use:          uint32(addrManager.AddrUse()),
 	}
+}
 
+func (s *Server) GetKeystoreDetail(ctx context.Context, in *pb.GetKeystoreDetailRequest) (*pb.GetKeystoreDetailResponse, error) {
+	keystore, addrManager, err := s.pocWallet.ExportKeystore(in.WalletId, []byte(in.Passphrase))
+	if err != nil {
+		return nil, err
+	}
+	detail := getKeystoreDetail(keystore)
+	detail.WalletId = in.WalletId
+	detail.AddrManager = getAddrManagerDetail(addrManager)
 	return &pb.GetKeystoreDetailResponse{
 		WalletId: in.WalletId,
 		Wallet:   detail,
@@ -111,7 +112,7 @@ func (s *Server) ExportKeystore(ctx context.Context, in *pb.ExportKeystoreReques
 		return nil, err
 	}
 	// get keystore json from wallet
-	keystore, _, err := s.pocWallet.ExportKeystore(in.WalletId, []byte(in.Passphrase))
+	keystore, addrManager, err := s.pocWallet.ExportKeystore(in.WalletId, []byte(in.Passphrase))
 	if err != nil {
 		logging.CPrint(logging.ERROR, ErrCode[ErrAPIExportWallet], logging.LogFormat{
 			"err": err,
@@ -147,8 +148,36 @@ func (s *Server) ExportKeystore(ctx context.Context, in *pb.ExportKeystoreReques
 
 	logging.CPrint(logging.INFO, "the request to export keystore was successfully answered", logging.LogFormat{"export keystore id": in.WalletId})
 	return &pb.ExportKeystoreResponse{
-		Keystore: string(keystoreJSON),
+		Keystore:    string(keystoreJSON),
+		AddrManager: getAddrManagerDetail(addrManager),
 	}, nil
+}
+
+func pushJsonFile(exportFileName string, data []byte) error {
+	file, err := os.OpenFile(exportFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		logging.CPrint(logging.ERROR, ErrCode[ErrAPIOpenFile], logging.LogFormat{
+			"error": err,
+		})
+		return status.New(ErrAPIOpenFile, ErrCode[ErrAPIOpenFile]).Err()
+	}
+	defer file.Close()
+	writer := bufio.NewWriter(file)
+	_, err = writer.WriteString(string(data))
+	if err != nil {
+		logging.CPrint(logging.ERROR, ErrCode[ErrAPIWriteFile], logging.LogFormat{
+			"error": err,
+		})
+		return status.New(ErrAPIWriteFile, ErrCode[ErrAPIWriteFile]).Err()
+	}
+	err = writer.Flush()
+	if err != nil {
+		logging.CPrint(logging.ERROR, ErrCode[ErrAPIFlush], logging.LogFormat{
+			"error": err,
+		})
+		return status.New(ErrAPIFlush, ErrCode[ErrAPIFlush]).Err()
+	}
+	return nil
 }
 
 func (s *Server) ExportKeystoreByDir(ctx context.Context, in *pb.ExportKeystoreByDirRequest) (*pb.ExportKeystoreByDirResponse, error) {
@@ -159,42 +188,34 @@ func (s *Server) ExportKeystoreByDir(ctx context.Context, in *pb.ExportKeystoreB
 		return nil, err
 	}
 	defer exportWallet.Close()
-	keystores, err := exportWallet.ExportKeystores([]byte(in.WalletPassphrase))
+	keystores, managers, err := exportWallet.ExportKeystores([]byte(in.WalletPassphrase))
 	if err != nil {
 		return nil, err
 	}
 	keystoreJSON, err := json.Marshal(keystores)
+	//addrManagersJson, err := json.Marshal(addrManagers)
+	addrManagers := make([]*pb.AddrManager, 0)
+	for _, a := range managers {
+		addrManagers = append(addrManagers, getAddrManagerDetail(a))
+	}
 	if err != nil {
 		return nil, err
 	}
 	// write keystore json file to disk
 	exportFileName := fmt.Sprintf("%s/%s-all.json", in.ExportPath, keystoreFileNamePrefix)
-	file, err := os.OpenFile(exportFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	//exportAddrsFileName := fmt.Sprintf("%s/%s-addrs.json", in.ExportPath, keystoreFileNamePrefix)
+	err = pushJsonFile(exportFileName, keystoreJSON)
 	if err != nil {
-		logging.CPrint(logging.ERROR, ErrCode[ErrAPIOpenFile], logging.LogFormat{
-			"error": err,
-		})
-		return nil, status.New(ErrAPIOpenFile, ErrCode[ErrAPIOpenFile]).Err()
+		return nil, err
 	}
-	defer file.Close()
-	writer := bufio.NewWriter(file)
-	_, err = writer.WriteString(string(keystoreJSON))
-	if err != nil {
-		logging.CPrint(logging.ERROR, ErrCode[ErrAPIWriteFile], logging.LogFormat{
-			"error": err,
-		})
-		return nil, status.New(ErrAPIWriteFile, ErrCode[ErrAPIWriteFile]).Err()
-	}
-	err = writer.Flush()
-	if err != nil {
-		logging.CPrint(logging.ERROR, ErrCode[ErrAPIFlush], logging.LogFormat{
-			"error": err,
-		})
-		return nil, status.New(ErrAPIFlush, ErrCode[ErrAPIFlush]).Err()
-	}
+	//err = pushJsonFile(exportAddrsFileName, addrManagersJson)
+	//if err != nil {
+	//	return nil, err
+	//}
 	logging.CPrint(logging.INFO, "the request to export keystore was successfully answered")
 	return &pb.ExportKeystoreByDirResponse{
-		Keystore: string(keystoreJSON),
+		Keystores:    string(keystoreJSON),
+		AddrManagers: addrManagers,
 	}, nil
 }
 
@@ -244,15 +265,25 @@ func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreB
 		return nil, err
 	}
 	defer exportWallet.Close()
-	keystores, err := exportWallet.ExportKeystores([]byte(in.ImportPrivpass))
+	keystores, oldManagers, err := exportWallet.ExportKeystores([]byte(in.ImportPrivpass))
 	if err != nil {
 		return nil, err
 	}
-	for _, keystoreJson := range keystores {
-		_, _, err := s.pocWallet.ImportKeystore([]byte(keystoreJson), []byte(in.ImportPrivpass), []byte(in.NewPrivpass))
+	oldAddressManager := make([]*pb.AddrManager, 0)
+	for _, a := range oldManagers {
+		oldAddressManager = append(oldAddressManager, getAddrManagerDetail(a))
+	}
+	newAddressManager := make([]*pb.AddrManager, 0)
+	for _, keystore := range keystores {
+		walletId, _, err := s.pocWallet.ImportKeystore(keystore.Bytes(), []byte(in.ImportPrivpass), []byte(in.NewPrivpass))
 		if err != nil {
 			return nil, err
 		}
+		manager, b := s.pocWallet.GetAddrManager(walletId)
+		if !b {
+			return nil, fmt.Errorf("Import With Error ")
+		}
+		newAddressManager = append(newAddressManager, getAddrManagerDetail(manager))
 	}
 
 	keystoreJSON, err := json.Marshal(keystores)
@@ -260,7 +291,9 @@ func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreB
 		return nil, err
 	}
 	return &pb.ImportKeystoreByDirResponse{
-		Keystore: string(keystoreJSON),
+		Keystore:        string(keystoreJSON),
+		OldAddrManagers: oldAddressManager,
+		NewAddrManagers: newAddressManager,
 	}, nil
 }
 

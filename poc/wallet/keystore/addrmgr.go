@@ -28,7 +28,7 @@ type AddrManager struct {
 	// in number of second
 	expires time.Duration
 	//
-	addrs map[string]*ManagedAddress
+	addrs map[string]*ManagedAddress `json:"addresses"`
 	use   AddrUse
 
 	acctInfo   *accountInfo

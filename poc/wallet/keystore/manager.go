@@ -156,6 +156,9 @@ func createManagerKeyScope(km db.Bucket, root *hdkeychain.ExtendedKey,
 	cryptoKeyPub, cryptoKeyPriv EncryptorDecryptor, hdPath *hdPath, net *config.Params) (db.BucketMeta, error) {
 
 	scope := Net2KeyScope[net.HDCoinType]
+	if hdPath.Coin > 0 {
+		scope = Net2KeyScope[hdPath.Coin]
+	}
 
 	accountIDBucket, err := db.GetOrCreateBucket(km, accountIDBucket)
 	if err != nil {
@@ -1151,24 +1154,26 @@ func (kmc *KeystoreManagerForPoC) ExportKeystore(accountID string, privPassphras
 	//return keystoreBytes, nil
 }
 
-func (kmc *KeystoreManagerForPoC) ExportKeystores(privPassphrase []byte) (map[string]string, error) {
+func (kmc *KeystoreManagerForPoC) ExportKeystores(privPassphrase []byte) (map[string]*Keystore, map[string]*AddrManager, error) {
 	kmc.mu.Lock()
 	defer kmc.mu.Unlock()
-	ret := make(map[string]string)
+	keystores := make(map[string]*Keystore)
+	addrManagers := make(map[string]*AddrManager)
 	for ac, addrManager := range kmc.managedKeystores {
 		err := db.View(kmc.db, func(dbTransaction db.ReadTransaction) error {
 			keystore, err := addrManager.exportKeystore(dbTransaction, privPassphrase)
 			if err != nil {
 				return err
 			}
-			ret[ac] = string(keystore.Bytes())
+			keystores[ac] = keystore
+			addrManagers[ac] = addrManager
 			return nil
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
-	return ret, nil
+	return keystores, addrManagers, nil
 }
 
 func (kmc *KeystoreManagerForPoC) DeleteKeystore(accountID string, privPassphrase []byte) (bool, error) {

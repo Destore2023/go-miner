@@ -1753,8 +1753,14 @@
     "rpcprotobufExportKeystoreByDirResponse": {
       "type": "object",
       "properties": {
-        "keystore": {
+        "keystores": {
           "type": "string"
+        },
+        "addrManagers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufAddrManager"
+          }
         }
       }
     },
@@ -1777,6 +1783,9 @@
       "properties": {
         "keystore": {
           "type": "string"
+        },
+        "addrManager": {
+          "$ref": "#/definitions/rpcprotobufAddrManager"
         }
       }
     },
@@ -2647,6 +2656,18 @@
       "properties": {
         "keystore": {
           "type": "string"
+        },
+        "old_addr_managers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufAddrManager"
+          }
+        },
+        "new_addr_managers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufAddrManager"
+          }
         }
       }
     },
@@ -2675,6 +2696,9 @@
         },
         "remark": {
           "type": "string"
+        },
+        "addrManager": {
+          "$ref": "#/definitions/rpcprotobufAddrManager"
         }
       }
     },
