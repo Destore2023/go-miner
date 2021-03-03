@@ -20,7 +20,12 @@ type MapType uint8
 
 const (
 	// TODO Compatible with multiple db formats
-	TypeSktDBV1             = "massdb.v1"
+	TypeSktDBV1   = "massdb.v1"
+	SktDBV1Suffix = ".massdb"
+)
+
+//  MapType
+const (
 	MapTypeHashMapA MapType = 1 // 1 keep compatible with MASS (which uses iota)
 	MapTypeHashMapB MapType = 2 // 2
 )
@@ -275,7 +280,6 @@ func CreateDB(args ...interface{}) (sktdb.SktDB, error) {
 
 func getPath(rootPath string, ordinal int, pubKey *pocec.PublicKey, bitLength int) (pathA, pathB string) {
 	pubKeyString := hex.EncodeToString(pubKey.SerializeCompressed())
-	var SktDBV1Suffix = ".massdb"
 	pathA = strings.Join([]string{strconv.Itoa(ordinal), pubKeyString, strconv.Itoa(bitLength), "a"}, "_") + SktDBV1Suffix
 	pathB = strings.Join([]string{strconv.Itoa(ordinal), pubKeyString, strconv.Itoa(bitLength)}, "_") + SktDBV1Suffix
 	return filepath.Join(rootPath, pathA), filepath.Join(rootPath, pathB)
