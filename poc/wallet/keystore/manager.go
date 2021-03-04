@@ -1183,59 +1183,57 @@ func (kmc *KeystoreManagerForPoC) DeleteKeystore(accountID string, privPassphras
 
 	// check private pass
 	addrManager, found := kmc.managedKeystores[accountID]
-	if found {
-		err := addrManager.safelyCheckPassword(privPassphrase)
-		if err != nil {
-			logging.CPrint(logging.ERROR, "wrong passphrase",
-				logging.LogFormat{
-					"err": err,
-				})
-			return false, err
-		}
-
-		err = db.Update(kmc.db, func(dbTransaction db.DBTransaction) error {
-			if addrManager.destroy(dbTransaction) != nil {
-				logging.CPrint(logging.ERROR, "delete account failed",
-					logging.LogFormat{
-						"err": err,
-					})
-				return err
-			}
-
-			kmBucket := dbTransaction.FetchBucket(kmc.ksMgrMeta)
-			if kmBucket == nil {
-				logging.CPrint(logging.ERROR, "failed to fetch keystore manager bucket")
-				return ErrBucketNotFound
-			}
-
-			err = kmBucket.DeleteBucket(addrManager.keystoreName)
-			if err != nil {
-				logging.CPrint(logging.ERROR, "failed to delete bucket under keystore manager", logging.LogFormat{"bucket name": addrManager.keystoreName})
-				return err
-			}
-
-			accountIDBucket := dbTransaction.FetchBucket(kmc.accountIDMeta)
-			err = deleteAccountID(accountIDBucket, []byte(accountID))
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-		if err != nil {
-			return false, err
-		}
-
-		addrManager.clearPrivKeys()
-		delete(kmc.managedKeystores, accountID)
-		return true, nil
-
-	} else {
+	if !found {
 		logging.CPrint(logging.ERROR, "account not exists",
 			logging.LogFormat{
 				"err": ErrAccountNotFound,
 			})
 		return false, ErrAccountNotFound
 	}
+	err := addrManager.safelyCheckPassword(privPassphrase)
+	if err != nil {
+		logging.CPrint(logging.ERROR, "wrong passphrase",
+			logging.LogFormat{
+				"err": err,
+			})
+		return false, err
+	}
+
+	err = db.Update(kmc.db, func(dbTransaction db.DBTransaction) error {
+		if addrManager.destroy(dbTransaction) != nil {
+			logging.CPrint(logging.ERROR, "delete account failed",
+				logging.LogFormat{
+					"err": err,
+				})
+			return err
+		}
+
+		kmBucket := dbTransaction.FetchBucket(kmc.ksMgrMeta)
+		if kmBucket == nil {
+			logging.CPrint(logging.ERROR, "failed to fetch keystore manager bucket")
+			return ErrBucketNotFound
+		}
+
+		err = kmBucket.DeleteBucket(addrManager.keystoreName)
+		if err != nil {
+			logging.CPrint(logging.ERROR, "failed to delete bucket under keystore manager", logging.LogFormat{"bucket name": addrManager.keystoreName})
+			return err
+		}
+
+		accountIDBucket := dbTransaction.FetchBucket(kmc.accountIDMeta)
+		err = deleteAccountID(accountIDBucket, []byte(accountID))
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return false, err
+	}
+
+	addrManager.clearPrivKeys()
+	delete(kmc.managedKeystores, accountID)
+	return true, nil
 }
 
 // useKeystore updatePriv --> true
