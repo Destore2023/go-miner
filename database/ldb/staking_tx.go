@@ -350,11 +350,11 @@ func (db *ChainDb) fetchActiveStakingTxFromUnexpired(height uint64) (map[[sha256
 
 	iter := db.localStorage.NewIterator(storage.BytesPrefix(recordStakingTx))
 	defer iter.Release()
-
+	recordStakingTxLen := len(recordStakingTx)
 	for iter.Next() {
 		key := iter.Key()
-		expiredHeight := binary.LittleEndian.Uint64(key[len(recordStakingTx) : len(recordStakingTx)+8])
-		mapKey := mustDecodeStakingTxMapKey(key[len(recordStakingTx)+8:])
+		expiredHeight := binary.LittleEndian.Uint64(key[recordStakingTxLen : recordStakingTxLen+8])
+		mapKey := mustDecodeStakingTxMapKey(key[recordStakingTxLen+8:])
 		blockHeight := mapKey.blockHeight
 
 		value := iter.Value()

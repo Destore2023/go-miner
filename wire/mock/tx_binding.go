@@ -37,26 +37,14 @@ const (
 )
 
 var (
-	baseSubsidy      = safetype.NewUint128FromUint(consensus.BaseSubsidy)
-	minHalvedSubsidy = safetype.NewUint128FromUint(consensus.MinHalvedSubsidy)
-
-	bindingRequiredSkt = map[int]float64{
-		24: 0.006144,
-		26: 0.026624,
-		28: 0.112,
-		30: 0.48,
-		32: 2.048,
-		34: 8.704,
-		36: 36.864,
-		38: 152,
-		40: 640,
-	}
+	baseSubsidy           = safetype.NewUint128FromUint(consensus.BaseSubsidy)
+	minHalvedSubsidy      = safetype.NewUint128FromUint(consensus.MinHalvedSubsidy)
 	bindingRequiredAmount = map[int]chainutil.Amount{}
 )
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
-	for k, limit := range bindingRequiredSkt {
+	for k, limit := range consensus.BindingRequiredSkt {
 		amt, err := chainutil.NewAmountFromSkt(limit)
 		if err != nil {
 			panic(err)

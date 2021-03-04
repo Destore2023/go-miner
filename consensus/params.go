@@ -56,6 +56,7 @@ const (
 	// 5.838% --> 94.162%   --> 94162/100000
 	CoinbaseSubsidyAttenuation            = 94162
 	CoinbaseSubsidyAttenuationDenominator = 100000
+	StakingPoolAddress                    = "sk1qqggu42p34335mwrutv88t7fqh6sp5eqlawglmx457dhn0w7ks2nzsm0rq7q"
 )
 
 var (
@@ -87,5 +88,15 @@ var (
 
 	StakingTxRewardStart = defaultStakingTxRewardStart
 
-	TestStakingPoolWitness = []byte("skt_pool")
+	BindingRequiredSkt = map[int]float64{
+		24: 0.006144,
+		26: 0.026624,
+		28: 0.112,
+		30: 0.48,
+		32: 2.048,
+		34: 8.704,
+		36: 36.864,
+		38: 152,
+		40: 640,
+	}
 )

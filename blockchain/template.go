@@ -65,8 +65,8 @@ func init() {
 	if err != nil {
 		panic("init anyoneRedeemableScript: " + err.Error())
 	}
-	add := "sk1qqggu42p34335mwrutv88t7fqh6sp5eqlawglmx457dhn0w7ks2nzsm0rq7q"
-	address, err := chainutil.DecodeAddress(add, &config.ChainParams)
+	address, err := chainutil.DecodeAddress(consensus.StakingPoolAddress, &config.ChainParams)
+	address.ScriptAddress()
 	if err != nil {
 		panic("init poolPubKeyScript: " + err.Error())
 	}
