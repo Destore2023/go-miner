@@ -73,6 +73,7 @@ var (
 
 	// StakingTx & BindingTx
 	ErrStandardBindingTx     = errors.New("input and output of the transaction are all binding transactions")
+	ErrNotAllowedTx          = errors.New("A transaction that is not allowed")
 	ErrInvalidStakingTxValue = errors.New("invalid staking tx value")
 	ErrInvalidFrozenPeriod   = errors.New("invalid frozen period")
 	ErrStakingRewardNum      = errors.New("incorrect staking reward number")

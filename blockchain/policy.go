@@ -253,9 +253,8 @@ func checkParsePkScript(tx *chainutil.Tx, txStore TxStore) (err error) {
 				checkedBinding = true
 			}
 		case txscript.PoolScriptHashTy:
-
+			return ErrNotAllowedTx
 		case txscript.GovernanceScriptHashTy:
-
 		case txscript.NonStandardTy,
 			txscript.MultiSigTy:
 			logging.CPrint(logging.ERROR, "non-standard script form",
@@ -372,6 +371,7 @@ func checkTransactionStandard(tx *chainutil.Tx, height uint64, minRelayTxFee cha
 		// the comment on maxStandardWitnessSize for more details.
 		var wit [][]byte
 		wit = txIn.Witness
+		// staking pool tx disable
 		if len(wit) != 2 {
 			logging.CPrint(logging.ERROR, "Invalid witness length",
 				logging.LogFormat{"transaction": tx.Hash(), "index": i, "previousOutPoint": txIn.PreviousOutPoint,
