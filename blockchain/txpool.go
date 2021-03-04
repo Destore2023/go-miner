@@ -541,8 +541,6 @@ func (tp *TxPool) maybeAcceptTransaction(tx *chainutil.Tx, isNew, rateLimit bool
 			logging.LogFormat{"txHash": txHash})
 		return nil, ErrCoinbaseTx
 	}
-	// TODO disable staking pool tx
-
 	// Don't accept transactions with a lock time after the maximum int64
 	// value for now.
 	if tx.MsgTx().LockTime > math.MaxInt64 {

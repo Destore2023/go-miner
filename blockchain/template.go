@@ -47,11 +47,8 @@ const (
 	minHighPriority = consensus.MinHighPriority
 
 	PriorityProposalSize = wire.MaxBlockPayload / 20
-
 	// extend payload
 	PayloadExtendJsonType = byte(128)
-	//
-	StakingPoolType = uint16(1)
 )
 
 var (
@@ -66,11 +63,10 @@ func init() {
 		panic("init anyoneRedeemableScript: " + err.Error())
 	}
 	address, err := chainutil.DecodeAddress(consensus.StakingPoolAddress, &config.ChainParams)
-	address.ScriptAddress()
 	if err != nil {
 		panic("init poolPubKeyScript: " + err.Error())
 	}
-	stakingPoolPubKeyScript, err = txscript.PayToPoolAddrScript(address, StakingPoolType)
+	stakingPoolPubKeyScript, err = txscript.PayToPoolAddrScript(address, consensus.StakingPoolType)
 	if err != nil {
 		panic("init poolPubKeyScript: " + err.Error())
 	}
@@ -653,8 +649,7 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 //
 // See the comment for NewBlockTemplate for more information about why the nil
 // address handling is useful.
-
-func createCoinbaseTx(nextBlockHeight uint64, payToAddress chainutil.Address) (*chainutil.Tx, error) {
+func createCoinbaseTx(nextBlockHeight uint64, payoutAddress chainutil.Address) (*chainutil.Tx, error) {
 	tx := wire.NewMsgTx()
 	tx.AddTxIn(&wire.TxIn{
 		// Coinbase transactions have no inputs, so previous outpoint is
@@ -670,64 +665,17 @@ func createCoinbaseTx(nextBlockHeight uint64, payToAddress chainutil.Address) (*
 	// redeemable by anyone.
 	pkScriptMiner := anyoneRedeemableScript
 	var err error
-	if payToAddress != nil {
-		pkScriptMiner, err = txscript.PayToAddrScript(payToAddress)
+	if payoutAddress != nil {
+		pkScriptMiner, err = txscript.PayToAddrScript(payoutAddress)
 		if err != nil {
 			return nil, err
 		}
 	}
-
 	miner, _, _, err := CalcBlockSubsidy(nextBlockHeight,
 		&config.ChainParams, chainutil.ZeroAmount(), bitLengthMissing)
 	if err != nil {
 		return nil, err
 	}
-	// no longer mint
-	//if miner.IsZero() {
-	//	tx.AddTxOut(&wire.TxOut{
-	//		Value:    miner.IntValue(),
-	//		PkScript: pkScriptMiner,
-	//	})
-	//	return chainutil.NewTx(tx), nil
-	//}
-
-	// mint
-
-	//diff := safetype.NewUint64()
-	//totalStakingValue := safetype.NewUint64()
-	//for _, v := range rewardAddresses {
-	//	totalStakingValue, err = totalStakingValue.AddInt(v.Value)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//}
-
-	// calc reward
-	//totalSNValue := safetype.NewUint64()
-	//for i := 0; i < len(rewardAddresses); i++ {
-	//	key := make([]byte, sha256.Size)
-	//	copy(key, rewardAddresses[i].ScriptHash[:])
-	//	pkScriptSuperNode, err := txscript.PayToWitnessScriptHashScript(key)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//superNodeValue, err := calcSuperNodeReward(superNode, totalStakingValue, rewardAddresses[i].Value)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//if superNodeValue.IsZero() {
-	//	// break loop as rewardAddresses is in descending order by value
-	//	break
-	//}
-	//totalSNValue, err = totalSNValue.Add(superNodeValue)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//	tx.AddTxOut(&wire.TxOut{
-	//		Value:    0,
-	//		PkScript: pkScriptSuperNode,
-	//	})
-	//}
 	tx.AddTxOut(&wire.TxOut{
 		Value:    miner.IntValue(),
 		PkScript: pkScriptMiner,
