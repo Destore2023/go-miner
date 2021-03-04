@@ -349,8 +349,6 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.Bin
 	}
 	coinbase.RemoveAllTxOut()
 	totalBinding := chainutil.ZeroAmount()
-	poolReward := chainutil.ZeroAmount()
-	coinbasePayload := NewCoinbasePayload()
 	// means still have reward in coinbase
 	// originMiner cannot be smaller than diff
 	// has guaranty tx
@@ -440,59 +438,7 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.Bin
 		}
 	}
 
-	totalWeight := safetype.NewUint128()
-	for _, v := range rewardAddresses {
-		if nextBlockHeight < consensus.Ip1Activation {
-			// by value
-			totalWeight, err = totalWeight.AddInt(v.Value)
-		} else { // by weight
-			totalWeight, err = totalWeight.Add(v.Weight)
-		}
-		if err != nil {
-			return err
-		}
-	}
-
 	logging.CPrint(logging.INFO, "show the count of stakingTx", logging.LogFormat{"count": len(rewardAddresses)})
-	// calc reward  index start with 0
-	var numOfStakingRewardSent uint32 = 0
-	for i := 0; i < len(rewardAddresses); i++ {
-		key := make([]byte, sha256.Size)
-		copy(key, rewardAddresses[i].ScriptHash[:])
-		pkScriptSuperNode, err := txscript.PayToWitnessScriptHashScript(key)
-		if err != nil {
-			return err
-		}
-
-		nodeWeight := rewardAddresses[i].Weight
-		if nextBlockHeight < consensus.Ip1Activation {
-			nodeWeight, err = safetype.NewUint128FromInt(rewardAddresses[i].Value)
-			if err != nil {
-				return err
-			}
-		}
-		nodeReward, err := calcNodeReward(poolReward, totalWeight, nodeWeight)
-		if err != nil {
-			return err
-		}
-
-		if nodeReward.IsZero() {
-			// break loop as rewordAddress is in descending order by value
-			break
-		}
-		coinbase.AddTxOut(&wire.TxOut{
-			Value:    nodeReward.IntValue(),
-			PkScript: pkScriptSuperNode,
-		})
-		numOfStakingRewardSent = numOfStakingRewardSent + 1
-	}
-	//coinbase.SetPayload(standardCoinbasePayload(nextBlockHeight, numOfStakingRewardSent, uint64(time.Now().Unix())))
-	if numOfStakingRewardSent > 0 {
-		coinbasePayload.lastStakingAwardedTimestamp = uint64(time.Now().Unix())
-	}
-	coinbasePayload.numStakingReward = numOfStakingRewardSent
-	coinbasePayload.height = nextBlockHeight
-	coinbase.SetPayload(coinbasePayload.Bytes())
 
 	// senateNode
 	if !senateNode.IsZero() && len(senateEquities) > 0 {
@@ -585,7 +531,7 @@ func createStakingPoolMergeTx(nextBlockHeight uint64, unspentPoolTxs []*database
 // |                               |-----------------------------------+
 // |                               |  reward                           |
 // +-------------------------------+-----------------------------------+
-func createStakingPoolRewardTx(nextBlockHeight uint64, unspentPoolTxs []*database.TxReply) (*chainutil.Tx, error) {
+func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []database.Rank, unspentPoolTxs []*database.TxReply) (*chainutil.Tx, error) {
 	stakingPoolRewardTx := wire.NewMsgTx()
 	var poolWitness [][]byte
 	poolTotal := safetype.NewUint128()
@@ -639,6 +585,51 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, unspentPoolTxs []*databas
 	}
 	if err != nil {
 		return nil, err
+	}
+	totalWeight := safetype.NewUint128()
+	for _, v := range rewardAddresses {
+		if nextBlockHeight < consensus.Ip1Activation {
+			// by value
+			totalWeight, err = totalWeight.AddInt(v.Value)
+		} else { // by weight
+			totalWeight, err = totalWeight.Add(v.Weight)
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	// calc reward  index start with 0
+	var numOfStakingRewardSent uint32 = 0
+	for i := 0; i < len(rewardAddresses); i++ {
+		key := make([]byte, sha256.Size)
+		copy(key, rewardAddresses[i].ScriptHash[:])
+		pkScriptSuperNode, err := txscript.PayToWitnessScriptHashScript(key)
+		if err != nil {
+			return nil, err
+		}
+
+		nodeWeight := rewardAddresses[i].Weight
+		if nextBlockHeight < consensus.Ip1Activation {
+			nodeWeight, err = safetype.NewUint128FromInt(rewardAddresses[i].Value)
+			if err != nil {
+				return nil, err
+			}
+		}
+		nodeReward, err := calcNodeReward(poolReward, totalWeight, nodeWeight)
+		if err != nil {
+			return nil, err
+		}
+
+		if nodeReward.IsZero() {
+			// break loop as rewordAddress is in descending order by value
+			break
+		}
+		numOfStakingRewardSent = numOfStakingRewardSent + 1
+		stakingPoolRewardTx.AddTxOut(&wire.TxOut{
+			Value:    nodeReward.IntValue(),
+			PkScript: pkScriptSuperNode,
+		})
+
 	}
 	poolBalance, err = poolTotal.SubUint(uint64(poolReward.IntValue()))
 	if err != nil {
@@ -840,7 +831,7 @@ type BlockTemplateGenerator struct {
 //  |  <= cfg.BlockMinSize)             |   |
 //   -----------------------------------  --
 
-func (chain *Blockchain) NewBlockTemplate(payToAddress chainutil.Address, templateCh chan interface{}) error {
+func (chain *Blockchain) NewBlockTemplate(payoutAddress chainutil.Address, templateCh chan interface{}) error {
 	chain.l.Lock()
 	defer chain.l.Unlock()
 
@@ -868,7 +859,7 @@ func (chain *Blockchain) NewBlockTemplate(payToAddress chainutil.Address, templa
 	//	return err
 	//}
 	// run newBlockTemplate as goroutine
-	go newBlockTemplate(chain, payToAddress, templateCh, bestNode, txs, punishments, rewardAddresses)
+	go newBlockTemplate(chain, payoutAddress, templateCh, bestNode, txs, punishments, rewardAddresses)
 	//go newBlockTemplate(chain, payoutAddress, templateCh, bestNode, txs, punishments, stakingRewardInfo)
 	return nil
 }
@@ -1018,7 +1009,7 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 		unspentStakingPoolTxs := chain.db.FetchUnSpentTxByShaList(unspentTxShaList)
 		if len(unspentStakingPoolTxs) > 0 {
 			if len(rewardAddresses) > 0 {
-				stakingPoolRewardTx, err := createStakingPoolRewardTx(nextBlockHeight, unspentStakingPoolTxs)
+				stakingPoolRewardTx, err := createStakingPoolRewardTx(nextBlockHeight, rewardAddresses, unspentStakingPoolTxs)
 				if err != nil {
 					templateCh <- &PoCTemplate{
 						Err: err,

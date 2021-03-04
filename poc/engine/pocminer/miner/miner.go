@@ -143,10 +143,9 @@ out:
 			logging.CPrint(logging.ERROR, "no valid mining payout addresses", logging.LogFormat{"err": ErrNoPayoutAddresses})
 			break out
 		}
-		payToAddr := payoutAddresses[rand.Intn(len(payoutAddresses))]
-
+		payoutAddress := payoutAddresses[rand.Intn(len(payoutAddresses))]
 		// start solve block
-		if newBlock, minerReward, err := m.solveBlock(payToAddr, quit); err == nil {
+		if newBlock, minerReward, err := m.solveBlock(payoutAddress, quit); err == nil {
 			block := chainutil.NewBlock(newBlock)
 			logging.CPrint(logging.INFO, "submitting mined block",
 				logging.LogFormat{
