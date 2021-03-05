@@ -287,7 +287,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"import_keystore_dir\":\"C:\\\\Users\\\\cui\\\\Downloads\\\\miner.mass\\\\miner\",\r\n    \"import_pubpass\":\"pub1234\",\r\n    \"import_privpass\":\"priv1234\",\r\n    \"new_privpass\":\"123456\"\r\n}",
+					"raw": "{\r\n    \"import_keystore_dir\":\"D:\\\\mass\\\\Miner\\\\resources\\\\bin\",\r\n    \"import_pubpass\":\"aLLQFevQj4\",\r\n    \"import_privpass\":\"123456\",\r\n    \"current_privpass\":\"123456\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
