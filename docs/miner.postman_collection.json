@@ -254,6 +254,24 @@
 			"response": []
 		},
 		{
+			"name": "wallets-GetKeystoreDetail",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"wallet_id\":\"ac10k4ggxcndct088mttep9wpqj4pwd2djnc4r30t9\",\r\n    \"passphrase\":\"123456\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://{{miner-url}}/v1/wallets/detail"
+			},
+			"response": []
+		},
+		{
 			"name": "wallets-ImportKeystore",
 			"request": {
 				"method": "POST",
@@ -269,7 +287,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"wallet_dir\":\"C:\\\\Users\\\\cui\\\\Downloads\\\\miner.mass\\\\miner\",\r\n    \"import_passphrase\":\"pub1234\",\r\n    \"import_wallet_passphrase\":\"priv1234\",\r\n    \"wallet_passphrase\":\"\"\r\n}",
+					"raw": "{\r\n    \"import_keystore_dir\":\"C:\\\\Users\\\\cui\\\\Downloads\\\\miner.mass\\\\miner\",\r\n    \"import_pubpass\":\"pub1234\",\r\n    \"import_privpass\":\"priv1234\",\r\n    \"new_privpass\":\"123456\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
