@@ -215,8 +215,7 @@ func TestCalcBlockSubsidy(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			resMiner, resSuperNode, _, err := CalcBlockSubsidy(test.height, &config.ChainParams,
-				test.totalBinding, test.numRank, test.bitLength)
+			resMiner, resSuperNode, _, err := CalcBlockSubsidy(test.height, &config.ChainParams, test.totalBinding, test.bitLength)
 			if err != nil {
 				t.Errorf("failed to calculate block subsidy, %v", err)
 			}
