@@ -85,7 +85,9 @@ Alternatively, check `./api/proto/api.swagger.json` directly for full definition
 - wallets
     * [GetKeystore](#getkeystore)
     * [ExportKeystore](#exportkeystore)
+    * [ExportKeystoreByDir](#ExportKeystoreByDir)  
     * [ImportKeystore](#importkeystore)
+    * [ImportKeystoreByDir](#ImportKeystoreByDir)
     * [UnlockWallet](#unlockwallet)
     * [LockWallet](#lockwallet)
     * [ChangePrivatePass](#changeprivatepass)
@@ -1445,6 +1447,11 @@ It is to export keystore.
     "keystore": "{\"remark\":\"\",\"crypto\":{\"cipher\":\"Stream cipher\",\"masterHDPrivKeyEnc\":\"2bc4592eb1e8b5e3aede665c310b3da4b8670e8315e717896b4ce35d26cef8c59a43e5b3de6dfde0f8aadbf77a2e2a87cb5948e622c7d4a198b60ef134f4d20675589753dcc1327a412f95ef111d08a2becb3d10dcbd31cc3eba6208b9cf98f3cffd3b38b1246c85230161e52de51587fa5c8ef066720e2e5bf7fd65c12eaff99494add5a334c8879924c50a6299ff22f51988eeb5c40b\",\"kdf\":\"scrypt\",\"pubParams\":\"8b6672e43801b807cc8e2b84e7451140f4a0ccefd95fd0517645a3fa46c1212941e809953ee35ad776bd5454011e55edb677d02b9226a002d288cde88b33a3f5000004000000000008000000000000000100000000000000\",\"privParams\":\"2db906258e0a0430d64dcd88cc9234cf56642dc0075ae2def430018b21962bf8fb5c380ce4a3d229f930776a1965a4a03448d46796afe9a5e1fe985f3d129df7000004000000000008000000000000000100000000000000\",\"cryptoKeyPubEnc\":\"bd59ebac79b1a20a8d666ccf734b86e928f2b48419db9409c0c17b9a9cdad39fc71eec5d03ef09536b224b60c322c9e8eb5f72452b379a502009cb9d6c1c4e0a4c67cbb0f7130582\",\"cryptoKeyPrivEnc\":\"b324172e95537af9406ce89a4ae439804bb90585027d18648f62bddd7d38600fdf41de5f6fcf74b1206ae173b4f3c2200c8bd385b472968bff931e2492e0cb5f27b651bac01e482c\"},\"hdPath\":{\"Purpose\":44,\"Coin\":297,\"Account\":0,\"ExternalChildNum\":4,\"InternalChildNum\":0}}"
 }
 ```
+---
+
+#### ExportKeystoreByDir
+
+
 
 ---
 
