@@ -828,7 +828,7 @@ message ImportKeystoreByDirRequest {
   string import_keystore_dir       = 1;  // wallet keystore dir which you want import
   string import_pubpass            = 2;  // import wallet public passphrase
   string import_privpass           = 3;  // import wallet private passphrase
-  string new_privpass              = 4;  // new wallet passphrase
+  string current_privpass          = 4;  // current private wallet passphrase
 }
 
 message ImportKeystoreByDirResponse {

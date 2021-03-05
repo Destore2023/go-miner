@@ -275,7 +275,7 @@ func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreB
 	}
 	newAddressManager := make([]*pb.AddrManager, 0)
 	for _, keystore := range keystores {
-		walletId, _, err := s.pocWallet.ImportKeystore(keystore.Bytes(), []byte(in.ImportPrivpass), []byte(in.NewPrivpass))
+		walletId, _, err := s.pocWallet.ImportKeystore(keystore.Bytes(), []byte(in.ImportPrivpass), []byte(in.CurrentPrivpass))
 		if err != nil {
 			return nil, err
 		}

@@ -2654,7 +2654,7 @@
         "import_privpass": {
           "type": "string"
         },
-        "new_privpass": {
+        "current_privpass": {
           "type": "string"
         }
       }
