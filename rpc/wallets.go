@@ -73,9 +73,10 @@ func getAddrManagerDetail(addrManager *keystore.AddrManager) *pb.AddrManager {
 				Index:   HdPath.Index,
 			},
 		}
-		if addr.PrivKey() != nil {
-			address.PrivKey = hex.EncodeToString(addr.PrivKey().Serialize())
-		}
+		// The private key is not visible
+		//if addr.PrivKey() != nil {
+		//	address.PrivKey = hex.EncodeToString(addr.PrivKey().Serialize())
+		//}
 		addresses = append(addresses, address)
 	}
 	return &pb.AddrManager{
