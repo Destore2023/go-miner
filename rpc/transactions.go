@@ -405,13 +405,13 @@ func (s *Server) showCoinbaseOutputDetails(mtx *wire.MsgTx, chainParams *config.
 		return nil, -1, err
 	}
 
-	coinbasePayload := blockchain.NewCoinbasePayload()
-	err = coinbasePayload.SetBytes(mtx.Payload)
-	if err != nil {
-		logging.CPrint(logging.ERROR, "failed to deserialize coinbase payload", logging.LogFormat{"error": err})
-		return nil, -1, err
-	}
-	numStaking := coinbasePayload.NumStakingReward()
+	//coinbasePayload := blockchain.NewCoinbasePayload()
+	//err = coinbasePayload.SetBytes(mtx.Payload)
+	//if err != nil {
+	//	logging.CPrint(logging.ERROR, "failed to deserialize coinbase payload", logging.LogFormat{"error": err})
+	//	return nil, -1, err
+	//}
+	//numStaking := coinbasePayload.NumStakingReward()
 
 	baseMiner, superNode, _, err := blockchain.CalcBlockSubsidy(height, chainParams, g, bitlength)
 	if err != nil {
@@ -452,11 +452,11 @@ func (s *Server) showCoinbaseOutputDetails(mtx *wire.MsgTx, chainParams *config.
 			encodedAddrs[j] = addr.EncodeAddress()
 		}
 
-		if uint32(i) < numStaking {
-			outputType = "staking reward"
-		} else {
-			outputType = "miner"
-		}
+		//if uint32(i) < numStaking {
+		//	outputType = "staking reward"
+		//} else {
+		//	outputType = "miner"
+		//}
 
 		valueStr, err := AmountToString(v.Value)
 		if err != nil {

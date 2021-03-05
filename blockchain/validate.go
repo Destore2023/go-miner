@@ -1024,9 +1024,10 @@ func checkBlockSanity(block *chainutil.Block, chainID wire.Hash, pocLimit *big.I
 	}
 
 	// Checks that coinbase height matches block header height.
-	if err := CheckCoinbaseHeight(block); err != nil {
-		return err
-	}
+	// TODO why
+	//if err := CheckCoinbaseHeight(block); err != nil {
+	//	return err
+	//}
 
 	// A block must not have more transactions than the max block payload.
 	if numTx > wire.MaxTxPerBlock {

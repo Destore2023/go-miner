@@ -1,12 +1,10 @@
 package blockchain
 
 import (
-	"bytes"
 	"container/heap"
 	"container/list"
 	"crypto/sha256"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"time"
@@ -100,100 +98,54 @@ type txPriorityQueue struct {
 	items    []*txPrioItem
 }
 
-type CoinbasePayload struct {
+type StakingPoolAwardPayload struct {
 	height                      uint64
 	numStakingReward            uint32 // the num of amount which give out rewards
 	lastStakingAwardedTimestamp uint64 // last staking pool awarded time
 }
 
-// ExtendPayload
-type ExtendPayload struct {
-	extendType byte        // the type of payload encode
-	data       interface{} // any type data ,payload data
-}
-
-func ExtendedPayloadEncode(encodeType byte, v interface{}) ([]byte, error) {
-	var payload bytes.Buffer
-	switch encodeType {
-	case PayloadExtendJsonType:
-		data, err := json.Marshal(v)
-		if err != nil {
-			return nil, err
-		}
-		payload.WriteByte(PayloadExtendJsonType)
-		payload.Write(data)
-		return payload.Bytes(), nil
-	default:
-		return nil, ErrPayloadUnsupportedType
-	}
-}
-
-func ExtendedPayloadDecode(payload []byte, v interface{}) error {
-	if len(payload) <= 1 {
-		return ErrPayloadExtendFormat
-	}
-	extendType := payload[0]
-	switch extendType {
-	case PayloadExtendJsonType:
-		return json.Unmarshal(payload[1:], v)
-	default:
-		return ErrPayloadUnsupportedType
-	}
-}
-
-func (p *CoinbasePayload) LastStakingAwardedTimestamp() uint64 {
+func (p *StakingPoolAwardPayload) LastStakingAwardedTimestamp() uint64 {
 	return p.lastStakingAwardedTimestamp
 }
 
-func (p *CoinbasePayload) NumStakingReward() uint32 {
+func (p *StakingPoolAwardPayload) NumStakingReward() uint32 {
 	return p.numStakingReward
 }
 
-func (p *CoinbasePayload) Bytes() []byte {
-	if p.lastStakingAwardedTimestamp == 0 {
-		buf := make([]byte, 12)
-		binary.LittleEndian.PutUint64(buf[:8], p.height)
-		binary.LittleEndian.PutUint32(buf[8:12], p.numStakingReward)
-		return buf
-	} else {
-		buf := make([]byte, 20)
-		binary.LittleEndian.PutUint64(buf[:8], p.height)
-		binary.LittleEndian.PutUint32(buf[8:12], p.numStakingReward)
-		binary.LittleEndian.PutUint64(buf[12:20], p.lastStakingAwardedTimestamp)
-		return buf
-	}
+func (p *StakingPoolAwardPayload) Bytes() []byte {
+	buf := make([]byte, 20)
+	binary.LittleEndian.PutUint64(buf[:8], p.height)
+	binary.LittleEndian.PutUint32(buf[8:12], p.numStakingReward)
+	binary.LittleEndian.PutUint64(buf[12:20], p.lastStakingAwardedTimestamp)
+	return buf
 }
 
-func (p *CoinbasePayload) SetBytes(data []byte) error {
-	if len(data) < 12 {
+func (p *StakingPoolAwardPayload) SetBytes(data []byte) error {
+	if len(data) < 20 {
 		return errIncompleteCoinbasePayload
 	}
 	p.height = binary.LittleEndian.Uint64(data[0:8])
 	p.numStakingReward = binary.LittleEndian.Uint32(data[8:12])
-	if len(data) == 20 {
-		p.lastStakingAwardedTimestamp = binary.LittleEndian.Uint64(data[12:20])
-	} else {
-		p.lastStakingAwardedTimestamp = 0
-	}
+	p.lastStakingAwardedTimestamp = binary.LittleEndian.Uint64(data[12:20])
 	return nil
 }
 
-func (p *CoinbasePayload) Reset() {
+func (p *StakingPoolAwardPayload) Reset() {
 	p.height = 0
 	p.numStakingReward = 0
 	p.lastStakingAwardedTimestamp = 0
 }
 
-func NewCoinbasePayload() *CoinbasePayload {
-	return &CoinbasePayload{
+func NewStakingPoolAwardPayload() *StakingPoolAwardPayload {
+	return &StakingPoolAwardPayload{
 		height:                      0,
 		numStakingReward:            0,
 		lastStakingAwardedTimestamp: 0,
 	}
 }
 
-func standardCoinbasePayload(nextBlockHeight uint64, numStakingReward uint32, awardedTimestamp uint64) []byte {
-	p := &CoinbasePayload{
+func standardStakingPoolAwardPayload(nextBlockHeight uint64, numStakingReward uint32, awardedTimestamp uint64) []byte {
+	p := &StakingPoolAwardPayload{
 		height:                      nextBlockHeight,
 		numStakingReward:            numStakingReward,
 		lastStakingAwardedTimestamp: awardedTimestamp,
@@ -625,8 +577,8 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 			Value:    nodeReward.IntValue(),
 			PkScript: pkScriptSuperNode,
 		})
-
 	}
+
 	poolBalance, err = poolTotal.SubUint(uint64(poolReward.IntValue()))
 	if err != nil {
 		return nil, err
@@ -638,8 +590,8 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 			PkScript: stakingPoolPubKeyScript,
 		})
 	}
-	//coinbasePayload.Reset()
-	//coinbasePayload.lastStakingAwardedTimestamp = uint64(time.Now().Unix())
+	payload := standardStakingPoolAwardPayload(nextBlockHeight, numOfStakingRewardSent, uint64(time.Now().Unix()))
+	stakingPoolRewardTx.SetPayload(payload)
 	return chainutil.NewTx(stakingPoolRewardTx), nil
 }
 
@@ -658,7 +610,7 @@ func createCoinbaseTx(nextBlockHeight uint64, payoutAddress chainutil.Address) (
 			wire.MaxPrevOutIndex),
 		Sequence: wire.MaxTxInSequenceNum,
 	})
-	tx.SetPayload(standardCoinbasePayload(nextBlockHeight, 0, 0))
+	//tx.SetPayload(standardCoinbasePayload(nextBlockHeight, 0, 0))
 
 	// Create a script for paying to the miner if one was specified.
 	// Otherwise create a script that allows the coinbase to be
