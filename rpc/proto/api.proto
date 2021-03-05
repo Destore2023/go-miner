@@ -279,7 +279,7 @@ service ApiService {
 
 message HDWalletPath {
   uint32  purpose            = 1;
-  uint32  coin               = 2;
+  uint32  cointype           = 2;
   uint32  account            = 3;
   uint32  external_child_num = 4;
   uint32  internal_child_num = 5;
@@ -662,7 +662,7 @@ message ConfigureSpaceKeeperRequest {
   uint64          capacity         = 1;
   repeated string payout_addresses = 2;
   string          passphrase       = 3;
-  uint32          coin             = 4;
+  uint32          cointype         = 4;
 }
 
 message WorkSpace {
@@ -704,7 +704,7 @@ message ConfigureSpaceKeeperByDirsRequest {
   repeated Allocation allocations = 1;
   repeated string payout_addresses = 2;
   string passphrase = 3;
-  uint32       coin = 4;
+  uint32   cointype = 4;
 }
 
 message WorkSpacesByDirsResponse {

@@ -41,7 +41,7 @@ func (s *Server) ConfigureCapacity(ctx context.Context, in *pb.ConfigureSpaceKee
 			return nil, err
 		}
 	}
-	cointype := in.Coin
+	cointype := in.Cointype
 	if cointype == 0 {
 		cointype = config.ChainParams.HDCoinType
 	}
@@ -125,7 +125,7 @@ func (s *Server) ConfigureCapacityByDirs(ctx context.Context, in *pb.ConfigureSp
 			return nil, err
 		}
 	}
-	cointype := in.Coin
+	cointype := in.Cointype
 	if cointype == 0 {
 		cointype = config.ChainParams.HDCoinType
 	}
@@ -200,6 +200,7 @@ func (s *Server) ConfigureCapacityByDirs(ctx context.Context, in *pb.ConfigureSp
 	return &pb.WorkSpacesByDirsResponse{DirectoryCount: uint32(len(alloctions)), Allocations: alloctions}, nil
 }
 
+// TODO auto get all spaces info
 func (s *Server) GetCapacitySpacesByDirs(ctx context.Context, in *empty.Empty) (*pb.WorkSpacesByDirsResponse, error) {
 	logging.CPrint(logging.INFO, "GetCapacitySpacesByDirs called")
 	defer logging.CPrint(logging.INFO, "GetCapacitySpaces responded")

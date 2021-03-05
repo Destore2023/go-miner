@@ -45,6 +45,31 @@ func NewPoCWallet(cfg *PoCWalletConfig, password []byte) (*PoCWallet, error) {
 	}, nil
 }
 
+func OpenPocWallet(cfg *PoCWalletConfig, password []byte) (*PoCWallet, error) {
+	dbPath := cfg.DBPath()
+
+	var store db.DB
+	fi, err := os.Stat(dbPath)
+	if err != nil {
+		return nil, err
+	}
+	if !fi.IsDir() {
+		return nil, fmt.Errorf("open %s: not a directory", dbPath)
+	}
+	if store, err = db.OpenDB(cfg.dbType, dbPath); err != nil {
+		return nil, err
+	}
+	manager, err := keystore.NewKeystoreManagerForPoC(store, password, &config.ChainParams)
+	if err != nil {
+		store.Close()
+		return nil, err
+	}
+	return &PoCWallet{
+		KeystoreManagerForPoC: manager,
+		store:                 store,
+	}, nil
+}
+
 func (wallet *PoCWallet) Close() error {
 	return wallet.store.Close()
 }

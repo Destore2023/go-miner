@@ -1684,7 +1684,7 @@
         "passphrase": {
           "type": "string"
         },
-        "coin": {
+        "cointype": {
           "type": "integer",
           "format": "int64"
         }
@@ -1718,7 +1718,7 @@
         "passphrase": {
           "type": "string"
         },
-        "coin": {
+        "cointype": {
           "type": "integer",
           "format": "int64"
         }
@@ -2568,7 +2568,7 @@
           "type": "integer",
           "format": "int64"
         },
-        "coin": {
+        "cointype": {
           "type": "integer",
           "format": "int64"
         },

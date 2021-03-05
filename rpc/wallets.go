@@ -47,7 +47,7 @@ func getKeystoreDetail(keystore *keystore.Keystore) *pb.PocWallet {
 	}
 	HdWalletPath := &pb.HDWalletPath{
 		Purpose:          keystore.HDpath.Purpose,
-		Coin:             keystore.HDpath.Coin,
+		Cointype:         keystore.HDpath.Coin,
 		Account:          keystore.HDpath.Account,
 		ExternalChildNum: keystore.HDpath.ExternalChildNum,
 		InternalChildNum: keystore.HDpath.InternalChildNum,
@@ -183,7 +183,7 @@ func pushJsonFile(exportFileName string, data []byte) error {
 func (s *Server) ExportKeystoreByDir(ctx context.Context, in *pb.ExportKeystoreByDirRequest) (*pb.ExportKeystoreByDirResponse, error) {
 	logging.CPrint(logging.INFO, "rpc ExportKeystoreByDirs called")
 	pocWalletConfig := wallet.NewPocWalletConfig(in.WalletDir, "leveldb")
-	exportWallet, err := wallet.NewPoCWallet(pocWalletConfig, []byte(in.Passphrase))
+	exportWallet, err := wallet.OpenPocWallet(pocWalletConfig, []byte(in.Passphrase))
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +260,7 @@ func (s *Server) ImportKeystore(ctx context.Context, in *pb.ImportKeystoreReques
 func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreByDirRequest) (*pb.ImportKeystoreByDirResponse, error) {
 	logging.CPrint(logging.INFO, "rpc ImportKeystoreByDirs called")
 	pocWalletConfig := wallet.NewPocWalletConfig(in.ImportKeystoreDir, "leveldb")
-	exportWallet, err := wallet.NewPoCWallet(pocWalletConfig, []byte(in.ImportPubpass))
+	exportWallet, err := wallet.OpenPocWallet(pocWalletConfig, []byte(in.ImportPubpass))
 	if err != nil {
 		return nil, err
 	}
