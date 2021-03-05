@@ -369,6 +369,27 @@ func checkTransactionStandard(tx *chainutil.Tx, height uint64, minRelayTxFee cha
 		// Each transaction input signature script must not exceed the
 		// maximum size allowed for a standard transaction.  See
 		// the comment on maxStandardWitnessSize for more details.
+		originTxHash := &txIn.PreviousOutPoint.Hash
+		originTx, exists := txStore[*originTxHash]
+		if !exists || originTx.Err != nil || originTx.Tx == nil {
+			logging.CPrint(logging.ERROR, "unable to find input transaction",
+				logging.LogFormat{"input transaction ": originTxHash})
+			return ErrBadTxInput
+		}
+		originMsgTx := originTx.Tx.MsgTx()
+
+		// Ensure the output index in the referenced transaction
+		// is available.
+		originTxIndex := txIn.PreviousOutPoint.Index
+		if originTxIndex >= uint32(len(originMsgTx.TxOut)) {
+			logging.CPrint(logging.ERROR, "out of bounds input index in referenced transaction",
+				logging.LogFormat{"input index": originTxIndex, "originTx": originTxHash})
+			return ErrBadTxInput
+		}
+		info := originTx.Tx.GetPkScriptInfo(int(originTxIndex))
+		if txscript.PoolScriptHashTy == txscript.ScriptClass(info.Class) {
+			return ErrNotAllowedTx
+		}
 		var wit [][]byte
 		wit = txIn.Witness
 		// staking pool tx disable
