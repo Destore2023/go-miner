@@ -388,6 +388,8 @@ func checkTransactionStandard(tx *chainutil.Tx, height uint64, minRelayTxFee cha
 		}
 		info := originTx.Tx.GetPkScriptInfo(int(originTxIndex))
 		if txscript.PoolScriptHashTy == txscript.ScriptClass(info.Class) {
+			logging.CPrint(logging.ERROR, "transaction is an individual staking pool tx",
+				logging.LogFormat{"txHash": tx.Hash()})
 			return ErrNotAllowedTx
 		}
 		var wit [][]byte
