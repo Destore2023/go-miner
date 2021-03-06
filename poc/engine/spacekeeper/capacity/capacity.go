@@ -140,7 +140,9 @@ func (sk *SpaceKeeper) GetProofs(ctx context.Context, flags engine.WorkSpaceStat
 	for _, ws := range getWsByFlags(sk.workSpaceList, flags) {
 		items[ws.id.String()] = ws
 	}
-
+	if len(items) == 0 {
+		return nil, ErrWorkSpaceIsNotReady
+	}
 	proofs := sk.getProofs(items, challenge)
 	result := make([]*engine.WorkSpaceProof, 0, len(proofs))
 	for _, proof := range proofs {
