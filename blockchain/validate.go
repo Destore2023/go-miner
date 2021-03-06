@@ -2,7 +2,6 @@ package blockchain
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"math"
@@ -236,111 +235,23 @@ func checkCoinbaseInputs(tx *chainutil.Tx, txStore TxStore, pk *pocec.PublicKey,
 }
 
 //checkCoinbase checks the outputs of coinbase
-func checkCoinbase(tx *chainutil.Tx, stakingRanks []database.Rank, nextBlockHeight uint64,
+func checkCoinbase(tx *chainutil.Tx, nextBlockHeight uint64,
 	totalSukhavatiIn chainutil.Amount, net *config.Params, bitLength int) (chainutil.Amount, error) {
-
-	num := len(stakingRanks)
-	StakingRewardNum, err := extractCoinbaseStakingRewardNumber(tx)
-	if err != nil {
-		return chainutil.ZeroAmount(), err
-	}
-	if StakingRewardNum > uint32(num) {
-		return chainutil.ZeroAmount(), ErrStakingRewardNum
-	}
-
 	miner, poolReward, senateNode, err := CalcBlockSubsidy(nextBlockHeight, net, totalSukhavatiIn, bitLength)
 	if err != nil {
 		return chainutil.ZeroAmount(), err
 	}
 	logging.CPrint(logging.INFO, "CalcBlockSubsidy",
 		logging.LogFormat{
-			"block height":     nextBlockHeight,
-			"StakingRewardNum": StakingRewardNum,
-			"miner":            miner,
-			"poolReward":       poolReward,
-			"senateNode":       senateNode,
+			"block height": nextBlockHeight,
+			"miner":        miner,
+			"poolReward":   poolReward,
+			"senateNode":   senateNode,
 		})
 	totalReward := chainutil.ZeroAmount()
 	totalReward, err = totalReward.Add(miner)
 	totalReward, err = totalReward.Add(poolReward)
 	totalReward, err = totalReward.Add(senateNode)
-
-	totalWeight := safetype.NewUint128()
-	for _, v := range stakingRanks {
-		if nextBlockHeight < consensus.Ip1Activation { // by value
-			totalWeight, err = totalWeight.AddInt(v.Value)
-		} else { // by weight
-			totalWeight, err = totalWeight.Add(v.Weight)
-		}
-		if err != nil {
-			return chainutil.ZeroAmount(), err
-		}
-	}
-
-	i := 0
-	for ; i < num; i++ {
-		nodeWeight := stakingRanks[i].Weight
-		if nextBlockHeight < consensus.Ip1Activation {
-			nodeWeight, err = safetype.NewUint128FromInt(stakingRanks[i].Value)
-			if err != nil {
-				return chainutil.ZeroAmount(), err
-			}
-		}
-		expectAmount, err := calcNodeReward(poolReward, totalWeight, nodeWeight)
-		if err != nil {
-			return chainutil.ZeroAmount(), err
-		}
-
-		if expectAmount.IsZero() {
-			break
-		}
-
-		// TODO
-		// check value
-		if expectAmount.IntValue() != tx.MsgTx().TxOut[i].Value {
-			//logging.CPrint(logging.ERROR, "incorrect reward value for stakingTxs",
-			//	logging.LogFormat{
-			//		"block height": nextBlockHeight,
-			//		"index":        i,
-			//		"actual":       tx.MsgTx().TxOut[i].Value,
-			//		"expect":       expectAmount,
-			//	})
-			//return chainutil.ZeroAmount(), errors.New("incorrect reward value for stakingTxs")
-		}
-
-		// check pkscript
-		key := make([]byte, sha256.Size)
-		copy(key, stakingRanks[i].ScriptHash[:])
-		pkScriptSuperNode, err := txscript.PayToWitnessScriptHashScript(key)
-		if err != nil {
-			return chainutil.ZeroAmount(), err
-		}
-		if !bytes.Equal(tx.MsgTx().TxOut[i].PkScript, pkScriptSuperNode) {
-			class, pops := txscript.GetScriptInfo(tx.MsgTx().TxOut[i].PkScript)
-			_, rsh, err := txscript.GetParsedOpcode(pops, class)
-			if err != nil {
-				return chainutil.ZeroAmount(), err
-			}
-			logging.CPrint(logging.ERROR, "The reward address for stakingTxs is wrong",
-				logging.LogFormat{
-					"block height":          nextBlockHeight,
-					"index":                 i,
-					"stakingTxs scriptHash": key,
-					"txout scriptHash":      rsh,
-				})
-			//return chainutil.ZeroAmount(), errors.New("incorrect reward address for stakingTxs")
-		}
-	}
-	if uint32(i) != StakingRewardNum {
-		logging.CPrint(logging.ERROR, "Mismatched staking reward number",
-			logging.LogFormat{
-				"block height": nextBlockHeight,
-				"expect":       StakingRewardNum,
-				"actual":       i,
-			})
-		return chainutil.ZeroAmount(), ErrStakingRewardNum
-	}
-
 	// No need to check miner reward ouput, because the caller will check total reward+fee
 	//return miner, nil
 	return totalReward, nil
@@ -1644,12 +1555,11 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 			return err
 		}
 		//
-		totalReward, err := checkCoinbase(transactions[0], stakingTx, node.Height, totalInValue, &config.ChainParams, proofBitLength)
+		totalReward, err := checkCoinbase(transactions[0], node.Height, totalInValue, &config.ChainParams, proofBitLength)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "checkCoinbase failed", logging.LogFormat{
 				"totalInValue": totalInValue,
 				"height":       node.Height,
-				"stakingTx":    len(stakingTx),
 				"err":          err,
 			})
 			return err
@@ -1698,7 +1608,7 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 		if !SequenceLockActive(sequenceLock, node.Height, medianTime) {
 			return ErrSequenceNotSatisfied
 		}
-		err = checkParsePkScript(tx, txInputStore)
+		err = checkParsePkScript(tx, txInputStore, true)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "checkParsePkScript error", logging.LogFormat{"tx": tx.Hash(), "err": err})
 			return err

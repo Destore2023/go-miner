@@ -204,7 +204,7 @@ func checkInputsStandard(tx *chainutil.Tx, txStore TxStore) error {
 	return nil
 }
 
-func checkParsePkScript(tx *chainutil.Tx, txStore TxStore) (err error) {
+func checkParsePkScript(tx *chainutil.Tx, txStore TxStore, internal bool) (err error) {
 	checkedBinding := false
 	for i, txOut := range tx.TxOut() {
 		psi := tx.GetPkScriptInfo(i)
@@ -253,7 +253,10 @@ func checkParsePkScript(tx *chainutil.Tx, txStore TxStore) (err error) {
 				checkedBinding = true
 			}
 		case txscript.PoolScriptHashTy:
-			return ErrNotAllowedTx
+			// disable pool script in network
+			if !internal {
+				return ErrNotAllowedTx
+			}
 		case txscript.GovernanceScriptHashTy:
 		case txscript.NonStandardTy,
 			txscript.MultiSigTy:
@@ -417,7 +420,7 @@ func checkTransactionStandard(tx *chainutil.Tx, height uint64, minRelayTxFee cha
 		}
 	}
 
-	err := checkParsePkScript(tx, txStore)
+	err := checkParsePkScript(tx, txStore, false)
 	if err != nil {
 		// Attempt to extract a reject code from the error so
 		// it can be retained.  When not possible, fall back to
