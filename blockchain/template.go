@@ -98,6 +98,48 @@ type txPriorityQueue struct {
 	items    []*txPrioItem
 }
 
+// CoinbasePayload BIP34
+// fix duplicate coinbase transactions potentially causing two coinbase transactions becoming invalid
+type CoinbasePayload struct {
+	height           uint64
+	numStakingReward uint32
+}
+
+func (p *CoinbasePayload) NumStakingReward() uint32 {
+	return p.numStakingReward
+}
+
+func (p *CoinbasePayload) Bytes() []byte {
+	buf := make([]byte, 12)
+	binary.LittleEndian.PutUint64(buf[:8], p.height)
+	binary.LittleEndian.PutUint32(buf[8:12], p.numStakingReward)
+	return buf
+}
+
+func (p *CoinbasePayload) SetBytes(data []byte) error {
+	if len(data) < 12 {
+		return errIncompleteCoinbasePayload
+	}
+	p.height = binary.LittleEndian.Uint64(data[0:8])
+	p.numStakingReward = binary.LittleEndian.Uint32(data[8:12])
+	return nil
+}
+
+func NewCoinbasePayload() *CoinbasePayload {
+	return &CoinbasePayload{
+		height:           0,
+		numStakingReward: 0,
+	}
+}
+
+func standardCoinbasePayload(nextBlockHeight uint64, numStakingReward uint32) []byte {
+	p := &CoinbasePayload{
+		height:           nextBlockHeight,
+		numStakingReward: numStakingReward,
+	}
+	return p.Bytes()
+}
+
 type StakingPoolAwardPayload struct {
 	height                      uint64
 	numStakingReward            uint32 // the num of amount which give out rewards
@@ -283,7 +325,7 @@ func GetMinerRewardTxOutFromCoinbase(coinbase *wire.MsgTx) (*wire.TxOut, error) 
 //  Coinbase Tx
 //   Vin:                           Vout:
 //  +------------------------------+-----------------------------------+
-//  | coinbase Genesis in          |   staking pool Genesis  out       |
+//  | coinbase Genesis in          |   staking pool Genesis out        |
 //  |                              |-----------------------------------|
 //  |                              |   senate Genesis out              |
 //  |                              |-----------------------------------|
@@ -418,7 +460,7 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.Bin
 		PkScript: minerTxOut.PkScript,
 		Value:    miner.IntValue(),
 	})
-
+	coinbase.SetPayload(standardCoinbasePayload(nextBlockHeight, 0))
 	return
 }
 
@@ -610,7 +652,7 @@ func createCoinbaseTx(nextBlockHeight uint64, payoutAddress chainutil.Address) (
 			wire.MaxPrevOutIndex),
 		Sequence: wire.MaxTxInSequenceNum,
 	})
-	//tx.SetPayload(standardCoinbasePayload(nextBlockHeight, 0, 0))
+	tx.SetPayload(standardCoinbasePayload(nextBlockHeight, 0))
 
 	// Create a script for paying to the miner if one was specified.
 	// Otherwise create a script that allows the coinbase to be
@@ -765,11 +807,11 @@ func (chain *Blockchain) NewBlockTemplate(payoutAddress chainutil.Address, templ
 }
 
 func GetFeeAfterBurnGas(fees chainutil.Amount) (chainutil.Amount, error) {
-	value, err := fees.Value().DivInt(2)
-	if err != nil {
-		return chainutil.ZeroAmount(), err
-	}
-	return chainutil.NewAmount(value)
+	//value, err := fees.Value().DivInt(2)
+	//if err != nil {
+	//	return chainutil.ZeroAmount(), err
+	//}
+	return chainutil.NewAmount(fees.Value())
 }
 
 func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templateCh chan interface{},
