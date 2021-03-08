@@ -288,7 +288,7 @@ func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreB
 		}
 		newAddressManager = append(newAddressManager, getAddrManagerDetail(manager))
 	}
-	keystores, _, err = s.pocWallet.ExportKeystores([]byte(in.ImportPrivpass))
+	keystores, _, err = s.pocWallet.ExportKeystores([]byte(in.CurrentPrivpass))
 	if err != nil {
 		return nil, err
 	}
