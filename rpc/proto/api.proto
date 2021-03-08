@@ -832,7 +832,7 @@ message ImportKeystoreByDirRequest {
 }
 
 message ImportKeystoreByDirResponse {
-  string   keystore                      = 1;
+  map<string,PocWallet> keystores        = 1;
   repeated AddrManager old_addr_managers = 2;
   repeated AddrManager new_addr_managers = 3;
 }

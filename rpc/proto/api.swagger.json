@@ -2662,8 +2662,11 @@
     "rpcprotobufImportKeystoreByDirResponse": {
       "type": "object",
       "properties": {
-        "keystore": {
-          "type": "string"
+        "keystores": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/rpcprotobufPocWallet"
+          }
         },
         "old_addr_managers": {
           "type": "array",

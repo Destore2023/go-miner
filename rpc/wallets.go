@@ -275,8 +275,10 @@ func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreB
 		oldAddressManager = append(oldAddressManager, getAddrManagerDetail(a))
 	}
 	newAddressManager := make([]*pb.AddrManager, 0)
-	for _, keystore := range keystores {
-		walletId, _, err := s.pocWallet.ImportKeystore(keystore.Bytes(), []byte(in.ImportPrivpass), []byte(in.CurrentPrivpass))
+	resp := &pb.ImportKeystoreByDirResponse{}
+	resp.Keystores = make(map[string]*pb.PocWallet)
+	for _, ks := range keystores {
+		walletId, _, err := s.pocWallet.ImportKeystore(ks.Bytes(), []byte(in.ImportPrivpass), []byte(in.CurrentPrivpass))
 		if err != nil {
 			return nil, err
 		}
@@ -286,16 +288,21 @@ func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreB
 		}
 		newAddressManager = append(newAddressManager, getAddrManagerDetail(manager))
 	}
-
-	keystoreJSON, err := json.Marshal(keystores)
+	keystores, _, err = s.pocWallet.ExportKeystores([]byte(in.ImportPrivpass))
 	if err != nil {
 		return nil, err
 	}
-	return &pb.ImportKeystoreByDirResponse{
-		Keystore:        string(keystoreJSON),
-		OldAddrManagers: oldAddressManager,
-		NewAddrManagers: newAddressManager,
-	}, nil
+	for walletId, ks := range keystores {
+		resp.Keystores[walletId] = getKeystoreDetail(ks)
+		manager, b := s.pocWallet.GetAddrManager(walletId)
+		if b {
+			resp.Keystores[walletId].AddrManager = getAddrManagerDetail(manager)
+			resp.Keystores[walletId].WalletId = walletId
+		}
+	}
+	resp.NewAddrManagers = newAddressManager
+	resp.OldAddrManagers = oldAddressManager
+	return resp, nil
 }
 
 func (s *Server) UnlockWallet(ctx context.Context, in *pb.UnlockWalletRequest) (*pb.UnlockWalletResponse, error) {
