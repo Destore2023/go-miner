@@ -107,7 +107,7 @@ func (s *Server) GetCapacitySpaces(ctx context.Context, in *empty.Empty) (*pb.Wo
 }
 
 func (s *Server) ConfigureCapacityByDirs(ctx context.Context, in *pb.ConfigureSpaceKeeperByDirsRequest) (*pb.WorkSpacesByDirsResponse, error) {
-	logging.CPrint(logging.INFO, "ConfigureCapacityByDirs called", logging.LogFormat{"capacity": in.Allocations, "payout_addresses": in.PayoutAddresses})
+	logging.CPrint(logging.INFO, "ConfigureCapacityByDirs called", logging.LogFormat{"auto_create": in.AutoCreate, "capacity": in.Allocations, "payout_addresses": in.PayoutAddresses})
 	defer logging.CPrint(logging.INFO, "ConfigureCapacityByDirs responded")
 
 	err := checkPassLen(in.Passphrase)
@@ -118,7 +118,6 @@ func (s *Server) ConfigureCapacityByDirs(ctx context.Context, in *pb.ConfigureSp
 	if in.AutoCreate < 0 {
 		autoCreate = false
 	}
-
 	if len(in.PayoutAddresses) == 0 {
 		logging.CPrint(logging.ERROR, "payout_addresses is empty")
 		return nil, status.New(ErrAPIMinerNoAddress, ErrCode[ErrAPIMinerNoAddress]).Err()
@@ -169,9 +168,14 @@ func (s *Server) ConfigureCapacityByDirs(ctx context.Context, in *pb.ConfigureSp
 			return nil, status.New(ErrAPIMinerInvalidAllocation, ErrCode[ErrAPIMinerInvalidAllocation]).Err()
 		}
 		if err = checkMinerPathCapacity(s.spaceKeeper, absDir, alloc.Capacity); err != nil {
-			logging.CPrint(logging.ERROR, "invalid capacity size",
-				logging.LogFormat{"err": err, "capacity": alloc.Capacity, "directory": absDir})
-			return nil, err
+			if autoCreate {
+				logging.CPrint(logging.ERROR, "invalid capacity size",
+					logging.LogFormat{"err": err, "autoCreate": autoCreate, "capacity": alloc.Capacity, "directory": absDir})
+				return nil, err
+			} else {
+				logging.CPrint(logging.WARN, "invalid capacity size",
+					logging.LogFormat{"err": err, "autoCreate": autoCreate, "capacity": alloc.Capacity, "directory": absDir})
+			}
 		}
 		dirs[i] = absDir
 		capacities[i] = alloc.Capacity * poc.MiB
