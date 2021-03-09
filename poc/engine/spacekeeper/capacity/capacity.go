@@ -562,6 +562,11 @@ func (sk *SpaceKeeper) IsCapacityAvailable(path string, capacityBytes uint64) er
 	}
 
 	if freeBytes+plottedBytes < capacityBytes {
+		logging.CPrint(logging.ERROR, "IsCapacityAvailable ErrOSDiskSizeNotEnough", logging.LogFormat{
+			"capacityBytes": capacityBytes,
+			"freeBytes":     freeBytes,
+			"plottedBytes":  plottedBytes,
+		})
 		return ErrOSDiskSizeNotEnough
 	}
 	return nil
@@ -577,6 +582,10 @@ func checkOSDiskSizeByPath(path string, requiredBytes int) error {
 		return err
 	}
 	if uint64(requiredBytes) >= info.Free {
+		logging.CPrint(logging.ERROR, "checkOSDiskSizeByPath ErrOSDiskSizeNotEnough", logging.LogFormat{
+			"requiredBytes": requiredBytes,
+			"Free":          info.Free,
+		})
 		return ErrOSDiskSizeNotEnough
 	}
 	return nil
@@ -1190,6 +1199,7 @@ func (sk *SpaceKeeper) ConfigureByPath(paths []string, sizes []int, execPlot, ex
 			continue
 		}
 		if autoCreate {
+			logging.CPrint(logging.INFO, "generateFillSpaceListByPathSize", logging.LogFormat{"absDirs": absDirs[i]})
 			// try to generate new WorkSpace to fill list
 			var err error
 			pathResultList, _, err = sk.generateFillSpaceListByPathSize(absDirs[i], pathResultList, currentSize, targetSize, cointype)
