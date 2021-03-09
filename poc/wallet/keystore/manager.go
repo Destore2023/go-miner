@@ -1052,23 +1052,23 @@ func (kmc *KeystoreManagerForPoC) allocAddrMgrNamespace(dbTransaction db.DBTrans
 }
 
 //ImportKeystore
-func (kmc *KeystoreManagerForPoC) ImportKeystore(keystoreJson []byte, oldPrivPass, newPrivPass []byte) (string, string, error) {
+func (kmc *KeystoreManagerForPoC) ImportKeystore(keystoreJson []byte, oldPrivPass, currentPrivPass []byte) (string, string, error) {
 	kmc.mu.Lock()
 	defer kmc.mu.Unlock()
 
-	if len(newPrivPass) == 0 {
-		newPrivPass = oldPrivPass
+	if len(currentPrivPass) == 0 {
+		currentPrivPass = oldPrivPass
 	}
-	if !ValidatePassphrase(newPrivPass) {
+	if !ValidatePassphrase(currentPrivPass) {
 		return "", "", ErrIllegalPassphrase
 	}
-	if bytes.Compare(newPrivPass, kmc.pubPassphrase) == 0 {
+	if bytes.Compare(currentPrivPass, kmc.pubPassphrase) == 0 {
 		return "", "", ErrIllegalNewPrivPass
 	}
 
 	if len(kmc.managedKeystores) > 0 {
 		for _, addrManager := range kmc.managedKeystores {
-			err := addrManager.safelyCheckPassword(newPrivPass)
+			err := addrManager.safelyCheckPassword(currentPrivPass)
 			if err != nil {
 				return "", "", ErrDifferentPrivPass
 			}
@@ -1086,7 +1086,7 @@ func (kmc *KeystoreManagerForPoC) ImportKeystore(keystoreJson []byte, oldPrivPas
 	err = db.Update(kmc.db, func(dbTransaction db.DBTransaction) error {
 		// storage update
 		var err error
-		amBucketMeta, err = kmc.allocAddrMgrNamespace(dbTransaction, oldPrivPass, newPrivPass, kmc.pubPassphrase, kStore, kmc.params, nil)
+		amBucketMeta, err = kmc.allocAddrMgrNamespace(dbTransaction, oldPrivPass, currentPrivPass, kmc.pubPassphrase, kStore, kmc.params, nil)
 		if err != nil {
 			return err
 		}
@@ -1113,8 +1113,9 @@ func (kmc *KeystoreManagerForPoC) ImportKeystore(keystoreJson []byte, oldPrivPas
 	}
 	kmc.managedKeystores[acctManager.keystoreName] = acctManager
 
+	logging.CPrint(logging.INFO, "ImportKeystore useKeystore", logging.LogFormat{"unlocked": kmc.unlocked, "walletId": acctManager.keystoreName})
 	if kmc.unlocked {
-		err := kmc.useKeystore(acctManager.keystoreName, newPrivPass, true)
+		err := kmc.useKeystore(acctManager.keystoreName, currentPrivPass, true)
 		if err != nil {
 			// should not be touched
 			delete(kmc.managedKeystores, acctManager.keystoreName)
@@ -1251,12 +1252,14 @@ func (kmc *KeystoreManagerForPoC) useKeystore(name string, privPassphrase []byte
 		if err == ErrInvalidPassphrase {
 			logging.CPrint(logging.ERROR, "password wrong",
 				logging.LogFormat{
-					"error": err,
+					"walletId": name,
+					"error":    err,
 				})
 		} else {
 			logging.CPrint(logging.ERROR, "failed to derive master private key",
 				logging.LogFormat{
-					"error": err,
+					"walletId": name,
+					"error":    err,
 				})
 		}
 		return err
@@ -1267,6 +1270,7 @@ func (kmc *KeystoreManagerForPoC) useKeystore(name string, privPassphrase []byte
 	zero.Bytes(saltPassphrase)
 
 	if updatePriv {
+		logging.CPrint(logging.INFO, "update Poc wallet privKeys", logging.LogFormat{"walletId": name})
 		err := addrManager.updatePrivKeys()
 		if err != nil {
 			logging.CPrint(logging.ERROR, "update privKeys failed",
@@ -1288,7 +1292,8 @@ func (kmc *KeystoreManagerForPoC) Unlock(privPassphrase []byte) error {
 		if err != nil {
 			logging.CPrint(logging.ERROR, "failed to use keystore",
 				logging.LogFormat{
-					"error": err,
+					"accountID": accountID,
+					"error":     err,
 				})
 			return err
 		}

@@ -151,6 +151,11 @@ func (a *AddrManager) checkPassword(passphrase []byte) error {
 		hashedPassphrase := sha512.Sum512(saltedPassphrase)
 		zero.Bytes(saltedPassphrase)
 		if !bytes.Equal(hashedPassphrase[:], a.hashedPrivPassphrase[:]) {
+			logging.CPrint(logging.ERROR, "failed checkPassword",
+				logging.LogFormat{
+					"unlocked": a.unlocked,
+					"err":      ErrInvalidPassphrase,
+				})
 			return ErrInvalidPassphrase
 		}
 		return nil
@@ -159,9 +164,10 @@ func (a *AddrManager) checkPassword(passphrase []byte) error {
 			if err == snacl.ErrInvalidPassword {
 				return ErrInvalidPassphrase
 			}
-			logging.CPrint(logging.ERROR, "DeriveKey failed",
+			logging.CPrint(logging.ERROR, "checkPassword DeriveKey failed",
 				logging.LogFormat{
-					"err": err,
+					"unlocked": a.unlocked,
+					"err":      err,
 				})
 			return ErrDeriveMasterPrivKey
 		}
@@ -174,7 +180,7 @@ func (a *AddrManager) safelyCheckPassword(privPass []byte) error {
 	if err != nil {
 		return err
 	}
-	a.masterKeyPriv.Zero()
+	//a.masterKeyPriv.Zero()
 	return nil
 }
 
@@ -240,7 +246,8 @@ func (a *AddrManager) updatePrivKeys() error {
 	if err != nil {
 		logging.CPrint(logging.ERROR, "failed to decrypt",
 			logging.LogFormat{
-				"err": err,
+				"cryptoKeyPrivEncrypted": a.cryptoKeyPrivEncrypted,
+				"err":                    err,
 			})
 		return err
 	}
