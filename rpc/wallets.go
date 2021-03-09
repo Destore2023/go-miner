@@ -260,6 +260,12 @@ func (s *Server) ImportKeystore(ctx context.Context, in *pb.ImportKeystoreReques
 
 func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreByDirRequest) (*pb.ImportKeystoreByDirResponse, error) {
 	logging.CPrint(logging.INFO, "rpc ImportKeystoreByDirs called")
+	if s.pocWallet.IsLocked() {
+		err := s.pocWallet.Unlock([]byte(in.CurrentPrivpass))
+		if err != nil {
+			return nil, err
+		}
+	}
 	pocWalletConfig := wallet.NewPocWalletConfig(in.ImportKeystoreDir, "leveldb")
 	exportWallet, err := wallet.OpenPocWallet(pocWalletConfig, []byte(in.ImportPubpass))
 	if err != nil {
@@ -286,6 +292,7 @@ func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreB
 		if !b {
 			return nil, fmt.Errorf("Import With Error ")
 		}
+
 		newAddressManager = append(newAddressManager, getAddrManagerDetail(manager))
 	}
 	keystores, _, err = s.pocWallet.ExportKeystores([]byte(in.CurrentPrivpass))
