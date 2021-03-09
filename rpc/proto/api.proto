@@ -705,6 +705,7 @@ message ConfigureSpaceKeeperByDirsRequest {
   repeated string payout_addresses = 2;
   string passphrase = 3;
   uint32   cointype = 4;
+  int32 auto_create  = 5; // >0 autoCreate =0 default  <0 no
 }
 
 message WorkSpacesByDirsResponse {

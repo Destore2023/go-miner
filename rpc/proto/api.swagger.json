@@ -1687,6 +1687,10 @@
         "cointype": {
           "type": "integer",
           "format": "int64"
+        },
+        "auto_create": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },

@@ -114,6 +114,10 @@ func (s *Server) ConfigureCapacityByDirs(ctx context.Context, in *pb.ConfigureSp
 	if err != nil {
 		return nil, err
 	}
+	autoCreate := true
+	if in.AutoCreate < 0 {
+		autoCreate = false
+	}
 
 	if len(in.PayoutAddresses) == 0 {
 		logging.CPrint(logging.ERROR, "payout_addresses is empty")
@@ -188,7 +192,7 @@ func (s *Server) ConfigureCapacityByDirs(ctx context.Context, in *pb.ConfigureSp
 			logging.LogFormat{"err": err})
 		return nil, status.New(ErrAPIMinerWrongPassphrase, ErrCode[ErrAPIMinerWrongPassphrase]).Err()
 	}
-	_, err = s.spaceKeeper.ConfigureByPath(dirs, capacities, false, false, cointype)
+	_, err = s.spaceKeeper.ConfigureByPath(dirs, capacities, false, false, autoCreate, cointype)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "fail to configure spaceKeeper", logging.LogFormat{"err": err})
 		return nil, status.New(ErrAPIMinerInternal, err.Error()).Err()

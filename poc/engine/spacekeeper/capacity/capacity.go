@@ -1111,7 +1111,7 @@ func (sk *SpaceKeeper) WorkSpaceInfosByDirs() (dirs []string, results [][]engine
 	return
 }
 
-func (sk *SpaceKeeper) ConfigureByPath(paths []string, sizes []int, execPlot, execMine bool, cointype uint32) ([]engine.WorkSpaceInfo, error) {
+func (sk *SpaceKeeper) ConfigureByPath(paths []string, sizes []int, execPlot, execMine, autoCreate bool, cointype uint32) ([]engine.WorkSpaceInfo, error) {
 	if sk.Started() {
 		return nil, ErrSpaceKeeperIsRunning
 	}
@@ -1189,11 +1189,13 @@ func (sk *SpaceKeeper) ConfigureByPath(paths []string, sizes []int, execPlot, ex
 			resultList = append(resultList, pathResultList...)
 			continue
 		}
-		// try to generate new WorkSpace to fill list
-		var err error
-		pathResultList, _, err = sk.generateFillSpaceListByPathSize(absDirs[i], pathResultList, currentSize, targetSize, cointype)
-		if err != nil {
-			return failureReturn(err)
+		if autoCreate {
+			// try to generate new WorkSpace to fill list
+			var err error
+			pathResultList, _, err = sk.generateFillSpaceListByPathSize(absDirs[i], pathResultList, currentSize, targetSize, cointype)
+			if err != nil {
+				return failureReturn(err)
+			}
 		}
 		resultList = append(resultList, pathResultList...)
 	}

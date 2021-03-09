@@ -15,7 +15,7 @@ type SpaceKeeper interface {
 	Configured() bool
 	ConfigureByBitLength(BlCount map[int]int, execPlot, execMine bool, cointype uint32) ([]engine.WorkSpaceInfo, error)
 	ConfigureBySize(targetSize uint64, execPlot, execMine bool, cointype uint32) ([]engine.WorkSpaceInfo, error)
-	ConfigureByPath(paths []string, sizes []uint64, execPlot, execMine bool, cointype uint32) ([]engine.WorkSpaceInfo, error)
+	ConfigureByPath(paths []string, sizes []uint64, execPlot, execMine, autoCreate bool, cointype uint32) ([]engine.WorkSpaceInfo, error)
 	AvailableDiskSize() (uint64, error)
 	IsCapacityAvailable(path string, capacity uint64) error
 	WorkSpaceInfosByDirs() (dirs []string, results [][]engine.WorkSpaceInfo, err error)
@@ -55,7 +55,7 @@ func (csk *ConfigurableSpaceKeeper) ConfigureBySize(targetSize uint64, execPlot,
 	return sk.ConfigureBySize(targetSize, execPlot, execMine, cointype)
 }
 
-func (csk *ConfigurableSpaceKeeper) ConfigureByPath(paths []string, sizes []uint64, execPlot, execMine bool, cointype uint32) ([]engine.WorkSpaceInfo, error) {
+func (csk *ConfigurableSpaceKeeper) ConfigureByPath(paths []string, sizes []uint64, execPlot, execMine, autoCreate bool, cointype uint32) ([]engine.WorkSpaceInfo, error) {
 	sk, err := getInstance(csk.SpaceKeeper)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "fail to assert SpaceKeeper type", logging.LogFormat{"actual": reflect.TypeOf(sk)})
@@ -65,7 +65,7 @@ func (csk *ConfigurableSpaceKeeper) ConfigureByPath(paths []string, sizes []uint
 	for i := range sizes {
 		sizesInt[i] = int(sizes[i])
 	}
-	return sk.ConfigureByPath(paths, sizesInt, execPlot, execMine, cointype)
+	return sk.ConfigureByPath(paths, sizesInt, execPlot, execMine, autoCreate, cointype)
 }
 
 func (csk *ConfigurableSpaceKeeper) AvailableDiskSize() (uint64, error) {
