@@ -174,7 +174,7 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 				pubKeyClass := txscript.GetScriptClass(txReply.Tx.TxOut[txIn.PreviousOutPoint.Index].PkScript)
 				if pubKeyClass == txscript.GovernanceScriptHashTy {
 					isGovernance = true
-				} else if pubKeyClass == txscript.PoolScriptHashTy {
+				} else if pubKeyClass == txscript.PoolingScriptHashTy {
 					isStakingPool = true
 				}
 			}

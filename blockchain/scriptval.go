@@ -72,7 +72,7 @@ out:
 				break out
 			}
 			info := originTx.Tx.GetPkScriptInfo(int(originTxIndex))
-			if txscript.PoolScriptHashTy == txscript.ScriptClass(info.Class) {
+			if txscript.PoolingScriptHashTy == txscript.ScriptClass(info.Class) {
 				v.sendResult(nil)
 				continue
 			}

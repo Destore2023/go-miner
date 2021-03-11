@@ -21,7 +21,7 @@ func init() {
 		if clazz == WitnessV0ScriptHashTy ||
 			clazz == StakingScriptHashTy ||
 			clazz == BindingScriptHashTy ||
-			clazz == PoolScriptHashTy ||
+			clazz == PoolingScriptHashTy ||
 			clazz == GovernanceScriptHashTy {
 			var err error
 			frozenOrHeight, witHash, err = GetParsedOpcode(pops, clazz)
@@ -108,7 +108,7 @@ func typeOfScript(pops []parsedOpcode) ScriptClass {
 	} else if isNullData(pops) {
 		return NullDataTy
 	} else if isWitnessPoolScript(pops) {
-		return PoolScriptHashTy
+		return PoolingScriptHashTy
 	} else if isWitnessGovernanceScript(pops) {
 		return GovernanceScriptHashTy
 	}
@@ -167,7 +167,7 @@ func GetParsedOpcode(pops []parsedOpcode, class ScriptClass) (uint64, [32]byte, 
 		if len(scriptHash) != WitnessV0ScriptHashDataSize {
 			return 0, rsh, ErrWitnessProgramLength
 		}
-	case PoolScriptHashTy:
+	case PoolingScriptHashTy:
 		scriptHash := pops[1].data
 		if len(scriptHash) != WitnessV0ScriptHashDataSize {
 			return 0, rsh, ErrWitnessProgramLength
@@ -204,7 +204,7 @@ func expectedInputs(pops []parsedOpcode, class ScriptClass) int {
 		// additional item from the stack, add an extra expected input
 		// for the extra push that is required to compensate.
 		return asSmallInt(pops[0].opcode)
-	case PoolScriptHashTy:
+	case PoolingScriptHashTy:
 		return 0
 	case NullDataTy:
 		fallthrough
@@ -477,7 +477,7 @@ func ExtractPkScriptAddrs(pkScript []byte, chainParams *config.Params) (ScriptCl
 		if err == nil {
 			addrs = append(addrs, pkAddr)
 		}
-	case PoolScriptHashTy:
+	case PoolingScriptHashTy:
 		requiredSigs = 1
 		addr, err := chainutil.NewAddressPoolScriptHash(pops[1].data, chainParams)
 		if err == nil {

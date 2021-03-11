@@ -201,7 +201,7 @@ func checkCoinbaseInputs(tx *chainutil.Tx, txStore TxStore, pk *pocec.PublicKey,
 			{
 
 			}
-		case txscript.PoolScriptHashTy:
+		case txscript.PoolingScriptHashTy:
 			{
 				//poolTxNum = poolTxNum + 1
 				//if poolTxNum > 1 {
@@ -1300,7 +1300,7 @@ func checkTxInMaturity(txData *TxData, txHeight uint64, preOutPoint wire.OutPoin
 			info := txData.Tx.GetPkScriptInfo(int(preOutPoint.Index))
 			txOutClass := txscript.ScriptClass(info.Class)
 			switch txOutClass {
-			case txscript.PoolScriptHashTy:
+			case txscript.PoolingScriptHashTy:
 				if preOutPoint.Index > 0 && blocksSincePrev >= consensus.TransactionMaturity {
 					return nil
 				}

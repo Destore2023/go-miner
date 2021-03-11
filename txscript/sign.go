@@ -132,7 +132,7 @@ func signwit(chainParams *config.Params, tx *wire.MsgTx, idx int, value int64,
 		script, _, err := signWitMultiSig(tx, idx, value, subScript, sigHashes, hashType,
 			pubkey, nrequired, kdb)
 		return script, class, addresses, nrequired, err
-	case PoolScriptHashTy:
+	case PoolingScriptHashTy:
 		script, err := sdb.GetScript(addresses[0])
 		if err != nil {
 			return nil, class, nil, 0, err

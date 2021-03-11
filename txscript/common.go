@@ -102,7 +102,7 @@ const (
 	BindingScriptHashTy                       //pay to binding script hash
 	MultiSigTy                                // Multi signature.
 	NullDataTy                                // Empty data-only (provably prunable).
-	PoolScriptHashTy                          // 6 pool
+	PoolingScriptHashTy                       // 6 pool
 	GovernanceScriptHashTy                    // 7 Governance
 )
 
@@ -121,6 +121,6 @@ var scriptClassToName = []string{
 	WitnessV0ScriptHashTy:  "witness_v0_scripthash",
 	StakingScriptHashTy:    "staking_scripthash",
 	BindingScriptHashTy:    "binding_scripthash",
-	PoolScriptHashTy:       "pool_scripthash",
+	PoolingScriptHashTy:    "pooling_scripthash",
 	GovernanceScriptHashTy: "governance_scripthash",
 }

@@ -5,18 +5,6 @@ import (
 	"testing"
 )
 
-//func TestGenesisDoc(t *testing.T) {
-//	address, err := chainutil.DecodeAddress("sk1qq049qd3e48d2g0l520ldk4akut9vl7f4sr6a8pmfs57gth2swevkqghmmny", &config.ChainParams)
-//	if err == nil {
-//		script, err := txscript.PayToAddrScript(address)
-//		if err != nil {
-//			return
-//		}
-//		toString := hex.EncodeToString(script)
-//		print(toString)
-//	}
-//}
-
 func TestChainHeader(t *testing.T) {
 	if len(genesisCoinbaseTx.TxOut) == 0 {
 		t.Error("Chain Header Coinbase Tx out is empty!")
@@ -29,6 +17,9 @@ func TestChainHeader(t *testing.T) {
 	//}
 	blockHash := genesisHeader.BlockHash()
 	t.Logf("Chain Header Block Hash:%s", blockHash)
+	for index, tx := range genesisBlock.Transactions {
+		t.Logf("index:%d txSha:%s", index, tx.TxHash())
+	}
 	transactionMerkles := wire.BuildMerkleTreeStoreTransactions(genesisBlock.Transactions, false)
 	size := len(transactionMerkles)
 	transactionMerklesHash := transactionMerkles[size-1]

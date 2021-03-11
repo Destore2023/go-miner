@@ -252,7 +252,7 @@ func checkParsePkScript(tx *chainutil.Tx, txStore TxStore, internal bool) (err e
 				}
 				checkedBinding = true
 			}
-		case txscript.PoolScriptHashTy:
+		case txscript.PoolingScriptHashTy:
 			// disable pool script in network
 			if !internal {
 				return ErrNotAllowedTx
@@ -390,7 +390,7 @@ func checkTransactionStandard(tx *chainutil.Tx, height uint64, minRelayTxFee cha
 			return ErrBadTxInput
 		}
 		info := originTx.Tx.GetPkScriptInfo(int(originTxIndex))
-		if txscript.PoolScriptHashTy == txscript.ScriptClass(info.Class) {
+		if txscript.PoolingScriptHashTy == txscript.ScriptClass(info.Class) {
 			logging.CPrint(logging.ERROR, "transaction is an individual staking pool tx",
 				logging.LogFormat{"txHash": tx.Hash()})
 			return ErrNotAllowedTx
