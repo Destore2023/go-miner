@@ -371,8 +371,8 @@ func PayToStakingAddrScript(addr chainutil.Address, frozenPeriod uint64) ([]byte
 	return payToStakingScriptHashScript(addr.ScriptAddress(), frozenPeriod)
 }
 
-// PayToPoolAddrScript creates a new script to pay a transaction
-func PayToPoolAddrScript(addr chainutil.Address, poolType uint16) ([]byte, error) {
+// PayToPoolingAddrScript creates a new script to pay a transaction
+func PayToPoolingAddrScript(addr chainutil.Address, poolType uint16) ([]byte, error) {
 	if !chainutil.IsWitnessPoolAddress(addr) {
 		return nil, ErrUnsupportedAddress
 	}

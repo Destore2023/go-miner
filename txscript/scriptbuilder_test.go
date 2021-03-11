@@ -20,7 +20,7 @@ func TestPayToPoolAddrScript(t *testing.T) {
 	if err != nil {
 		panic("init poolPubKeyScript: " + err.Error())
 	}
-	stakingPoolPubKeyScript, err := txscript.PayToPoolAddrScript(address, 1)
+	stakingPoolPubKeyScript, err := txscript.PayToPoolingAddrScript(address, 1)
 	if err != nil {
 		panic("init poolPubKeyScript: " + err.Error())
 	}

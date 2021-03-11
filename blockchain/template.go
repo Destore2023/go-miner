@@ -64,7 +64,7 @@ func init() {
 	if err != nil {
 		panic("init poolPubKeyScript: " + err.Error())
 	}
-	stakingPoolPubKeyScript, err = txscript.PayToPoolAddrScript(address, consensus.StakingPoolType)
+	stakingPoolPubKeyScript, err = txscript.PayToPoolingAddrScript(address, consensus.StakingPoolType)
 	if err != nil {
 		panic("init poolPubKeyScript: " + err.Error())
 	}
