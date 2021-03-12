@@ -156,7 +156,7 @@ out:
 				})
 			m.submitBlock(block, minerReward)
 		} else if err != errQuitSolveBlock {
-			logging.CPrint(logging.ERROR, "fail to solve block", logging.LogFormat{"err": err})
+			logging.CPrint(logging.WARN, "fail to solve block", logging.LogFormat{"err": err})
 		}
 	}
 

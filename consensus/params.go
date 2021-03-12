@@ -11,7 +11,7 @@ const (
 	MaxStakingRewardNum                = 30
 	defaultStakingTxRewardStart uint64 = 24
 
-	defaultCoinbaseMaturity    uint64 = 1000
+	defaultCoinbaseMaturity    uint64 = 10
 	defaultTransactionMaturity uint64 = 1
 
 	// +-----------+--------------------+

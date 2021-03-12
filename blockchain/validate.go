@@ -1419,7 +1419,6 @@ func CheckTransactionInputs(tx *chainutil.Tx, txHeight uint64, txStore TxStore) 
 	// conditions would have already been caught by checkTransactionSanity.
 	totalSukhavatiOut := chainutil.ZeroAmount()
 	for _, txOut := range tx.MsgTx().TxOut {
-
 		v, err := chainutil.NewAmountFromInt(txOut.Value)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "invalid output value",
