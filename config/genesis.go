@@ -1,6 +1,9 @@
 package config
 
 import (
+	"bytes"
+	"crypto/md5"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
@@ -122,15 +125,61 @@ func mustDecodePoCSignature(str string) *pocec.Signature {
 
 // GenesisDoc defines the initial conditions for a sukhavati blockchain, in particular its validator set.
 type GenesisDoc struct {
-	GenesisTime time.Time `json:"genesis_time"`
-	ChainID     string    `json:"chain_id"`
+	Alloc      []*wire.TxOut
+	InitHeight uint64
 }
 
+var ChainGenesisDoc = GenesisDoc{
+	InitHeight: 1,
+	Alloc: []*wire.TxOut{
+		{
+			Value:    0x20EF7AC3840A00, //Investor sk1qqrz45pn0x7nmqsl386yv8z77gpstkchzdzmfrppprazfk3xudrq3samq95a
+			PkScript: mustDecodeString("002018ab40cde6f4f6087e27d118717bc80c176c5c4d16d2308423e893689b8d1823"),
+		},
+		{
+			Value:    0xD9D02F39EBB00, //Ecology sk1qqkla5a9a05pcfavtwnz8m2r296yzvlak26n7ksd7ev3q24j22qj9sr78w7w
+			PkScript: mustDecodeString("0020b7fb4e97afa0709eb16e988fb50d45d104cff6cad4fd6837d96440aac94a048b"),
+		},
+		{
+			Value:    0x15F4FC8454A700, //Team sk1qq2sv82wygyega90g3amckmtanxgcyaesn9r40zcqekq0yy7nyl6yqmkju74
+			PkScript: mustDecodeString("002054187538882651d2bd11eef16dafb332304ee61328eaf16019b01e427a64fe88"),
+		},
+		{
+			Value:    0xF5EB0C13E4B00, //Foundation sk1qq049qd3e48d2g0l520ldk4akut9vl7f4sr6a8pmfs57gth2swevkqghmmny
+			PkScript: mustDecodeString("00207d4a06c7353b5487fe8a7fdb6af6dc5959ff26b01eba70ed30a790bbaa0ecb2c"),
+		},
+	},
+}
+
+const ChainGenesisDocHash = "73756b686176617469b34ea2f85159fa271423fcc27496b5e2"
+
 // SaveAs is a utility method for saving GenesisDoc as a JSON file.
-func (genDoc *GenesisDoc) SaveAs(file string) error {
+func (genDoc GenesisDoc) SaveAs(file string) error {
 	genDocBytes, err := json.Marshal(genDoc)
 	if err != nil {
 		return err
 	}
 	return ioutil.WriteFile(file, genDocBytes, 0644)
+}
+func (genDoc GenesisDoc) IsHashEqual(sha string) bool {
+	var data bytes.Buffer
+	for _, v := range genDoc.Alloc {
+		_, err := data.Write(v.PkScript)
+		if err != nil {
+			return false
+		}
+		var buf = make([]byte, 8)
+		binary.BigEndian.PutUint64(buf, uint64(v.Value))
+		_, err = data.Write(buf)
+		if err != nil {
+			return false
+		}
+	}
+	hash := md5.New()
+	hash.Write(data.Bytes())
+	sum := hash.Sum([]byte("sukhavati"))
+	//
+	toString := hex.EncodeToString(sum)
+	println("GenesisDocHash:" + toString)
+	return bytes.Equal(sum, mustDecodeString(ChainGenesisDocHash))
 }

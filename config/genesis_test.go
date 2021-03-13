@@ -58,3 +58,10 @@ func TestChainHeader(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestGenesisDoc_Hash(t *testing.T) {
+	if !ChainGenesisDoc.IsHashEqual(ChainGenesisDocHash) {
+		t.Logf("genesis doc error!")
+		t.FailNow()
+	}
+}

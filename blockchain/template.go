@@ -332,23 +332,10 @@ func mustDecodeString(str string) []byte {
 }
 
 func createDistributeTx(coinbase *wire.MsgTx, nextBlockHeight uint64) error {
-	if nextBlockHeight == 1 {
-		coinbase.AddTxOut(&wire.TxOut{
-			Value:    0x20EF7AC3840A00, //Investor sk1qqrz45pn0x7nmqsl386yv8z77gpstkchzdzmfrppprazfk3xudrq3samq95a
-			PkScript: mustDecodeString("002018ab40cde6f4f6087e27d118717bc80c176c5c4d16d2308423e893689b8d1823"),
-		})
-		coinbase.AddTxOut(&wire.TxOut{
-			Value:    0xD9D02F39EBB00, //Ecology sk1qqkla5a9a05pcfavtwnz8m2r296yzvlak26n7ksd7ev3q24j22qj9sr78w7w
-			PkScript: mustDecodeString("0020b7fb4e97afa0709eb16e988fb50d45d104cff6cad4fd6837d96440aac94a048b"),
-		})
-		coinbase.AddTxOut(&wire.TxOut{
-			Value:    0x15F4FC8454A700, //Team sk1qq2sv82wygyega90g3amckmtanxgcyaesn9r40zcqekq0yy7nyl6yqmkju74
-			PkScript: mustDecodeString("002054187538882651d2bd11eef16dafb332304ee61328eaf16019b01e427a64fe88"),
-		})
-		coinbase.AddTxOut(&wire.TxOut{
-			Value:    0xF5EB0C13E4B00, //Foundation sk1qq049qd3e48d2g0l520ldk4akut9vl7f4sr6a8pmfs57gth2swevkqghmmny
-			PkScript: mustDecodeString("00207d4a06c7353b5487fe8a7fdb6af6dc5959ff26b01eba70ed30a790bbaa0ecb2c"),
-		})
+	if nextBlockHeight == config.ChainGenesisDoc.InitHeight {
+		for _, c := range config.ChainGenesisDoc.Alloc {
+			coinbase.AddTxOut(c)
+		}
 	}
 	return nil
 }
