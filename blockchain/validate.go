@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"math"
 	"math/big"
 	"reflect"
@@ -143,12 +144,18 @@ func pkToRedeemScriptHash(pubkey []byte, net *config.Params) ([]byte, error) {
 	return scriptHash, nil
 }
 
+// checkCoinbaseInputs
+// coinbase vin
+// +--------------------+
+// |     genesis        |
+// +--------------------+
+// |  binding tx        |
+// +--------------------+
+// return binding tx total value in
 func checkCoinbaseInputs(tx *chainutil.Tx, txStore TxStore, pk *pocec.PublicKey,
 	net *config.Params, nextBlockHeight uint64) (chainutil.Amount, error) {
 	totalSukhavatiIn := chainutil.ZeroAmount()
-	//poolTxNum := 0
 	// 0 coinbase
-
 	for _, txIn := range tx.MsgTx().TxIn[1:] {
 		txInHash := txIn.PreviousOutPoint.Hash
 		originTxIndex := txIn.PreviousOutPoint.Index
@@ -159,43 +166,15 @@ func checkCoinbaseInputs(tx *chainutil.Tx, txStore TxStore, pk *pocec.PublicKey,
 			return chainutil.ZeroAmount(), ErrMissingTx
 		}
 		mtx := originTx.Tx.MsgTx()
-
 		err := checkTxInMaturity(originTx, nextBlockHeight, txIn.PreviousOutPoint, true)
 		if err != nil {
 			return chainutil.ZeroAmount(), err
 		}
-
 		err = checkDupSpend(txIn.PreviousOutPoint, originTx.Spent)
 		if err != nil {
 			return chainutil.ZeroAmount(), err
 		}
-
-		originTxSukhavati, err := chainutil.NewAmountFromInt(originTx.Tx.MsgTx().TxOut[originTxIndex].Value)
-		if err != nil {
-			logging.CPrint(logging.ERROR, "invalid coinbase input value",
-				logging.LogFormat{
-					"blockHeight": nextBlockHeight,
-					"prevTx":      txInHash.String(),
-					"prevIndex":   originTxIndex,
-					"value":       originTx.Tx.MsgTx().TxOut[originTxIndex].Value,
-					"err":         err,
-				})
-			return chainutil.ZeroAmount(), err
-		}
-
-		totalSukhavatiIn, err = totalSukhavatiIn.Add(originTxSukhavati)
-		if err != nil {
-			logging.CPrint(logging.ERROR, "calc coinbase total input value error",
-				logging.LogFormat{
-					"blockHeight": nextBlockHeight,
-					"tx":          tx.MsgTx().TxHash().String(),
-					"err":         err,
-				})
-			return chainutil.ZeroAmount(), err
-		}
-
 		class, pops := txscript.GetScriptInfo(mtx.TxOut[originTxIndex].PkScript)
-
 		switch class {
 		case txscript.BindingScriptHashTy:
 			{
@@ -203,10 +182,6 @@ func checkCoinbaseInputs(tx *chainutil.Tx, txStore TxStore, pk *pocec.PublicKey,
 			}
 		case txscript.PoolingScriptHashTy:
 			{
-				//poolTxNum = poolTxNum + 1
-				//if poolTxNum > 1 {
-				//	return chainutil.ZeroAmount(), ErrPoolTxNum
-				//}
 				continue
 			}
 		default:
@@ -219,30 +194,51 @@ func checkCoinbaseInputs(tx *chainutil.Tx, txStore TxStore, pk *pocec.PublicKey,
 		if err != nil {
 			return chainutil.ZeroAmount(), err
 		}
-
 		_, bindingScriptHash, err := txscript.GetParsedBindingOpcode(pops)
 		if err != nil {
 			return chainutil.ZeroAmount(), err
 		}
-
 		if !bytes.Equal(pkScriptHash, bindingScriptHash) {
 			logging.CPrint(logging.ERROR, "binding public key does not match miner public key",
 				logging.LogFormat{"blockHeight": nextBlockHeight, "publicKeyScript": bindingScriptHash, "expected": pkScriptHash})
 			return chainutil.ZeroAmount(), ErrBindingPubKey
 		}
+		originTxSukhavati, err := chainutil.NewAmountFromInt(originTx.Tx.MsgTx().TxOut[originTxIndex].Value)
+		if err != nil {
+			logging.CPrint(logging.ERROR, "invalid coinbase input value",
+				logging.LogFormat{
+					"blockHeight": nextBlockHeight,
+					"prevTx":      txInHash.String(),
+					"prevIndex":   originTxIndex,
+					"value":       originTx.Tx.MsgTx().TxOut[originTxIndex].Value,
+					"err":         err,
+				})
+			return chainutil.ZeroAmount(), err
+		}
+		totalSukhavatiIn, err = totalSukhavatiIn.Add(originTxSukhavati)
+		if err != nil {
+			logging.CPrint(logging.ERROR, "calc coinbase total input value error",
+				logging.LogFormat{
+					"blockHeight": nextBlockHeight,
+					"tx":          tx.MsgTx().TxHash().String(),
+					"err":         err,
+				})
+			return chainutil.ZeroAmount(), err
+		}
 	}
 	return totalSukhavatiIn, nil
 }
 
-//checkCoinbase checks the outputs of coinbase
+// checkCoinbase checks the outputs of coinbase
 func checkCoinbase(tx *chainutil.Tx, nextBlockHeight uint64,
-	totalSukhavatiIn chainutil.Amount, net *config.Params, bitLength int) (chainutil.Amount, error) {
-	miner, poolReward, senateNode, err := CalcBlockSubsidy(nextBlockHeight, net, totalSukhavatiIn, bitLength)
+	totalBinding chainutil.Amount, net *config.Params, bitLength int) (chainutil.Amount, error) {
+	miner, poolReward, senateNode, err := CalcBlockSubsidy(nextBlockHeight, net, totalBinding, bitLength)
 	if err != nil {
 		return chainutil.ZeroAmount(), err
 	}
 	logging.CPrint(logging.INFO, "CalcBlockSubsidy",
 		logging.LogFormat{
+			"totalBinding": totalBinding,
 			"block height": nextBlockHeight,
 			"miner":        miner,
 			"poolReward":   poolReward,
@@ -250,8 +246,36 @@ func checkCoinbase(tx *chainutil.Tx, nextBlockHeight uint64,
 		})
 	totalReward := chainutil.ZeroAmount()
 	totalReward, err = totalReward.Add(miner)
+	if err != nil {
+		return chainutil.ZeroAmount(), err
+	}
 	totalReward, err = totalReward.Add(poolReward)
+	if err != nil {
+		return chainutil.ZeroAmount(), err
+	}
 	totalReward, err = totalReward.Add(senateNode)
+	if err != nil {
+		return chainutil.ZeroAmount(), err
+	}
+	if nextBlockHeight == config.ChainGenesisDoc.InitHeight {
+		out := tx.TxOut()
+		for _, o := range config.ChainGenesisDoc.Alloc {
+			var valid = false
+			for _, c := range out {
+				if bytes.Equal(c.PkScript, o.PkScript) && c.Value == o.Value {
+					totalReward, err = totalReward.AddInt(c.Value)
+					if err != nil {
+						return chainutil.ZeroAmount(), err
+					}
+					valid = true
+					break
+				}
+			}
+			if !valid {
+				return chainutil.ZeroAmount(), fmt.Errorf("error tx :%s ", tx.Hash())
+			}
+		}
+	}
 	// No need to check miner reward ouput, because the caller will check total reward+fee
 	//return miner, nil
 	return totalReward, nil
@@ -534,14 +558,10 @@ func CalcBlockSubsidy(height uint64, chainParams *config.Params, totalBinding ch
 				logging.LogFormat{"bitLength": bitLength})
 		}
 	} else {
-		// TODO
 		if totalBinding.Cmp(valueRequired) >= 0 {
 			hasValidBinding = true
 		}
 	}
-	//hasSuperNode := numRank > 0
-
-	// return calBlockSubsidy(subsidy, hasValidBinding, hasSuperNode)
 	return calcSktBlockSubsidy(subsidy, hasValidBinding)
 }
 
@@ -1548,16 +1568,16 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 	proofBitLength := block.MsgBlock().Header.Proof.BitLength
 	// TODO why header public key is nil
 	if headerPubKey != nil && !reflect.DeepEqual(headerPubKey, wire.NewEmptyPoCPublicKey()) {
-		//check coinbase txin
-		totalInValue, err := checkCoinbaseInputs(transactions[0], txInputStore, headerPubKey, &config.ChainParams, node.Height)
+		//check coinbase tx in
+		totalBinding, err := checkCoinbaseInputs(transactions[0], txInputStore, headerPubKey, &config.ChainParams, node.Height)
 		if err != nil {
 			return err
 		}
 		//
-		totalReward, err := checkCoinbase(transactions[0], node.Height, totalInValue, &config.ChainParams, proofBitLength)
+		totalReward, err := checkCoinbase(transactions[0], node.Height, totalBinding, &config.ChainParams, proofBitLength)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "checkCoinbase failed", logging.LogFormat{
-				"totalInValue": totalInValue,
+				"totalBinding": totalBinding,
 				"height":       node.Height,
 				"err":          err,
 			})
@@ -1578,7 +1598,7 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 					"actual": totalCoinbaseOut,
 					"expect": maxTotalCoinbaseOut,
 				})
-			//return ErrBadCoinbaseValue
+			return ErrBadCoinbaseValue
 		}
 	}
 
