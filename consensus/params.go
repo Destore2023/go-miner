@@ -37,6 +37,7 @@ const (
 	defaultBaseSubsidy            uint64 = 128 * SukhavatiPerSkt
 	defaultMinHalvedSubsidy       uint64 = 6250000
 
+	DayPeriod              uint64 = 1920
 	defaultMinFrozenPeriod uint64 = 61440
 	defaultMinStakingValue uint64 = 2048 * SukhavatiPerSkt
 
@@ -100,4 +101,12 @@ var (
 		38: 152,
 		40: 640,
 	}
+	// day --> weight * 10000
+	StakingFrozenPeriodWeight = map[uint32]uint32{
+		55:  10000,
+		144: 16180,
+		377: 26180,
+	}
+	//
+	StakingFrozenWeightDenominator = 10000
 )

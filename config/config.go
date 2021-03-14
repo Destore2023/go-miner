@@ -37,12 +37,12 @@ const (
 	defaultBlockMinSize        = 0
 	defaultBlockMaxSize        = wire.MaxBlockPayload
 	defaultBlockPrioritySize   = consensus.DefaultBlockPrioritySize
-	defaultListenAddress       = "tcp://0.0.0.0:31468"
+	defaultListenAddress       = "tcp://0.0.0.0:32468"
 	defaultDialTimeout         = 3
 	defaultHandshakeTimeout    = 30
 	MaxMiningPayoutAddresses   = 6000
-	defaultAPIPortGRPC         = "9687"
-	defaultAPIPortHttp         = "9688"
+	defaultAPIPortGRPC         = "9787"
+	defaultAPIPortHttp         = "9788"
 )
 
 var (
