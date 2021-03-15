@@ -90,9 +90,9 @@ func (chain *Blockchain) calcSequenceLock(node *BlockNode, tx *chainutil.Tx, txS
 			// which this input was included within so we can
 			// compute the past median time for the block prior to
 			// the one which included this referenced output.
-			prevInputHeight := coinHeight - 1
-			if prevInputHeight < 0 {
-				prevInputHeight = 0
+			var prevInputHeight uint64 = 0
+			if coinHeight > 0 {
+				prevInputHeight = coinHeight - 1
 			}
 			blockNode := node.Ancestor(prevInputHeight)
 			medianTime, _ := chain.calcPastMedianTime(blockNode)
