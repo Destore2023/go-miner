@@ -348,7 +348,7 @@ func payToStakingScriptHashScript(scriptHash []byte, frozenPeriod uint64) ([]byt
 	return NewScriptBuilder().AddOp(OP_0).AddData(scriptHash).AddData(buf).Script()
 }
 
-func payToPoolAddrScript(scriptHash []byte, poolType uint16) ([]byte, error) {
+func payToPoolingAddrScript(scriptHash []byte, poolType uint16) ([]byte, error) {
 	if len(scriptHash) != WitnessV0ScriptHashDataSize {
 		return nil, ErrWitnessExtProgramLength
 	}
@@ -376,7 +376,7 @@ func PayToPoolingAddrScript(addr chainutil.Address, poolType uint16) ([]byte, er
 	if !chainutil.IsWitnessPoolAddress(addr) {
 		return nil, ErrUnsupportedAddress
 	}
-	return payToPoolAddrScript(addr.ScriptAddress(), poolType)
+	return payToPoolingAddrScript(addr.ScriptAddress(), poolType)
 }
 
 // PayToAddrScript creates a new script to pay a transaction output to a the
