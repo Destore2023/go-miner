@@ -113,7 +113,7 @@ func (c *Chain) retrieveCoinbase(block *wire.MsgBlock, height uint64) error {
 	return nil
 }
 
-func (c *Chain) createCoinbaseTx(blockHeight uint64, pocpk *pocec.PublicKey) (*chainutil.Tx, wire.Hash, error) {
+func (c *Chain) createCoinbaseTx(blockHeight uint64, pocPk *pocec.PublicKey) (*chainutil.Tx, wire.Hash, error) {
 	tx := wire.NewMsgTx()
 
 	// add txIn
@@ -129,7 +129,7 @@ func (c *Chain) createCoinbaseTx(blockHeight uint64, pocpk *pocec.PublicKey) (*c
 	}
 
 	// calc reward
-	minerReward, superReward, err := c.gUtxoMgr.calcCoinbaseOut(blockHeight, tx, pocpk, len(ranks), c.opt.BitLength)
+	minerReward, superReward, err := c.gUtxoMgr.calcCoinbaseOut(blockHeight, tx, pocPk, len(ranks), c.opt.BitLength)
 	if err != nil {
 		return nil, wire.Hash{}, err
 	}
@@ -137,10 +137,10 @@ func (c *Chain) createCoinbaseTx(blockHeight uint64, pocpk *pocec.PublicKey) (*c
 	txHash := tx.TxHash()
 	// staking reward
 	change := chainutil.ZeroAmount()
-	if len(ranks) > consensus.MaxStakingRewardNum {
-		return nil, wire.Hash{}, errors.New("too many ranks")
-	}
 	if len(ranks) > 0 {
+		if len(ranks) > consensus.MaxStakingRewardNum {
+			return nil, wire.Hash{}, errors.New("too many ranks")
+		}
 		totalStakingValue := chainutil.ZeroAmount()
 		for _, rank := range ranks {
 			totalStakingValue, err = totalStakingValue.AddInt(rank.addressValue)

@@ -181,10 +181,10 @@ func (m *gUtxoMgr) isBindingUtxo(u *utxo) bool {
 	return ok
 }
 
-func (m *gUtxoMgr) calcCoinbaseOut(blockHeight uint64, coinbaseTx *wire.MsgTx, pocpk *pocec.PublicKey,
+func (m *gUtxoMgr) calcCoinbaseOut(blockHeight uint64, coinbaseTx *wire.MsgTx, pocPk *pocec.PublicKey,
 	numRank, bitLength int) (miner, superNode chainutil.Amount, err error) {
 
-	_, addr, err := keystore.NewPoCAddress(pocpk, &config.ChainParams)
+	_, addr, err := keystore.NewPoCAddress(pocPk, &config.ChainParams)
 	if err != nil {
 		return chainutil.ZeroAmount(), chainutil.ZeroAmount(), err
 	}

@@ -8,7 +8,7 @@ const (
 	DefaultBlockPrioritySize = 50000 // bytes  40MB
 
 	// staking tx
-	MaxStakingRewardNum                = 30
+	MaxStakingRewardNum                = 100
 	defaultStakingTxRewardStart uint64 = 24
 
 	defaultCoinbaseMaturity    uint64 = 10
