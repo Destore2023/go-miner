@@ -259,11 +259,11 @@ func checkCoinbase(tx *chainutil.Tx, nextBlockHeight uint64,
 	}
 	if nextBlockHeight == config.ChainGenesisDoc.InitHeight {
 		out := tx.TxOut()
-		for _, o := range config.ChainGenesisDoc.Alloc {
+		for _, allocOut := range config.ChainGenesisDoc.Alloc {
 			var valid = false
-			for _, c := range out {
-				if bytes.Equal(c.PkScript, o.PkScript) && c.Value == o.Value {
-					totalReward, err = totalReward.AddInt(c.Value)
+			for _, txOut := range out {
+				if bytes.Equal(txOut.PkScript, allocOut.PkScript) && txOut.Value == allocOut.Value {
+					totalReward, err = totalReward.AddInt(txOut.Value)
 					if err != nil {
 						return chainutil.ZeroAmount(), err
 					}
