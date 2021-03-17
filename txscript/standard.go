@@ -107,7 +107,7 @@ func typeOfScript(pops []parsedOpcode) ScriptClass {
 		return MultiSigTy
 	} else if isNullData(pops) {
 		return NullDataTy
-	} else if isWitnessPoolScript(pops) {
+	} else if isWitnessPoolingScript(pops) {
 		return PoolingScriptHashTy
 	} else if isWitnessGovernanceScript(pops) {
 		return GovernanceScriptHashTy

@@ -20,8 +20,8 @@ const (
 )
 
 func Run(cfg *config.Config) error {
-	portHttp := cfg.Network.API.APIPortHttp
-	portGRPC := cfg.Network.API.APIPortGRPC
+	portHttp := cfg.Network.Rpc.ApiPortHttp
+	portGRPC := cfg.Network.Rpc.ApiPortGrpc
 
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
@@ -37,7 +37,7 @@ func Run(cfg *config.Config) error {
 	}
 
 	// TODO: CORS
-	isAllowedAddress, err := getIPAccessControlFunc(cfg.Network.API.APIWhitelist, cfg.Network.API.APIAllowedLan)
+	isAllowedAddress, err := getIPAccessControlFunc(cfg.Network.Rpc.ApiWhitelist, cfg.Network.Rpc.ApiAllowedLan)
 	if err != nil {
 		return err
 	}

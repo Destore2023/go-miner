@@ -186,8 +186,8 @@ func CheckConfig(cfg *Config) (*Config, error) {
 		cfg.Network.P2P = new(configpb.P2PConfig)
 		cfg.Network.P2P.AddPeer = make([]string, 0)
 	}
-	if cfg.Network.API == nil {
-		cfg.Network.API = new(configpb.APIConfig)
+	if cfg.Network.Rpc == nil {
+		cfg.Network.Rpc = new(configpb.RPCConfig)
 	}
 	if cfg.Db == nil {
 		cfg.Db = new(configpb.DataConfig)
@@ -210,21 +210,21 @@ func CheckConfig(cfg *Config) (*Config, error) {
 		cfg.App.Hostname, _ = os.Hostname()
 	}
 
-	// Checks for APIConfig
-	if cfg.Network.API.APIPortHttp == "" {
-		cfg.Network.API.APIPortHttp = defaultAPIPortHttp
+	// Checks for rpc config
+	if cfg.Network.Rpc.ApiPortHttp == "" {
+		cfg.Network.Rpc.ApiPortHttp = defaultAPIPortHttp
 	}
-	if cfg.Network.API.APIPortGRPC == "" {
-		cfg.Network.API.APIPortGRPC = defaultAPIPortGRPC
+	if cfg.Network.Rpc.ApiPortGrpc == "" {
+		cfg.Network.Rpc.ApiPortGrpc = defaultAPIPortGRPC
 	}
-	if cfg.Network.API.APIWhitelist == nil {
-		cfg.Network.API.APIWhitelist = make([]string, 0)
+	if cfg.Network.Rpc.ApiWhitelist == nil {
+		cfg.Network.Rpc.ApiWhitelist = make([]string, 0)
 	}
-	if cfg.Network.API.APIAllowedLan == nil {
-		cfg.Network.API.APIAllowedLan = make([]string, 0)
+	if cfg.Network.Rpc.ApiAllowedLan == nil {
+		cfg.Network.Rpc.ApiAllowedLan = make([]string, 0)
 	}
 	// TODO: remove duplicate items
-	for i, addr := range cfg.Network.API.APIWhitelist {
+	for i, addr := range cfg.Network.Rpc.ApiWhitelist {
 		if addr == "*" {
 			continue
 		}

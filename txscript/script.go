@@ -33,10 +33,10 @@ func isWitnessScriptHash(pops []parsedOpcode) bool {
 		pops[1].opcode.value == OP_DATA_32
 }
 
-// isWitnessPoolScript return true if the passed script is a
+// isWitnessPoolingScript return true if the passed script is a
 // pay-to-pool-script transaction, false otherwise
 // OP_DATA_2 pool type
-func isWitnessPoolScript(pops []parsedOpcode) bool {
+func isWitnessPoolingScript(pops []parsedOpcode) bool {
 	return len(pops) == 3 &&
 		pops[0].opcode.value == OP_0 &&
 		pops[1].opcode.value == OP_DATA_32 && // public key
@@ -103,7 +103,7 @@ func IsPayToPoolScriptHash(script []byte) bool {
 	if err != nil {
 		return false
 	}
-	return isWitnessPoolScript(pops)
+	return isWitnessPoolingScript(pops)
 }
 
 func IsPayToGovernanceScriptHash(script []byte) bool {

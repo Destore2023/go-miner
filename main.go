@@ -84,8 +84,8 @@ func minerMain(serverChan chan<- *server) error {
 	}
 
 	// Write cpu profile if requested.
-	if cfg.App.CPUProfile != "" {
-		f, err := os.Create(cfg.App.CPUProfile)
+	if cfg.App.CpuProfile != "" {
+		f, err := os.Create(cfg.App.CpuProfile)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "unable to create cpu profile", logging.LogFormat{"err": err})
 			return err

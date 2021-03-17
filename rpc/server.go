@@ -64,14 +64,14 @@ func NewServer(db database.DB, pocMiner pocminer.PoCMiner, spaceKeeper mining.Sp
 }
 
 func (s *Server) Start() error {
-	address := fmt.Sprintf("%s%s%s", GRPCListenAddress, ":", s.config.Network.API.APIPortGRPC)
+	address := fmt.Sprintf("%s%s%s", GRPCListenAddress, ":", s.config.Network.Rpc.ApiPortGrpc)
 	listen, err := net.Listen("tcp", address)
 	if err != nil {
-		logging.CPrint(logging.ERROR, "failed to start tcp listener", logging.LogFormat{"port": s.config.Network.API.APIPortGRPC, "error": err})
+		logging.CPrint(logging.ERROR, "failed to start tcp listener", logging.LogFormat{"port": s.config.Network.Rpc.ApiPortGrpc, "error": err})
 		return err
 	}
 	go s.rpcServer.Serve(listen)
-	logging.CPrint(logging.INFO, "gRPC server start", logging.LogFormat{"port": s.config.Network.API.APIPortGRPC})
+	logging.CPrint(logging.INFO, "gRPC server start", logging.LogFormat{"port": s.config.Network.Rpc.ApiPortGrpc})
 	return nil
 }
 
@@ -83,8 +83,8 @@ func (s *Server) Stop() {
 func (s *Server) RunGateway() {
 	go func() {
 		if err := Run(s.config); err != nil {
-			logging.CPrint(logging.ERROR, "failed to start gateway", logging.LogFormat{"port": s.config.Network.API.APIPortHttp, "error": err})
+			logging.CPrint(logging.ERROR, "failed to start gateway", logging.LogFormat{"port": s.config.Network.Rpc.ApiPortHttp, "error": err})
 		}
 	}()
-	logging.CPrint(logging.INFO, "gRPC-gateway start", logging.LogFormat{"port": s.config.Network.API.APIPortHttp})
+	logging.CPrint(logging.INFO, "gRPC-gateway start", logging.LogFormat{"port": s.config.Network.Rpc.ApiPortHttp})
 }
