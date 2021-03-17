@@ -103,7 +103,7 @@ func minerMain(serverChan chan<- *server) error {
 	}
 
 	// Load the block database.
-	db, err := loadBlockDB()
+	chainDB, err := loadBlockDB()
 	if err != nil {
 		logging.CPrint(logging.ERROR, "loadBlockDB error", logging.LogFormat{"err": err})
 		return err
@@ -115,7 +115,7 @@ func minerMain(serverChan chan<- *server) error {
 		return err
 	}
 	// Create server and start it.
-	server, err := newServer(MiningAddrList, db, pocWallet)
+	server, err := newServer(MiningAddrList, chainDB, pocWallet)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "unable to start server on address", logging.LogFormat{"addr": cfg.Network.P2P.ListenAddress, "err": err})
 		return err
@@ -125,7 +125,7 @@ func minerMain(serverChan chan<- *server) error {
 		server.Stop()
 		server.WaitForShutdown()
 
-		err = db.Close()
+		err = chainDB.Close()
 		logging.CPrint(logging.INFO, "Chain db closed", logging.LogFormat{
 			"err": err,
 		})

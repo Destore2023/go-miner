@@ -23,7 +23,7 @@ type server struct {
 	started     int32 // atomic
 	shutdown    int32 // atomic
 	apiServer   *rpc.Server
-	db          database.DB
+	chainDB     database.DB
 	chain       *blockchain.Blockchain
 	syncManager *netsync.SyncManager
 	pocWallet   *wallet.PoCWallet
@@ -108,7 +108,7 @@ func (s *server) WaitForShutdown() {
 func newServer(miningAddresses []chainutil.Address, db database.DB, pocWallet *wallet.PoCWallet) (*server, error) {
 	s := &server{
 		quit:      make(chan struct{}),
-		db:        db,
+		chainDB:   db,
 		pocWallet: pocWallet,
 	}
 
@@ -148,7 +148,7 @@ func newServer(miningAddresses []chainutil.Address, db database.DB, pocWallet *w
 	}
 
 	// Create API Server
-	s.apiServer, err = rpc.NewServer(s.db, s.pocMiner, mining.NewConfigurableSpaceKeeper(s.spaceKeeper), s.chain, s.chain.GetTxPool(), s.syncManager, pocWallet, func() { interruptChannel <- os.Interrupt }, cfg)
+	s.apiServer, err = rpc.NewServer(s.chainDB, s.pocMiner, mining.NewConfigurableSpaceKeeper(s.spaceKeeper), s.chain, s.chain.GetTxPool(), s.syncManager, pocWallet, func() { interruptChannel <- os.Interrupt }, cfg)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "new server", logging.LogFormat{"err": err})
 		return nil, err
