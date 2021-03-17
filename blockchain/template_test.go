@@ -12,30 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type Account struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Money    uint64 `json:"money"`
-}
-
-func TestExtendPayload(t *testing.T) {
-	account := &Account{
-		Email:    "xx@gamil.com",
-		Password: "xxxx",
-		Money:    100000000000,
-	}
-	//equities:= make([]SenateEquity,2)
-	//append(equities, &SenateEquity{Equity: 100,Addr: chainutil.})
-	encode, err := ExtendedPayloadEncode(PayloadExtendJsonType, account)
-	if err != nil {
-		t.Fatal("err in encode payload", err)
-	}
-	err = ExtendedPayloadDecode(encode, account)
-	if err != nil {
-		t.Fatal("err in decode payload", err)
-	}
-}
-
 func TestBlockchain_NewBlockTemplate(t *testing.T) {
 	bc, _, err := newBlockChain()
 	if err != nil {

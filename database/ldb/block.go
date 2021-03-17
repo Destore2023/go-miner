@@ -4,7 +4,6 @@ package ldb
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/Sukhavati-Labs/go-miner/blockchain"
 	"math"
 
 	"github.com/Sukhavati-Labs/go-miner/database/storage"
@@ -167,6 +166,7 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 		}
 		isGovernance := false
 		isStakingPool := false
+		isStakingPoolAward := false
 		// tx in
 		for _, txIn := range tx.TxIn() {
 			txReply, ok := inputTxStore[txIn.PreviousOutPoint.Hash]
@@ -179,21 +179,14 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 				}
 			}
 		}
-		if isStakingPool {
-			payload := blockchain.NewStakingPoolAwardPayload()
-			err = payload.SetBytes(tx.MsgTx().Payload)
-			if err != nil {
-				return err
-			}
-			if payload.LastStakingAwardedTimestamp() > 0 {
-				db.insertStakingAwardedRecord(tx.Hash(), payload.LastStakingAwardedTimestamp())
-			}
-		}
-
 		// find and insert staking tx
 		for i, txOut := range tx.TxOut() {
 			pubKeyInfo := tx.GetPkScriptInfo(i)
 			switch pubKeyInfo.Class {
+			case byte(txscript.WitnessV0ScriptHashTy):
+				if isStakingPool {
+					isStakingPoolAward = true
+				}
 			case byte(txscript.StakingScriptHashTy):
 				{
 					logging.CPrint(logging.DEBUG, "Insert StakingTx", logging.LogFormat{
@@ -223,6 +216,10 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 					}
 				}
 			}
+		}
+
+		if isStakingPoolAward {
+			db.insertStakingAwardedRecord(tx.Hash(), uint64(block.MsgBlock().Header.Timestamp.Unix()))
 		}
 
 		err = db.insertTx(tx.Hash(), block.Height(), txLocations[txIdx].TxStart, txLocations[txIdx].TxLen, spentBuf)

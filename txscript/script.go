@@ -98,7 +98,7 @@ func IsPayToBindingScriptHash(script []byte) bool {
 	return isWitnessBindingScript(pops)
 }
 
-func IsPayToPoolScriptHash(script []byte) bool {
+func IsPayToPoolingScriptHash(script []byte) bool {
 	pops, err := parseScript(script)
 	if err != nil {
 		return false

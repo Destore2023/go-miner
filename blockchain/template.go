@@ -141,61 +141,6 @@ func standardCoinbasePayload(nextBlockHeight uint64, numStakingReward uint32) []
 	return p.Bytes()
 }
 
-type StakingPoolAwardPayload struct {
-	height                      uint64
-	numStakingReward            uint32 // the num of amount which give out rewards
-	lastStakingAwardedTimestamp uint64 // last staking pool awarded time
-}
-
-func (p *StakingPoolAwardPayload) LastStakingAwardedTimestamp() uint64 {
-	return p.lastStakingAwardedTimestamp
-}
-
-func (p *StakingPoolAwardPayload) NumStakingReward() uint32 {
-	return p.numStakingReward
-}
-
-func (p *StakingPoolAwardPayload) Bytes() []byte {
-	buf := make([]byte, 20)
-	binary.LittleEndian.PutUint64(buf[:8], p.height)
-	binary.LittleEndian.PutUint32(buf[8:12], p.numStakingReward)
-	binary.LittleEndian.PutUint64(buf[12:20], p.lastStakingAwardedTimestamp)
-	return buf
-}
-
-func (p *StakingPoolAwardPayload) SetBytes(data []byte) error {
-	if len(data) < 20 {
-		return errIncompleteCoinbasePayload
-	}
-	p.height = binary.LittleEndian.Uint64(data[0:8])
-	p.numStakingReward = binary.LittleEndian.Uint32(data[8:12])
-	p.lastStakingAwardedTimestamp = binary.LittleEndian.Uint64(data[12:20])
-	return nil
-}
-
-func (p *StakingPoolAwardPayload) Reset() {
-	p.height = 0
-	p.numStakingReward = 0
-	p.lastStakingAwardedTimestamp = 0
-}
-
-func NewStakingPoolAwardPayload() *StakingPoolAwardPayload {
-	return &StakingPoolAwardPayload{
-		height:                      0,
-		numStakingReward:            0,
-		lastStakingAwardedTimestamp: 0,
-	}
-}
-
-func standardStakingPoolAwardPayload(nextBlockHeight uint64, numStakingReward uint32, awardedTimestamp uint64) []byte {
-	p := &StakingPoolAwardPayload{
-		height:                      nextBlockHeight,
-		numStakingReward:            numStakingReward,
-		lastStakingAwardedTimestamp: awardedTimestamp,
-	}
-	return p.Bytes()
-}
-
 // Len returns the number of items in the priority queue.  It is part of the
 // heap.Interface implementation.
 func (pq *txPriorityQueue) Len() int {
@@ -350,7 +295,7 @@ func createDistributeTx(coinbase *wire.MsgTx, nextBlockHeight uint64) error {
 //  |                              |   miner Genesis out               |
 //  +------------------------------------------------------------------+
 func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.BindingTxReply, nextBlockHeight uint64,
-	bitLength int, rewardAddresses []database.Rank, senateEquities database.SenateEquities, totalFee chainutil.Amount) (err error) {
+	bitLength int, rewardAddresses []database.Rank, senateEquities database.SenateEquities, totalFee chainutil.Amount, pubkey *pocec.PublicKey) (err error) {
 	minerTxOut, err := GetMinerRewardTxOutFromCoinbase(coinbase)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "reCreateCoinbaseTx get miner tx out ", logging.LogFormat{"error": err, "height": nextBlockHeight})
@@ -530,7 +475,7 @@ func createStakingPoolMergeTx(nextBlockHeight uint64, unspentPoolTxs []*database
 			if reply.TxSpent[index] {
 				continue
 			}
-			if !txscript.IsPayToPoolScriptHash(txOut.PkScript) {
+			if !txscript.IsPayToPoolingScriptHash(txOut.PkScript) {
 				continue
 			}
 			if blocksSincePrev < consensus.TransactionMaturity {
@@ -562,7 +507,6 @@ func createStakingPoolMergeTx(nextBlockHeight uint64, unspentPoolTxs []*database
 			PkScript: stakingPoolPubKeyScript,
 		})
 	}
-	stakingPoolMergeTx.SetPayload(standardStakingPoolAwardPayload(nextBlockHeight, 0, 0))
 	return chainutil.NewTx(stakingPoolMergeTx), nil
 }
 
@@ -587,7 +531,7 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 			if reply.TxSpent[index] {
 				continue
 			}
-			if !txscript.IsPayToPoolScriptHash(txOut.PkScript) {
+			if !txscript.IsPayToPoolingScriptHash(txOut.PkScript) {
 				continue
 			}
 			poolTotal, err = poolTotal.AddInt(txOut.Value)
@@ -718,8 +662,6 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 			PkScript: stakingPoolPubKeyScript,
 		})
 	}
-	payload := standardStakingPoolAwardPayload(nextBlockHeight, numOfStakingRewardSent, uint64(time.Now().Unix()))
-	stakingPoolRewardTx.SetPayload(payload)
 	return chainutil.NewTx(stakingPoolRewardTx), nil
 }
 
@@ -975,7 +917,7 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 			return nil, err
 		}
 
-		err = reCreateCoinbaseTx(coinbaseTx.MsgTx(), BindingTxListReply, nextBlockHeight, bitLength, rewardAddresses, nodesConfig.SenateEquities, totalFee)
+		err = reCreateCoinbaseTx(coinbaseTx.MsgTx(), BindingTxListReply, nextBlockHeight, bitLength, rewardAddresses, nodesConfig.SenateEquities, totalFee, pubkey)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "newBlockTemplate  getCoinbaseTx  reCreateCoinbaseTx",
 				logging.LogFormat{
