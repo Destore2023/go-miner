@@ -335,7 +335,7 @@ func isDust(txOut *wire.TxOut, minRelayTxFee chainutil.Amount) (bool, error) {
 // finalized, conforming to more stringent size constraints, having scripts
 // of recognized forms, and not containing "dust" outputs (those that are
 // so small it costs more to process them than they are worth).
-func checkTransactionStandard(tx *chainutil.Tx, height uint64, minRelayTxFee chainutil.Amount, txStore TxStore, isNew bool) error {
+func checkTransactionStandard(tx *chainutil.Tx, height uint64, minRelayTxFee chainutil.Amount, txStore TxStore) error {
 	// The transaction must be a currently supported version.
 	msgTx := tx.MsgTx()
 	if msgTx.Version > wire.TxVersion || msgTx.Version < 1 {
@@ -391,9 +391,6 @@ func checkTransactionStandard(tx *chainutil.Tx, height uint64, minRelayTxFee cha
 		}
 		info := originTx.Tx.GetPkScriptInfo(int(originTxIndex))
 		if txscript.PoolingScriptHashTy == txscript.ScriptClass(info.Class) {
-			if !isNew {
-				return nil
-			}
 			logging.CPrint(logging.ERROR, "transaction is an individual staking pool tx",
 				logging.LogFormat{"txHash": tx.Hash()})
 			return ErrNotAllowedTx

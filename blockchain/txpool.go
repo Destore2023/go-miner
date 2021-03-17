@@ -577,7 +577,7 @@ func (tp *TxPool) maybeAcceptTransaction(tx *chainutil.Tx, isNew, rateLimit bool
 	// Don't allow non-standard transactions if the network parameters
 	// forbid their relaying.
 	if !config.ChainParams.RelayNonStdTxs {
-		err = checkTransactionStandard(tx, nextBlockHeight, chainutil.MinRelayTxFee(), txStore, isNew)
+		err = checkTransactionStandard(tx, nextBlockHeight, chainutil.MinRelayTxFee(), txStore)
 		if err != nil {
 			return nil, err
 		}
