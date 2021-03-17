@@ -93,6 +93,11 @@ type stakingPoolTx struct {
 	delete     bool              // database tag
 }
 
+// mustDecodeStakingTxValue
+// 0                      32              40
+// +----------------------+---------------+
+// | script hash 32 bytes | value 8 bytes |
+// +----------------------+---------------+
 func mustDecodeStakingTxValue(bs []byte) (scriptHash [sha256.Size]byte, value uint64) {
 	if length := len(bs); length != stakingTxValueLength {
 		logging.CPrint(logging.FATAL, "invalid raw StakingTxVale Data", logging.LogFormat{"length": length, "data": bs})
@@ -132,21 +137,31 @@ func mustDecodeStakingTxKey(buf []byte) (expiredHeight uint64, mapKey stakingTxM
 	return
 }
 
+// mustDecodeStakingTxMapKey
+// 0                 8                40
+// +-----------------+----------------+---------------+
+// | height  8 bytes | tx id 32 bytes | index 4 bytes |
+// +-----------------+----------------+---------------+
 func mustDecodeStakingTxMapKey(bs []byte) stakingTxMapKey {
 	if length := len(bs); length != stakingTxMapKeyLength {
 		logging.CPrint(logging.FATAL, "invalid raw stakingTxMapKey Data", logging.LogFormat{"length": length, "data": bs})
 		panic("invalid raw stakingTxMapKey Data") // should not reach
 	}
 	height := binary.LittleEndian.Uint64(bs[:8])
-	var txid wire.Hash
-	copy(txid[:], bs[8:40])
+	var txId wire.Hash
+	copy(txId[:], bs[8:40])
 	return stakingTxMapKey{
 		blockHeight: height,
-		txID:        txid,
+		txID:        txId,
 		index:       binary.LittleEndian.Uint32(bs[40:]),
 	}
 }
 
+// mustEncodeStakingTxMapKey
+// 0                 8                40              44
+// +-----------------+----------------+---------------+
+// | height  8 bytes | tx id 32 bytes | index 4 bytes |
+// +-----------------+----------------+---------------+
 func mustEncodeStakingTxMapKey(mapKey stakingTxMapKey) []byte {
 	var key [stakingTxMapKeyLength]byte
 	binary.LittleEndian.PutUint64(key[:8], mapKey.blockHeight)
@@ -155,6 +170,11 @@ func mustEncodeStakingTxMapKey(mapKey stakingTxMapKey) []byte {
 	return key[:]
 }
 
+// heightStakingTxToKey
+//
+// +--------+----------------+-----------------+----------------+---------------+
+// | prefix | expired height | height  8 bytes | tx id 32 bytes | index 4 bytes |
+// +--------+----------------+-----------------+----------------+---------------+
 func heightStakingTxToKey(expiredHeight uint64, mapKey stakingTxMapKey) []byte {
 	mapKeyData := mustEncodeStakingTxMapKey(mapKey)
 	key := make([]byte, stakingTxKeyLength)
@@ -165,6 +185,11 @@ func heightStakingTxToKey(expiredHeight uint64, mapKey stakingTxMapKey) []byte {
 	return key
 }
 
+// heightExpiredStakingTxToKey
+// 0         3                        11
+// +---------+------------------------+
+// | prefix  | expired height 8 bytes |
+// +---------+------------------------+
 func heightExpiredStakingTxToKey(expiredHeight uint64, mapKey stakingTxMapKey) []byte {
 	mapKeyData := mustEncodeStakingTxMapKey(mapKey)
 	key := make([]byte, stakingTxKeyLength)
@@ -175,6 +200,11 @@ func heightExpiredStakingTxToKey(expiredHeight uint64, mapKey stakingTxMapKey) [
 	return key
 }
 
+// stakingAwardedRecordToKey
+// 0         3                        11                         43
+// +---------+------------------------+---------------------------+
+// | prefix  | day    8 bytes         | tx id 32 bytes            |
+// +---------+------------------------+---------------------------+
 func stakingAwardedRecordToKey(mapKey stakingAwardedRecordMapKey) []byte {
 	key := make([]byte, stakingAwardedSearchKeyLength)
 	copy(key[:len(recordStakingAwarded)], recordStakingAwarded) //3 bytes
@@ -183,6 +213,11 @@ func stakingAwardedRecordToKey(mapKey stakingAwardedRecordMapKey) []byte {
 	return key
 }
 
+// stakingTxSearchKey
+// 0                3                        11
+// +----------------+------------------------+
+// | prefix 3 bytes | expired height 8 bytes |
+// +----------------+------------------------+
 func stakingTxSearchKey(expiredHeight uint64) []byte {
 	prefix := make([]byte, stakingTxSearchKeyLength)
 	copy(prefix[:len(recordStakingTx)], recordStakingTx)
@@ -190,6 +225,11 @@ func stakingTxSearchKey(expiredHeight uint64) []byte {
 	return prefix
 }
 
+// stakingAwardedSearchKey
+// 0                3                        11
+// +----------------+------------------------+
+// | prefix 3 bytes |  day 8 bytes           |
+// +----------------+------------------------+
 func stakingAwardedSearchKey(queryTime uint64) []byte {
 	day := queryTime / 86400
 	prefix := make([]byte, stakingAwardedSearchKeyLength)
@@ -198,6 +238,11 @@ func stakingAwardedSearchKey(queryTime uint64) []byte {
 	return prefix
 }
 
+// expiredStakingTxSearchKey
+// 0                3                        11
+// +----------------+------------------------+
+// | prefix 3 bytes | expired height 8 bytes |
+// +----------------+------------------------+
 func expiredStakingTxSearchKey(expiredHeight uint64) []byte {
 	prefix := make([]byte, stakingTxSearchKeyLength)
 	copy(prefix[:len(recordExpiredStakingTx)], recordExpiredStakingTx)

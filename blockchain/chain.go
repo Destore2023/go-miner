@@ -471,6 +471,11 @@ func (chain *Blockchain) connectBestChain(node *BlockNode, block *chainutil.Bloc
 		// block.
 		var err error
 		if err = chain.checkConnectBlock(node, block); err != nil {
+			logging.CPrint(logging.ERROR, "connectBestChain checkConnectBlock", logging.LogFormat{
+				"hash":   block.Hash(),
+				"height": node.Height,
+				"flags":  flags,
+			})
 			return err
 		}
 
@@ -479,10 +484,20 @@ func (chain *Blockchain) connectBestChain(node *BlockNode, block *chainutil.Bloc
 		defer chain.l.Unlock()
 
 		if err = chain.connectBlock(node, block); err != nil {
+			logging.CPrint(logging.ERROR, "connectBestChain connectBlock", logging.LogFormat{
+				"hash":   block.Hash(),
+				"height": node.Height,
+				"flags":  flags,
+			})
 			return err
 		}
 		// Connect the Parent node to this node.
 		if err = chain.blockTree.attachBlockNode(node); err != nil {
+			logging.CPrint(logging.ERROR, "connectBestChain attachBlockNode", logging.LogFormat{
+				"hash":   block.Hash(),
+				"height": node.Height,
+				"flags":  flags,
+			})
 			return err
 		}
 

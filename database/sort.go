@@ -133,7 +133,7 @@ func SortMap(m map[[sha256.Size]byte][]StakingTxInfo, newestHeight uint64, isOnl
 	ps := make(Pairs, length)
 	pl := PairList{
 		pairs:       ps,
-		weightFirst: newestHeight >= consensus.Ip1Activation,
+		weightFirst: true,
 	}
 	i := 0
 
@@ -141,7 +141,7 @@ func SortMap(m map[[sha256.Size]byte][]StakingTxInfo, newestHeight uint64, isOnl
 		totalValue := chainutil.ZeroAmount()
 		totalWeight := safetype.NewUint128()
 		for _, stakingTx := range stakingTxs {
-			va, err := chainutil.NewAmountFromUint(stakingTx.Value)
+			value, err := chainutil.NewAmountFromUint(stakingTx.Value)
 			if err != nil {
 				logging.CPrint(logging.ERROR, "invalid value", logging.LogFormat{
 					"value":        stakingTx.Value,
@@ -153,10 +153,10 @@ func SortMap(m map[[sha256.Size]byte][]StakingTxInfo, newestHeight uint64, isOnl
 				})
 				return nil, err
 			}
-			totalValue, err = totalValue.Add(va)
+			totalValue, err = totalValue.Add(value)
 			if err != nil {
 				logging.CPrint(logging.ERROR, "calc total value error", logging.LogFormat{
-					"value":        va.String(),
+					"value":        value.String(),
 					"blockHeight":  stakingTx.BlockHeight,
 					"frozenPeriod": stakingTx.FrozenPeriod,
 					"newestHeight": newestHeight,
@@ -184,21 +184,18 @@ func SortMap(m map[[sha256.Size]byte][]StakingTxInfo, newestHeight uint64, isOnl
 				return nil, errors.New("expired staking tx found")
 			}
 
-			var period uint64
-			if newestHeight < consensus.Ip1Activation {
-				period = stakingTx.BlockHeight + stakingTx.FrozenPeriod - newestHeight + 1
-			} else {
-				period = stakingTx.FrozenPeriod
-				if period > consensus.MaxValidPeriod {
-					period = consensus.MaxValidPeriod
+			var equities uint64 = 0
+			for period, equity := range consensus.StakingFrozenPeriodWeight {
+				if stakingTx.FrozenPeriod/consensus.DayPeriod >= period && equity > equities {
+					equities = equity
 				}
 			}
-			uPeriod := safetype.NewUint128FromUint(period)
-			uWeight, err := va.Value().Mul(uPeriod)
+			gain := safetype.NewUint128FromUint(equities)
+			uWeight, err := value.Value().Mul(gain)
 			if err != nil {
 				logging.CPrint(logging.ERROR, "calc weight error", logging.LogFormat{
 					"value":        stakingTx.Value,
-					"period":       uPeriod.String(),
+					"equities":     equities,
 					"blockHeight":  stakingTx.BlockHeight,
 					"frozenPeriod": stakingTx.FrozenPeriod,
 					"newestHeight": newestHeight,

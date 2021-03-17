@@ -88,6 +88,7 @@ var (
 	//MinStakingValue minimum StakingScriptHash output in Sukhavati
 	MinStakingValue = defaultMinStakingValue
 
+	//
 	StakingTxRewardStart = defaultStakingTxRewardStart
 
 	BindingRequiredSkt = map[int]float64{
@@ -102,7 +103,7 @@ var (
 		40: 640,
 	}
 	// day --> weight * 10000
-	StakingFrozenPeriodWeight = map[uint32]uint32{
+	StakingFrozenPeriodWeight = map[uint64]uint64{
 		55:  10000,
 		144: 16180,
 		377: 26180,

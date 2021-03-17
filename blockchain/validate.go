@@ -1392,12 +1392,16 @@ func CheckTransactionInputs(tx *chainutil.Tx, txHeight uint64, txStore TxStore) 
 		// yet reached the required coinbase maturity.
 		err := checkTxInMaturity(originTx, txHeight, txIn.PreviousOutPoint, false)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "coinbaseTx checkTxInMaturity",
+				logging.LogFormat{"tx Height ": txHeight, "tx hash": txIn.PreviousOutPoint})
 			return chainutil.ZeroAmount(), err
 		}
 
 		// Ensure the transaction is not double spending coins.
 		err = checkDupSpend(txIn.PreviousOutPoint, originTx.Spent)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "coinbaseTx checkDupSpend",
+				logging.LogFormat{"tx hash": txIn.PreviousOutPoint})
 			return chainutil.ZeroAmount(), err
 		}
 
@@ -1462,14 +1466,30 @@ func CheckTransactionInputs(tx *chainutil.Tx, txHeight uint64, txStore TxStore) 
 			return chainutil.ZeroAmount(), err
 		}
 	}
-
-	return totalSukhavatiIn.Sub(totalSukhavatiOut)
+	sub, err := totalSukhavatiIn.Sub(totalSukhavatiOut)
+	if err != nil {
+		logging.CPrint(logging.ERROR, "CheckTransactionInputs totalSukhavatiIn - totalSukhavatiOut ",
+			logging.LogFormat{
+				"tx":                tx.MsgTx().TxHash().String(),
+				"height":            txHeight,
+				"err":               err,
+				"totalSukhavatiIn":  totalSukhavatiIn,
+				"totalSukhavatiOut": totalSukhavatiOut,
+			})
+		return chainutil.ZeroAmount(), err
+	}
+	return sub, err
 }
 
 func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Block) error {
 	// The coinbase for the Genesis block is not spendable, so just return
 	// an error now.
 	if node.Hash.IsEqual(config.ChainParams.GenesisHash) {
+		logging.CPrint(logging.ERROR, "checkConnectBlock error genesis hash",
+			logging.LogFormat{
+				"node hash":    node.Hash,
+				"genesis hash": config.ChainParams.GenesisHash,
+			})
 		return ErrConnectGenesis
 	}
 
@@ -1478,6 +1498,8 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 	// spent. Check this in checkDupTx.
 	err := chain.checkDupTx(node, block)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "checkConnectBlock error checkDupTx",
+			logging.LogFormat{"block hash": block.Hash(), "height": block.Height()})
 		return err
 	}
 
@@ -1487,6 +1509,8 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 	// transaction inputs, counting pay-to-script-hashes, and scripts.
 	txInputStore, err := chain.fetchInputTransactions(node, block)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "checkConnectBlock error fetchInputTransactions",
+			logging.LogFormat{"block hash": block.Hash(), "height": block.Height()})
 		return err
 	}
 
@@ -1530,6 +1554,8 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 	for _, tx := range transactions {
 		txFee, err := CheckTransactionInputs(tx, node.Height, txInputStore)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "checkConnectBlock error CheckTransactionInputs",
+				logging.LogFormat{"block hash": block.Hash(), "height": block.Height()})
 			return err
 		}
 
@@ -1551,6 +1577,8 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 	for _, txOut := range transactions[0].MsgTx().TxOut {
 		totalCoinbaseOut, err = totalCoinbaseOut.AddInt(txOut.Value)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "checkConnectBlock error totalCoinbaseOut",
+				logging.LogFormat{"block hash": block.Hash(), "height": block.Height()})
 			return err
 		}
 	}
@@ -1571,6 +1599,8 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 		//check coinbase tx in
 		totalBinding, err := checkCoinbaseInputs(transactions[0], txInputStore, headerPubKey, &config.ChainParams, node.Height)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "checkConnectBlock error checkCoinbaseInputs",
+				logging.LogFormat{"block hash": block.Hash(), "height": block.Height()})
 			return err
 		}
 		//
@@ -1585,10 +1615,14 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 		}
 		feesAfterGas, err := GetFeeAfterBurnGas(totalFees)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "checkConnectBlock error GetFeeAfterBurnGas",
+				logging.LogFormat{"block hash": block.Hash(), "height": block.Height()})
 			return err
 		}
 		maxTotalCoinbaseOut, err := totalReward.Add(feesAfterGas)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "checkConnectBlock error maxTotalCoinbaseOut",
+				logging.LogFormat{"block hash": block.Hash(), "height": block.Height()})
 			return err
 		}
 
@@ -1609,6 +1643,8 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 	// determine if transactions in the current block are final.
 	medianTime, err := chain.CalcPastMedianTime()
 	if err != nil {
+		logging.CPrint(logging.ERROR, "checkConnectBlock error CalcPastMedianTime",
+			logging.LogFormat{"block hash": block.Hash(), "height": block.Height()})
 		return err
 	}
 
@@ -1622,6 +1658,8 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 		// active.
 		sequenceLock, err := chain.calcSequenceLock(node, tx, txInputStore)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "checkConnectBlock error calcSequenceLock",
+				logging.LogFormat{"block hash": block.Hash(), "height": block.Height()})
 			return err
 		}
 		if !SequenceLockActive(sequenceLock, node.Height, medianTime) {
@@ -1658,6 +1696,8 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 	if runScripts {
 		err := checkBlockScripts(block, txInputStore, scriptFlags, chain.sigCache, chain.hashCache)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "checkConnectBlock error checkBlockScripts",
+				logging.LogFormat{"block hash": block.Hash(), "height": block.Height()})
 			return err
 		}
 	}

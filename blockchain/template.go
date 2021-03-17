@@ -353,11 +353,13 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.Bin
 	bitLength int, rewardAddresses []database.Rank, senateEquities database.SenateEquities, totalFee chainutil.Amount) (err error) {
 	minerTxOut, err := GetMinerRewardTxOutFromCoinbase(coinbase)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "reCreateCoinbaseTx get miner tx out ", logging.LogFormat{"error": err, "height": nextBlockHeight})
 		return err
 	}
 	coinbase.RemoveAllTxOut()
 	err = createDistributeTx(coinbase, nextBlockHeight)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "reCreateCoinbaseTx createDistributeTx", logging.LogFormat{"error": err, "height": nextBlockHeight})
 		return err
 	}
 	totalBinding := chainutil.ZeroAmount()
@@ -389,6 +391,7 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.Bin
 				}
 				totalBinding, err = totalBinding.AddInt(bindingTx.Value)
 				if err != nil {
+					logging.CPrint(logging.ERROR, "reCreateCoinbaseTx totalBinding", logging.LogFormat{"error": err, "height": nextBlockHeight})
 					return err
 				}
 				prevOut := wire.NewOutPoint(txHash, index)
@@ -435,6 +438,11 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.Bin
 	if miner.IsZero() {
 		miner, err = miner.Add(totalFee)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "reCreateCoinbaseTx miner reward",
+				logging.LogFormat{
+					"error":    err,
+					"height":   nextBlockHeight,
+					"totalFee": totalFee})
 			return err
 		}
 		coinbase.AddTxOut(&wire.TxOut{
@@ -457,14 +465,26 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.Bin
 		for _, equity := range senateEquities {
 			pkScriptSenateNode, err := txscript.PayToWitnessScriptHashScript(equity.ScriptHash[:])
 			if err != nil {
+				logging.CPrint(logging.ERROR, "reCreateCoinbaseTx senateNode reward pkScriptSenateNode",
+					logging.LogFormat{
+						"error":  err,
+						"height": nextBlockHeight})
 				return err
 			}
 			senateReward, err := senateNode.Value().MulInt(int64(equity.Equity))
 			if err != nil {
+				logging.CPrint(logging.ERROR, "reCreateCoinbaseTx senateNode reward senateReward MulInt",
+					logging.LogFormat{
+						"error":  err,
+						"height": nextBlockHeight})
 				return err
 			}
 			senateReward, err = senateReward.DivInt(10000)
 			if err != nil {
+				logging.CPrint(logging.ERROR, "reCreateCoinbaseTx senateNode reward senateReward DivInt",
+					logging.LogFormat{
+						"error":  err,
+						"height": nextBlockHeight})
 				return err
 			}
 			coinbase.AddTxOut(&wire.TxOut{
@@ -475,6 +495,10 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.Bin
 	}
 	miner, err = miner.Add(totalFee)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "reCreateCoinbaseTx total miner",
+			logging.LogFormat{
+				"error":  err,
+				"height": nextBlockHeight})
 		return err
 	}
 	// miner as first out  and update value later
@@ -517,6 +541,10 @@ func createStakingPoolMergeTx(nextBlockHeight uint64, unspentPoolTxs []*database
 			}
 			poolMaturityValue, err = poolMaturityValue.AddInt(txOut.Value)
 			if err != nil {
+				logging.CPrint(logging.ERROR, "createStakingPoolMergeTx  poolMaturityValue",
+					logging.LogFormat{
+						"error":  err,
+						"height": nextBlockHeight})
 				return nil, err
 			}
 			prevOut := wire.NewOutPoint(reply.TxSha, uint32(index))
@@ -564,6 +592,10 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 			}
 			poolTotal, err = poolTotal.AddInt(txOut.Value)
 			if err != nil {
+				logging.CPrint(logging.ERROR, "createStakingPoolRewardTx  poolTotal",
+					logging.LogFormat{
+						"error":  err,
+						"height": nextBlockHeight})
 				return nil, err
 			}
 			if blocksSincePrev < consensus.TransactionMaturity {
@@ -574,6 +606,10 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 			}
 			poolMaturityValue, err = poolMaturityValue.AddInt(txOut.Value)
 			if err != nil {
+				logging.CPrint(logging.ERROR, "createStakingPoolRewardTx  poolMaturityValue",
+					logging.LogFormat{
+						"error":  err,
+						"height": nextBlockHeight})
 				return nil, err
 			}
 			prevOut := wire.NewOutPoint(reply.TxSha, uint32(index))
@@ -585,29 +621,40 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 	//if coinbasePayload.LastStakingAwardedTimestamp() == 0 || (uint64(time.Now().Unix())-coinbasePayload.LastStakingAwardedTimestamp()) < 86400 {
 	divInt, err := poolTotal.DivInt(consensus.StakingPoolRewardProportionalDenominator)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "createStakingPoolRewardTx  poolTotal div ",
+			logging.LogFormat{
+				"error":  err,
+				"height": nextBlockHeight})
 		return nil, err
 	}
 
 	if divInt.Gt(poolMaturityValue) {
 		poolReward, err = poolReward.AddInt(poolMaturityValue.IntValue())
 		if err != nil {
+			logging.CPrint(logging.ERROR, "createStakingPoolRewardTx  poolTotal div >  poolMaturityValue",
+				logging.LogFormat{
+					"error":  err,
+					"height": nextBlockHeight})
 			return nil, err
 		}
 	} else {
 		poolReward, err = poolReward.AddInt(divInt.IntValue())
 	}
 	if err != nil {
+		logging.CPrint(logging.ERROR, "createStakingPoolRewardTx  poolReward",
+			logging.LogFormat{
+				"error":  err,
+				"height": nextBlockHeight})
 		return nil, err
 	}
 	totalWeight := safetype.NewUint128()
 	for _, v := range rewardAddresses {
-		if nextBlockHeight < consensus.Ip1Activation {
-			// by value
-			totalWeight, err = totalWeight.AddInt(v.Value)
-		} else { // by weight
-			totalWeight, err = totalWeight.Add(v.Weight)
-		}
+		totalWeight, err = totalWeight.Add(v.Weight)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "createStakingPoolRewardTx  totalWeight",
+				logging.LogFormat{
+					"error":  err,
+					"height": nextBlockHeight})
 			return nil, err
 		}
 	}
@@ -618,21 +665,31 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 		copy(key, rewardAddresses[i].ScriptHash[:])
 		pkScriptSuperNode, err := txscript.PayToWitnessScriptHashScript(key)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "createStakingPoolRewardTx  PayToWitnessScriptHashScript",
+				logging.LogFormat{
+					"error":  err,
+					"pubkey": key,
+					"height": nextBlockHeight})
 			return nil, err
 		}
 
 		nodeWeight := rewardAddresses[i].Weight
-		if nextBlockHeight < consensus.Ip1Activation {
-			nodeWeight, err = safetype.NewUint128FromInt(rewardAddresses[i].Value)
-			if err != nil {
-				return nil, err
-			}
-		}
 		nodeReward, err := calcNodeReward(poolReward, totalWeight, nodeWeight)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "createStakingPoolRewardTx  calcNodeReward",
+				logging.LogFormat{
+					"error":  err,
+					"height": nextBlockHeight})
 			return nil, err
 		}
-
+		logging.CPrint(logging.INFO, "createStakingPoolRewardTx reward",
+			logging.LogFormat{
+				"script hash":  key,
+				"node weight":  nodeWeight,
+				"total weight": totalWeight,
+				"node reward":  nodeReward,
+				"pool Reward":  poolReward,
+			})
 		if nodeReward.IsZero() {
 			// break loop as rewordAddress is in descending order by value
 			break
@@ -642,12 +699,18 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 			Value:    nodeReward.IntValue(),
 			PkScript: pkScriptSuperNode,
 		})
+		poolBalance, err = poolMaturityValue.SubUint(uint64(nodeReward.IntValue()))
+		if err != nil {
+			logging.CPrint(logging.ERROR, "createStakingPoolRewardTx  poolBalance",
+				logging.LogFormat{
+					"error":       err,
+					"height":      nextBlockHeight,
+					"poolBalance": poolBalance,
+				})
+			return nil, err
+		}
 	}
 
-	poolBalance, err = poolTotal.SubUint(uint64(poolReward.IntValue()))
-	if err != nil {
-		return nil, err
-	}
 	// poolNode balance
 	if !poolBalance.IsZero() {
 		stakingPoolRewardTx.AddTxOut(&wire.TxOut{
@@ -685,12 +748,23 @@ func createCoinbaseTx(nextBlockHeight uint64, payoutAddress chainutil.Address) (
 	if payoutAddress != nil {
 		pkScriptMiner, err = txscript.PayToAddrScript(payoutAddress)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "createCoinbaseTx  pkScriptMiner",
+				logging.LogFormat{
+					"error":         err,
+					"height":        nextBlockHeight,
+					"payoutAddress": payoutAddress,
+				})
 			return nil, err
 		}
 	}
 	miner, _, _, err := CalcBlockSubsidy(nextBlockHeight,
 		&config.ChainParams, chainutil.ZeroAmount(), bitLengthMissing)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "createCoinbaseTx  CalcBlockSubsidy",
+			logging.LogFormat{
+				"error":  err,
+				"height": nextBlockHeight,
+			})
 		return nil, err
 	}
 	tx.AddTxOut(&wire.TxOut{
@@ -700,6 +774,7 @@ func createCoinbaseTx(nextBlockHeight uint64, payoutAddress chainutil.Address) (
 	return chainutil.NewTx(tx), nil
 }
 
+// calcNodeReward
 func calcNodeReward(totalReward chainutil.Amount, totalWeight, nodeWeight *safetype.Uint128) (chainutil.Amount, error) {
 	u, err := totalReward.Value().Mul(nodeWeight)
 	if err != nil {
@@ -819,13 +894,7 @@ func (chain *Blockchain) NewBlockTemplate(payoutAddress chainutil.Address, templ
 			}
 		}
 	}
-	//stakingRewardInfo, err := chain.db.FetchStakingStakingRewardInfo(bestNode.Height + 1)
-	//if err != nil {
-	//	return err
-	//}
-	// run newBlockTemplate as goroutine
 	go newBlockTemplate(chain, payoutAddress, templateCh, bestNode, txs, punishments, rewardAddresses)
-	//go newBlockTemplate(chain, payoutAddress, templateCh, bestNode, txs, punishments, stakingRewardInfo)
 	return nil
 }
 
@@ -842,6 +911,10 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 	nextBlockHeight := bestNode.Height + 1
 	challenge, err := calcNextChallenge(bestNode)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "newBlockTemplate  calcNextChallenge",
+			logging.LogFormat{
+				"error":  err,
+				"height": nextBlockHeight})
 		templateCh <- &PoCTemplate{
 			Err: err,
 		}
@@ -849,6 +922,10 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 	}
 	coinbaseTx, err := createCoinbaseTx(nextBlockHeight, payoutAddress)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "newBlockTemplate  createCoinbaseTx",
+			logging.LogFormat{
+				"error":  err,
+				"height": nextBlockHeight})
 		templateCh <- &PoCTemplate{
 			Err: err,
 		}
@@ -856,6 +933,10 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 	}
 	governanceConfig, err := chain.db.FetchEnabledGovernanceConfig(database.GovernanceSenate)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "newBlockTemplate  FetchEnabledGovernanceConfig",
+			logging.LogFormat{
+				"error":  err,
+				"height": nextBlockHeight})
 		templateCh <- &PoCTemplate{
 			Err: ErrBadTxOutValue,
 		}
@@ -863,6 +944,10 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 	}
 	nodesConfig, ok := (governanceConfig).(database.GovernanceSenateNodesConfig)
 	if !ok {
+		logging.CPrint(logging.ERROR, "newBlockTemplate  get GovernanceSenateNodesConfig",
+			logging.LogFormat{
+				"error":  err,
+				"height": nextBlockHeight})
 		templateCh <- &PoCTemplate{
 			Err: ErrBadTxOutValue,
 		}
@@ -872,16 +957,31 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 	getCoinbaseTx := func(pubkey *pocec.PublicKey, totalFee chainutil.Amount, bitLength int) (*chainutil.Tx, error) {
 		pkScriptHash, err := pkToScriptHash(pubkey.SerializeCompressed(), &config.ChainParams)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "newBlockTemplate  getCoinbaseTx  pkToScriptHash",
+				logging.LogFormat{
+					"error":  err,
+					"pubkey": pubkey.SerializeCompressed(),
+					"height": nextBlockHeight})
 			return nil, err
 		}
 
 		BindingTxListReply, err := chain.db.FetchScriptHashRelatedBindingTx(pkScriptHash, &config.ChainParams)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "newBlockTemplate  getCoinbaseTx  FetchScriptHashRelatedBindingTx",
+				logging.LogFormat{
+					"error":  err,
+					"pubkey": pubkey.SerializeCompressed(),
+					"height": nextBlockHeight})
 			return nil, err
 		}
 
 		err = reCreateCoinbaseTx(coinbaseTx.MsgTx(), BindingTxListReply, nextBlockHeight, bitLength, rewardAddresses, nodesConfig.SenateEquities, totalFee)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "newBlockTemplate  getCoinbaseTx  reCreateCoinbaseTx",
+				logging.LogFormat{
+					"error":  err,
+					"pubkey": pubkey.SerializeCompressed(),
+					"height": nextBlockHeight})
 			return nil, err
 		}
 		return coinbaseTx, nil
@@ -935,7 +1035,7 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 	// generated block with reserved space.  Also create a transaction
 	// store to house all of the input transactions so multiple lookups
 	// can be avoided.
-	blockTxns := make([]*wire.MsgTx, 0, len(mempoolTxns))
+	blockTxns := make([]*wire.MsgTx, 0, len(mempoolTxns)+1)
 	blockTxns = append(blockTxns, coinbaseTx.MsgTx())
 
 	if len(rewardAddresses) > 0 || nextBlockHeight%consensus.StakingPoolMergeEpoch == 0 {
@@ -954,6 +1054,11 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 
 		blockShaList, err := chain.db.FetchHeightRange(startHeight, nextBlockHeight)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "newBlockTemplate  FetchHeightRange",
+				logging.LogFormat{
+					"error":        err,
+					"start height": startHeight,
+					"height":       nextBlockHeight})
 			templateCh <- &PoCTemplate{
 				Err: err,
 			}
@@ -964,6 +1069,12 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 		for _, blockSha := range blockShaList {
 			block, err := chain.db.FetchBlockBySha(&blockSha)
 			if err != nil {
+				logging.CPrint(logging.ERROR, "newBlockTemplate  FetchBlockBySha",
+					logging.LogFormat{
+						"error":        err,
+						"start height": startHeight,
+						"block sha":    blockSha,
+						"height":       nextBlockHeight})
 				templateCh <- &PoCTemplate{
 					Err: err,
 				}
@@ -976,6 +1087,11 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 			if len(rewardAddresses) > 0 {
 				stakingPoolRewardTx, err := createStakingPoolRewardTx(nextBlockHeight, rewardAddresses, unspentStakingPoolTxs)
 				if err != nil {
+					logging.CPrint(logging.ERROR, "newBlockTemplate  createStakingPoolRewardTx",
+						logging.LogFormat{
+							"error":        err,
+							"start height": startHeight,
+							"height":       nextBlockHeight})
 					templateCh <- &PoCTemplate{
 						Err: err,
 					}
@@ -987,6 +1103,11 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 			} else {
 				stakingPoolMergeTx, err := createStakingPoolMergeTx(nextBlockHeight, unspentStakingPoolTxs)
 				if err != nil {
+					logging.CPrint(logging.ERROR, "newBlockTemplate  createStakingPoolMergeTx",
+						logging.LogFormat{
+							"error":        err,
+							"start height": startHeight,
+							"height":       nextBlockHeight})
 					templateCh <- &PoCTemplate{
 						Err: err,
 					}
@@ -1254,6 +1375,10 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 
 	proposalArea, err := wire.NewProposalArea(punishProposals, otherProposals)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "newBlockTemplate  NewProposalArea",
+			logging.LogFormat{
+				"error":  err,
+				"height": nextBlockHeight})
 		templateCh <- &BlockTemplate{
 			Err: err,
 		}
@@ -1282,6 +1407,10 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 
 	//timeSource := NewMedianTime()
 	if _, err := chain.execProcessBlock(block, BFNoPoCCheck); err != nil {
+		logging.CPrint(logging.ERROR, "createStakingPoolRewardTx  execProcessBlock",
+			logging.LogFormat{
+				"error":  err,
+				"height": nextBlockHeight})
 		templateCh <- &BlockTemplate{
 			Err: err,
 		}
@@ -1289,6 +1418,10 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 	}
 	totalFee, err = GetFeeAfterBurnGas(totalFee)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "newBlockTemplate  GetFeeAfterBurnGas",
+			logging.LogFormat{
+				"error":  err,
+				"height": nextBlockHeight})
 		templateCh <- &BlockTemplate{
 			Err: err,
 		}

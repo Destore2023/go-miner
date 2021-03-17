@@ -73,6 +73,12 @@ func (chain *Blockchain) maybeAcceptBlock(block *chainutil.Block, flags Behavior
 	// also handles validation of the transaction scripts.
 	err = chain.connectBestChain(newNode, block, flags)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "fail on connectBestChain",
+			logging.LogFormat{
+				"err": err, "preHash": block.MsgBlock().Header.Previous,
+				"hash":  block.Hash(),
+				"flags": fmt.Sprintf("%b", flags),
+			})
 		return err
 	}
 
