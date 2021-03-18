@@ -22,6 +22,7 @@ import (
 
 const (
 	defaultChainTag            = "mainnet"
+	defaultConfigDir           = "config"
 	DefaultConfigFilename      = "config.json"
 	defaultGenesisJsonFilename = "genesis.json"
 	defaultShowVersion         = false
@@ -103,7 +104,7 @@ func newConfigParser(cfg *Config, so *serviceOptions, options flags.Options) *fl
 //  2) Pre-parse the command line to check for an alternative config file
 func ParseConfig() (*Config, []string, error) {
 	// Default config.
-	cfg := Config{
+	chainCfg := Config{
 		ConfigFile:  defaultConfigFile,
 		ShowVersion: defaultShowVersion,
 		Config:      configpb.NewConfig(),
@@ -116,7 +117,7 @@ func ParseConfig() (*Config, []string, error) {
 	// file or the version flag was specified.  Any errors aside from the
 	// help message error can be ignored here since they will be caught by
 	// the final parse below.
-	preCfg := cfg
+	preCfg := chainCfg
 	preParser := newConfigParser(&preCfg, &serviceOpts, flags.HelpFlag)
 	_, err := preParser.Parse()
 	if err != nil {
@@ -148,7 +149,7 @@ func ParseConfig() (*Config, []string, error) {
 	}
 
 	// Load additional config from file.
-	parser := newConfigParser(&cfg, &serviceOpts, flags.Default)
+	parser := newConfigParser(&chainCfg, &serviceOpts, flags.Default)
 
 	// Parse command line options again to ensure they take precedence.
 	remainingArgs, err := parser.Parse()
@@ -159,7 +160,7 @@ func ParseConfig() (*Config, []string, error) {
 		return nil, nil, err
 	}
 
-	return &cfg, remainingArgs, nil
+	return &chainCfg, remainingArgs, nil
 }
 
 func LoadConfig(cfg *Config) (*Config, error) {

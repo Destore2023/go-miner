@@ -31,20 +31,8 @@ var genesisCoinbaseTx = wire.MsgTx{
 	},
 	TxOut: []*wire.TxOut{
 		{
-			Value:    0x20EF7AC3840A00, //Investor sk1qqrz45pn0x7nmqsl386yv8z77gpstkchzdzmfrppprazfk3xudrq3samq95a
+			Value:    0x2FAF08000,
 			PkScript: mustDecodeString("002018ab40cde6f4f6087e27d118717bc80c176c5c4d16d2308423e893689b8d1823"),
-		},
-		{
-			Value:    0xD9D02F39EBB00, //Ecology sk1qqkla5a9a05pcfavtwnz8m2r296yzvlak26n7ksd7ev3q24j22qj9sr78w7w
-			PkScript: mustDecodeString("0020b7fb4e97afa0709eb16e988fb50d45d104cff6cad4fd6837d96440aac94a048b"),
-		},
-		{
-			Value:    0x15F4FC8454A700, //Team sk1qq2sv82wygyega90g3amckmtanxgcyaesn9r40zcqekq0yy7nyl6yqmkju74
-			PkScript: mustDecodeString("002054187538882651d2bd11eef16dafb332304ee61328eaf16019b01e427a64fe88"),
-		},
-		{
-			Value:    0xF5EB0C13E4B00, //Foundation sk1qq049qd3e48d2g0l520ldk4akut9vl7f4sr6a8pmfs57gth2swevkqghmmny
-			PkScript: mustDecodeString("00207d4a06c7353b5487fe8a7fdb6af6dc5959ff26b01eba70ed30a790bbaa0ecb2c"),
 		},
 	},
 	LockTime: 0,
@@ -55,20 +43,20 @@ var genesisHeader = wire.BlockHeader{
 	ChainID:         mustDecodeHash("8ecd463882c2ffcd9a82a6b85e52dcb3cb7e330819196334af7a9702ca2661ca"),
 	Version:         1,
 	Height:          0,
-	Timestamp:       time.Unix(0x5FEE6600, 0), // 2021-01-01 00:00:00 +0000 UTC, 1608250088 0x5FEE6600
+	Timestamp:       time.Unix(0x60531443, 0), // 2021-01-01 00:00:00 +0000 UTC, 1608250088 0x5FEE6600
 	Previous:        mustDecodeHash("0000000000000000000000000000000000000000000000000000000000000000"),
-	TransactionRoot: mustDecodeHash("adaa0e925b02e85dbae928cc8953a173427eeb235c6f8873b0a0397d2a84700a"),
-	WitnessRoot:     mustDecodeHash("adaa0e925b02e85dbae928cc8953a173427eeb235c6f8873b0a0397d2a84700a"),
+	TransactionRoot: mustDecodeHash("ada8ce6758af6b5291349f58900f87f6b0e051fb43d9f756ea54c3fb708d950f"),
+	WitnessRoot:     mustDecodeHash("ada8ce6758af6b5291349f58900f87f6b0e051fb43d9f756ea54c3fb708d950f"),
 	ProposalRoot:    mustDecodeHash("9663440551fdcd6ada50b1fa1b0003d19bc7944955820b54ab569eb9a7ab7999"),
-	Target:          hexToBigInt("b5e620f48000"), // 200000000000000
-	Challenge:       mustDecodeHash("5eb91b2d9fd6d5920ccc9610f0695509b60ccf764fab693ecab112f2edf1e3f0"),
-	PubKey:          mustDecodePoCPublicKey("02c121b2bb27f8af5b365f1c0d9e02c2044a731aad6d0a6951ab3af506a3792c9c"),
+	Target:          hexToBigInt("44814ac47058"),
+	Challenge:       mustDecodeHash("12166ef1d5772aff8fa94a7248d8d3601f8a3eb2faf4e46820b0f91b4d36a508"),
+	PubKey:          mustDecodePoCPublicKey("033e44859a79ea399c69c41c248b4b33384813fe7b34735dd7d117acc08ae04d42"),
 	Proof: &poc.Proof{
-		X:         mustDecodeString("acc59996"),
-		XPrime:    mustDecodeString("944f0116"),
-		BitLength: 32,
+		X:         mustDecodeString("07149d0c"),
+		XPrime:    mustDecodeString("941ea70c"),
+		BitLength: 28,
 	},
-	Signature: mustDecodePoCSignature("304402204ab4d572324785f59119a5dce949a47edb5b05cbf065e255510c23bcc9f0c133022027242ece09dee99ef19fa22d72a85a3db0662da1605300ae7610f03eab1d1a79"),
+	Signature: mustDecodePoCSignature("3045022100dbcbafc7b41d4622394c55527aa43f582be7c8e7106579d26cf4b1a443cfd7e902203104a8ada1e64db2df7e88d0dafe548299cd878adddaf41b323c4a855c926c88"),
 	BanList:   make([]*pocec.PublicKey, 0),
 }
 
@@ -83,9 +71,9 @@ var genesisBlock = wire.MsgBlock{
 	Transactions: []*wire.MsgTx{&genesisCoinbaseTx},
 }
 
-var genesisHash = mustDecodeHash("b88c3b7bd49910541ea2e507dce3091ccc3b950c614c792a9cc9d7273d1600da")
+var genesisHash = mustDecodeHash("a03d8ac0d7899d5a92e38c47aa7f7e2cf493e9f0441bdeed887b43c65c1bf8eb")
 
-var genesisChainID = mustDecodeHash("8ecd463882c2ffcd9a82a6b85e52dcb3cb7e330819196334af7a9702ca2661ca")
+var genesisChainID = mustDecodeHash("1b9d4594f1ede614b81a141d9b098ca6dc76a60f9efcf34d76c7c90645c4aa0b")
 
 func hexToBigInt(str string) *big.Int {
 	return new(big.Int).SetBytes(mustDecodeString(str))
@@ -123,32 +111,34 @@ func mustDecodePoCSignature(str string) *pocec.Signature {
 	return sig
 }
 
-// GenesisDoc defines the initial conditions for a sukhavati blockchain, in particular its validator set.
-type GenesisDoc struct {
-	Alloc      []*wire.TxOut
-	InitHeight uint64
+type GenesisProof struct {
+	x         string `json:"x"`
+	y         string `json:"y"`
+	BitLength int    `json:"bit_length"`
 }
 
-var ChainGenesisDoc = GenesisDoc{
-	InitHeight: 1,
-	Alloc: []*wire.TxOut{
-		{
-			Value:    0x20EF7AC3840A00, //Investor sk1qqrz45pn0x7nmqsl386yv8z77gpstkchzdzmfrppprazfk3xudrq3samq95a
-			PkScript: mustDecodeString("002018ab40cde6f4f6087e27d118717bc80c176c5c4d16d2308423e893689b8d1823"),
-		},
-		{
-			Value:    0xD9D02F39EBB00, //Ecology sk1qqkla5a9a05pcfavtwnz8m2r296yzvlak26n7ksd7ev3q24j22qj9sr78w7w
-			PkScript: mustDecodeString("0020b7fb4e97afa0709eb16e988fb50d45d104cff6cad4fd6837d96440aac94a048b"),
-		},
-		{
-			Value:    0x15F4FC8454A700, //Team sk1qq2sv82wygyega90g3amckmtanxgcyaesn9r40zcqekq0yy7nyl6yqmkju74
-			PkScript: mustDecodeString("002054187538882651d2bd11eef16dafb332304ee61328eaf16019b01e427a64fe88"),
-		},
-		{
-			Value:    0xF5EB0C13E4B00, //Foundation sk1qq049qd3e48d2g0l520ldk4akut9vl7f4sr6a8pmfs57gth2swevkqghmmny
-			PkScript: mustDecodeString("00207d4a06c7353b5487fe8a7fdb6af6dc5959ff26b01eba70ed30a790bbaa0ecb2c"),
-		},
-	},
+type GenesisSignature struct {
+	r string `json:"r"`
+	s string `json:"s"`
+}
+
+type GenesisAlloc struct {
+	Value   uint64 `json:"value"`
+	Address string `json:"address"`
+}
+
+// GenesisDoc defines the initial conditions for a sukhavati blockchain, in particular its validator set.
+type GenesisDoc struct {
+	Version    uint64           `json: "version"`
+	InitHeight uint64           `json:"init_height"`
+	Timestamp  uint64           `json:"timestamp"`
+	Target     string           `json:"target"`
+	Challenge  string           `json:"challenge"`
+	PublicKey  string           `json:"public_key"`
+	Proof      GenesisProof     `json:"proof"`
+	Signature  GenesisSignature `json:"signature"`
+	alloc      []GenesisAlloc   `json:"alloc"`
+	allocTxOut []*wire.TxOut
 }
 
 const ChainGenesisDocHash = "73756b686176617469b34ea2f85159fa271423fcc27496b5e2"
@@ -161,9 +151,10 @@ func (genDoc GenesisDoc) SaveAs(file string) error {
 	}
 	return ioutil.WriteFile(file, genDocBytes, 0644)
 }
+
 func (genDoc GenesisDoc) IsHashEqual(sha string) bool {
 	var data bytes.Buffer
-	for _, v := range genDoc.Alloc {
+	for _, v := range genDoc.allocTxOut {
 		_, err := data.Write(v.PkScript)
 		if err != nil {
 			return false

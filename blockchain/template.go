@@ -277,11 +277,11 @@ func mustDecodeString(str string) []byte {
 }
 
 func createDistributeTx(coinbase *wire.MsgTx, nextBlockHeight uint64) error {
-	if nextBlockHeight == config.ChainGenesisDoc.InitHeight {
-		for _, c := range config.ChainGenesisDoc.Alloc {
-			coinbase.AddTxOut(c)
-		}
-	}
+	//if nextBlockHeight == config.ChainGenesisDoc.InitHeight {
+	//	for _, c := range config.ChainGenesisDoc.Alloc {
+	//		coinbase.AddTxOut(c)
+	//	}
+	//}
 	return nil
 }
 

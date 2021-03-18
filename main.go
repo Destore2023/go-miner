@@ -39,11 +39,6 @@ var winServiceMain func() (bool, error)
 // notified with the server once it is setup so it can gracefully stop it when
 // requested from the service control manager.
 func minerMain(serverChan chan<- *server) error {
-	// load genesis
-	equal := config.ChainGenesisDoc.IsHashEqual(config.ChainGenesisDocHash)
-	if !equal {
-		return fmt.Errorf("error genesis file! ")
-	}
 	// Load configuration and parse command line.  This function also
 	// initializes logging and configures it accordingly.
 	tcfg, _, err := config.ParseConfig()

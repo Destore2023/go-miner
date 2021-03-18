@@ -1,6 +1,8 @@
 package config
 
 import (
+	"encoding/hex"
+	"github.com/Sukhavati-Labs/go-miner/consensus"
 	"github.com/Sukhavati-Labs/go-miner/wire"
 	"testing"
 )
@@ -10,13 +12,15 @@ func TestChainHeader(t *testing.T) {
 		t.Error("Chain Header Coinbase Tx out is empty!")
 		t.FailNow()
 	}
-	//baseSubsidy := genesisCoinbaseTx.TxOut[0].Value
-	//if uint64(baseSubsidy) != consensus.BaseSubsidy {
-	//	t.Errorf("Chain Header Coinbase BaseSubsidy :%d , Consensus  BaseSubsidy:%d", baseSubsidy, consensus.BaseSubsidy)
-	//	t.FailNow()
-	//}
+	baseSubsidy := genesisCoinbaseTx.TxOut[0].Value
+	if uint64(baseSubsidy) != consensus.BaseSubsidy {
+		t.Errorf("Chain Header Coinbase BaseSubsidy :%d , Consensus  BaseSubsidy:%d", baseSubsidy, consensus.BaseSubsidy)
+		t.FailNow()
+	}
 	blockHash := genesisHeader.BlockHash()
 	t.Logf("Chain Header Block Hash:%s", blockHash)
+	t.Logf("genesisHash:%s", genesisHash.String())
+	t.Logf("%s", hex.EncodeToString(genesisHash[:]))
 	for index, tx := range genesisBlock.Transactions {
 		t.Logf("index:%d txSha:%s", index, tx.TxHash())
 	}
@@ -44,24 +48,33 @@ func TestChainHeader(t *testing.T) {
 		t.FailNow()
 	}
 	chainId, err := genesisHeader.GetChainID()
-	t.Logf("Chain Header ChainId:%s", chainId)
+	t.Logf("Chain Header ChainId:%s", hex.EncodeToString(chainId[:]))
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	if !chainId.IsEqual(&genesisChainID) {
-		t.Errorf("Chain Header Id Err")
+	if !genesisChainID.IsEqual(&chainId) {
+		t.Error("Chain Header Id error ")
 		t.FailNow()
 	}
 	if !genesisHash.IsEqual(&blockHash) {
-		t.Logf("Chain Header Block error!")
+		t.Error("Chain Header Block error ")
 		t.FailNow()
 	}
 }
 
-func TestGenesisDoc_Hash(t *testing.T) {
-	if !ChainGenesisDoc.IsHashEqual(ChainGenesisDocHash) {
-		t.Logf("genesis doc error!")
+func TestPocSignature(t *testing.T) {
+	br, err := hex.DecodeString("dbcbafc7b41d4622394c55527aa43f582be7c8e7106579d26cf4b1a443cfd7e9")
+	if err != nil {
 		t.FailNow()
 	}
+	bs, err := hex.DecodeString("3104a8ada1e64db2df7e88d0dafe548299cd878adddaf41b323c4a855c926c88")
+	if err != nil {
+		t.FailNow()
+	}
+	sig := wire.NewEmptyPoCSignature()
+	sig.R.SetBytes(br)
+	sig.S.SetBytes(bs)
+	signature := hex.EncodeToString(sig.Serialize())
+	t.Logf("Signature:%s", signature)
 }
