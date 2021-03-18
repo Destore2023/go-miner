@@ -120,7 +120,8 @@ service ApiService {
 
   rpc GetStakingTxPoolAwardRecord (GetStakingTxPoolAwardRecordRequest) returns (GetStakingTxPoolAwardRecordResponse) {
     option (google.api.http) = {
-      get: "/v1/transactions/staking/award/record"
+      post: "/v1/transactions/staking/award/record"
+      body: "*"
     };
   }
 

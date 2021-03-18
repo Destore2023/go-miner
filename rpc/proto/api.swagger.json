@@ -891,7 +891,7 @@
       }
     },
     "/v1/transactions/staking/award/record": {
-      "get": {
+      "post": {
         "operationId": "ApiService_GetStakingTxPoolAwardRecord",
         "responses": {
           "200": {
@@ -916,11 +916,12 @@
         },
         "parameters": [
           {
-            "name": "timestamp",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetStakingTxPoolAwardRecordRequest"
+            }
           }
         ],
         "tags": [
@@ -2269,6 +2270,15 @@
           "items": {
             "$ref": "#/definitions/rpcprotobufTxOutPoint"
           }
+        }
+      }
+    },
+    "rpcprotobufGetStakingTxPoolAwardRecordRequest": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "uint64"
         }
       }
     },
