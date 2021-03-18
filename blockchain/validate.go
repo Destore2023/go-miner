@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"math"
 	"math/big"
 	"reflect"
@@ -256,25 +257,25 @@ func checkCoinbase(tx *chainutil.Tx, nextBlockHeight uint64,
 	if err != nil {
 		return chainutil.ZeroAmount(), err
 	}
-	//if nextBlockHeight == config.ChainGenesisDoc.InitHeight {
-	//	out := tx.TxOut()
-	//	for _, allocOut := range config.ChainGenesisDoc.Alloc {
-	//		var valid = false
-	//		for _, txOut := range out {
-	//			if bytes.Equal(txOut.PkScript, allocOut.PkScript) && txOut.Value == allocOut.Value {
-	//				totalReward, err = totalReward.AddInt(txOut.Value)
-	//				if err != nil {
-	//					return chainutil.ZeroAmount(), err
-	//				}
-	//				valid = true
-	//				break
-	//			}
-	//		}
-	//		if !valid {
-	//			return chainutil.ZeroAmount(), fmt.Errorf("error tx :%s ", tx.Hash())
-	//		}
-	//	}
-	//}
+	if nextBlockHeight == config.ChainGenesisDoc.InitHeight {
+		out := tx.TxOut()
+		for _, allocOut := range config.ChainGenesisDoc.AllocTxOut {
+			var valid = false
+			for _, txOut := range out {
+				if bytes.Equal(txOut.PkScript, allocOut.PkScript) && txOut.Value == allocOut.Value {
+					totalReward, err = totalReward.AddInt(txOut.Value)
+					if err != nil {
+						return chainutil.ZeroAmount(), err
+					}
+					valid = true
+					break
+				}
+			}
+			if !valid {
+				return chainutil.ZeroAmount(), fmt.Errorf("error tx :%s ", tx.Hash())
+			}
+		}
+	}
 	// No need to check miner reward ouput, because the caller will check total reward+fee
 	//return miner, nil
 	return totalReward, nil

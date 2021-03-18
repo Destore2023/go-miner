@@ -218,6 +218,7 @@ func UpdateGenesisBlock(block *wire.MsgBlock) {
 }
 
 func init() {
+	InitChainGenesisDoc()
 	// update genesis block
 	UpdateGenesisBlock(ChainParams.GenesisBlock)
 	// register chainParams
