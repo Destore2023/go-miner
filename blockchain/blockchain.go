@@ -457,16 +457,16 @@ func (chain *Blockchain) CurrentIndexHeight() uint64 {
 }
 
 // GetBlockStakingRewardRankOnList returns staking reward list at any height.
-func (chain *Blockchain) GetBlockStakingRewardRankOnList(height uint64) ([]database.Rank, error) {
+func (chain *Blockchain) GetBlockStakingRewardRankOnList(timestamp, height uint64) ([]database.Rank, error) {
 	if height == chain.BestBlockHeight() {
-		return chain.db.FetchUnexpiredStakingRank(height, true)
+		return chain.db.FetchUnexpiredStakingRank(timestamp, height, true)
 	}
-	return chain.db.FetchStakingRank(height, true)
+	return chain.db.FetchStakingRank(timestamp, height, true)
 }
 
 // GetUnexpiredStakingRank returns all the unexpired staking rank.
-func (chain *Blockchain) GetUnexpiredStakingRank(height uint64) ([]database.Rank, error) {
-	return chain.db.FetchUnexpiredStakingRank(height, false)
+func (chain *Blockchain) GetUnexpiredStakingRank(timestamp, height uint64) ([]database.Rank, error) {
+	return chain.db.FetchUnexpiredStakingRank(timestamp, height, false)
 }
 
 func (chain *Blockchain) FetchScriptHashRelatedBindingTx(scriptHash []byte, chainParams *config.Params) ([]*database.BindingTxReply, error) {

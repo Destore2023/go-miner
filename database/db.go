@@ -3,6 +3,7 @@ package database
 import (
 	"crypto/sha256"
 	"errors"
+	"github.com/Sukhavati-Labs/go-miner/consensus"
 
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/config"
@@ -130,19 +131,19 @@ type DB interface {
 	FetchUnSpentStakingPoolTxOutByHeight(startHeight uint64, endHeight uint64) ([]*TxOutReply, error)
 	// FetchUnexpiredStakingRank returns only currently unexpired staking rank at
 	// target height. This function is for mining and validating block.
-	FetchUnexpiredStakingRank(height uint64, onlyOnList bool) ([]Rank, error)
+	FetchUnexpiredStakingRank(timestamp, height uint64, onlyOnList bool) ([]Rank, error)
 	// Fetch
-	FetchStakingStakingRewardInfo(height uint64) (*StakingRewardInfo, error)
+	//FetchStakingStakingRewardInfo(height uint64) (*StakingRewardInfo, error)
 
-	// FetchStakingAwardedRecordByTime
-	FetchStakingAwardedRecordByTime(queryTime uint64) ([]StakingAwardedRecord, error)
+	// FetchStakingAwardedRecordByTimestamp
+	FetchStakingAwardedRecordByTimestamp(queryTime uint64) ([]StakingAwardedRecord, error)
 	// FetchEnabledGovernanceConfig
 	FetchEnabledGovernanceConfig(configType int) (GovernanceConfig, error)
 	// FetchGovernanceConfig
 	FetchGovernanceConfig(configType int, status byte) ([]GovernanceConfig, error)
 	// FetchStakingRank returns staking rank at any height. This
 	// function may be slow.
-	FetchStakingRank(height uint64, onlyOnList bool) ([]Rank, error)
+	FetchStakingRank(timestamp, height uint64, onlyOnList bool) ([]Rank, error)
 
 	// fetch a map of all staking transactions in database
 	FetchStakingTxMap() (StakingNodes, error)
@@ -253,6 +254,15 @@ type AddrIndexOutPoint struct {
 	Index uint32
 }
 
+// Staking Awarded Record
+// +----------+------------+     +--------------+
+// |  prefix  | timestamp  | --> | tx sha       |
+// +----------+------------+     +--------------+
+type StakingAwardedRecord struct {
+	TxID      *wire.Hash // award tx sha
+	Timestamp uint64     // award timestamp
+}
+
 // BindingTx --> BTx
 type BindingTxSpent struct {
 	SpentTxLoc     *wire.TxLoc
@@ -269,16 +279,21 @@ type BindingTxReply struct {
 	Index      uint32
 }
 
-type StakingTxOutAtHeight map[uint64]map[wire.OutPoint]StakingTxInfo
+// StakingTxOutAtPeriod
+// period -->  outPoint --> staking tx info
+type StakingTxOutAtPeriod map[uint64]map[wire.OutPoint]StakingTxInfo
 
-type StakingAwardRecordAtTime map[uint64]map[wire.Hash]StakingAwardedRecord
+// StakingAwardAtPeriod
+// period --> { timestamp, txSha }
+type StakingAwardAtPeriod map[uint64]map[wire.Hash]StakingAwardedRecord
 
 // Returns false if already exists
-func (sh StakingTxOutAtHeight) Put(op wire.OutPoint, stk StakingTxInfo) (success bool) {
-	m, ok := sh[stk.BlockHeight]
+func (sp StakingTxOutAtPeriod) Put(op wire.OutPoint, stk StakingTxInfo) (success bool) {
+	p := stk.Timestamp / consensus.DayPeriod
+	m, ok := sp[p]
 	if !ok {
 		m = make(map[wire.OutPoint]StakingTxInfo)
-		sh[stk.BlockHeight] = m
+		sp[p] = m
 	}
 	if _, exist := m[op]; exist {
 		return false
@@ -287,26 +302,26 @@ func (sh StakingTxOutAtHeight) Put(op wire.OutPoint, stk StakingTxInfo) (success
 	return true
 }
 
-func (sar StakingAwardRecordAtTime) Put(record StakingAwardedRecord) (success bool) {
-	d := record.AwardedTime / 86400
-	m, ok := sar[d]
+func (sap StakingAwardAtPeriod) Put(record StakingAwardedRecord) (success bool) {
+	p := record.Timestamp / consensus.DayPeriod
+	m, ok := sap[p]
 	if !ok {
 		m = make(map[wire.Hash]StakingAwardedRecord)
-		sar[d] = m
+		sap[p] = m
 	}
-	if _, exist := m[record.TxId]; exist {
+	if _, exist := m[*record.TxID]; exist {
 		return false
 	}
-	m[record.TxId] = record
+	m[*record.TxID] = record
 	return true
 }
 
-type StakingNodes map[[sha256.Size]byte]StakingTxOutAtHeight
+type StakingNodes map[[sha256.Size]byte]StakingTxOutAtPeriod
 
-func (nodes StakingNodes) Get(key [sha256.Size]byte) StakingTxOutAtHeight {
+func (nodes StakingNodes) Get(key [sha256.Size]byte) StakingTxOutAtPeriod {
 	m, ok := nodes[key]
 	if !ok {
-		m = make(StakingTxOutAtHeight)
+		m = make(StakingTxOutAtPeriod)
 		nodes[key] = m
 	}
 	return m

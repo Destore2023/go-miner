@@ -17,10 +17,9 @@ import (
 
 const (
 	// params for ldb batch
-	blockBatch     = 0
-	addrIndexBatch = 1
-	dbBatchCount   = 2
-
+	blockBatch                 = 0
+	addrIndexBatch             = 1
+	dbBatchCount               = 2
 	blockStorageMetaDataLength = 40
 )
 
@@ -47,7 +46,7 @@ type ChainDb struct {
 
 	stakingTxMap            map[stakingTxMapKey]*stakingTx
 	expiredStakingTxMap     map[stakingTxMapKey]*stakingTx
-	stakingAwardedRecordMap map[stakingAwardedRecordMapKey]*database.StakingAwardedRecord
+	stakingAwardedRecordMap map[stakingAwardedRecordMapKey]*stakingAwardedRecord
 	governanceConfigMap     map[int]*database.GovernanceConfig
 }
 
@@ -97,9 +96,8 @@ func NewChainDb(dbpath string, dbStorage storage.Storage) (*ChainDb, error) {
 		txSpentUpdateMap:        make(map[wire.Hash]*spentTxUpdate),
 		stakingTxMap:            make(map[stakingTxMapKey]*stakingTx),
 		expiredStakingTxMap:     make(map[stakingTxMapKey]*stakingTx),
-		stakingAwardedRecordMap: make(map[stakingAwardedRecordMapKey]*database.StakingAwardedRecord),
+		stakingAwardedRecordMap: make(map[stakingAwardedRecordMapKey]*stakingAwardedRecord),
 	}
-
 	blockMeta, err := cdb.getBlockStorageMeta()
 	if err != nil {
 		if err != storage.ErrNotFound {

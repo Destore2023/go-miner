@@ -4,6 +4,7 @@ package ldb
 import (
 	"bytes"
 	"encoding/binary"
+	"github.com/Sukhavati-Labs/go-miner/consensus"
 	"math"
 
 	"github.com/Sukhavati-Labs/go-miner/database/storage"
@@ -190,12 +191,12 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 			case byte(txscript.StakingScriptHashTy):
 				{
 					logging.CPrint(logging.DEBUG, "Insert StakingTx", logging.LogFormat{
-						"txid":   tx.Hash(),
+						"txId":   tx.Hash(),
 						"vout":   i,
 						"height": block.Height(),
 						"frozen": pubKeyInfo.FrozenPeriod,
 					})
-					err = db.insertStakingTx(tx.Hash(), uint32(i), pubKeyInfo.FrozenPeriod, block.Height(), pubKeyInfo.ScriptHash, txOut.Value)
+					err = db.insertStakingTx(tx.Hash(), uint32(i), pubKeyInfo.FrozenPeriod, uint64(block.MsgBlock().Header.Timestamp.Unix()), block.Height(), pubKeyInfo.ScriptHash, txOut.Value)
 					if err != nil {
 						return err
 					}
@@ -204,7 +205,7 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 				{
 					// only tx vin is governance
 					logging.CPrint(logging.DEBUG, "Insert GovernanceTx", logging.LogFormat{
-						"txid":   tx.Hash(),
+						"txId":   tx.Hash(),
 						"vout":   i,
 						"height": block.Height(),
 					})
@@ -236,7 +237,7 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 			return err
 		}
 
-		err = db.expireStakingTx(block.Height())
+		err = db.expireStakingTx(uint64(block.MsgBlock().Header.Timestamp.Unix()), block.Height())
 		if err != nil {
 			logging.CPrint(logging.ERROR, "block failed to expire tx", logging.LogFormat{
 				"block":  blockHash,
@@ -322,7 +323,7 @@ func (db *ChainDb) deleteBlock(blockSha *wire.Hash) (err error) {
 		}
 	}
 
-	if err = db.freezeStakingTx(height); err != nil {
+	if err = db.freezeStakingTx(uint64(block.MsgBlock().Header.Timestamp.Unix())); err != nil {
 		return err
 	}
 
@@ -341,23 +342,50 @@ func (db *ChainDb) deleteBlock(blockSha *wire.Hash) (err error) {
 		var txStk stakingTx
 		txUo.delete = true
 		db.txUpdateMap[*tx.Hash()] = &txUo
+		allTxIn := make([]*wire.Hash, 0)
+		for _, txIn := range tx.MsgTx().TxIn {
+			allTxIn = append(allTxIn, &txIn.PreviousOutPoint.Hash)
+		}
+		txReply := db.FetchUnSpentTxByShaList(allTxIn)
+		isPoolingTx := false
+		for _, reply := range txReply {
+			for _, txOut := range reply.Tx.TxOut {
+				class, _ := txscript.GetScriptInfo(txOut.PkScript)
+				if class == txscript.PoolingScriptHashTy {
+					isPoolingTx = true
+				}
+			}
+		}
 
 		// delete insert stakingTx in the block
 		for i, txOut := range tx.MsgTx().TxOut {
 			class, pushData := txscript.GetScriptInfo(txOut.PkScript)
-			if class == txscript.StakingScriptHashTy {
+			timestamp := uint64(block.MsgBlock().Header.Timestamp.Unix())
+			switch class {
+			case txscript.StakingScriptHashTy:
 				frozenPeriod, _, err := txscript.GetParsedOpcode(pushData, class)
 				if err != nil {
 					return err
 				}
-				txStk.expiredHeight = height + frozenPeriod
+				txStk.expiredTimestamp = timestamp + frozenPeriod
 				txStk.delete = true
 				var key = stakingTxMapKey{
 					blockHeight: height,
 					txID:        *tx.Hash(),
 					index:       uint32(i),
+					timestamp:   timestamp,
 				}
 				db.stakingTxMap[key] = &txStk
+			case txscript.WitnessV0ScriptHashTy:
+				if isPoolingTx {
+					var key = stakingAwardedRecordMapKey{
+						period:    timestamp / consensus.DayPeriod,
+						timestamp: timestamp,
+					}
+					db.stakingAwardedRecordMap[key] = &stakingAwardedRecord{
+						delete: true,
+					}
+				}
 			}
 		}
 	}
@@ -394,10 +422,8 @@ func (db *ChainDb) processBlockBatch() error {
 	for txSha, txUp := range db.txUpdateMap {
 		key := txShaToKey(&txSha)
 		if txUp.delete {
-			//log.Tracef("deleting tx %v", txSha)
 			batch.Delete(key)
 		} else {
-			//log.Tracef("inserting tx %v", txSha)
 			txDat := db.formatTx(txUp)
 			batch.Put(key, txDat)
 		}
@@ -406,17 +432,15 @@ func (db *ChainDb) processBlockBatch() error {
 	for txSha, txSu := range db.txSpentUpdateMap {
 		key := spentTxShaToKey(&txSha)
 		if txSu.delete {
-			//log.Tracef("deleting tx %v", txSha)
 			batch.Delete(key)
 		} else {
-			//log.Tracef("inserting tx %v", txSha)
 			txDat := db.formatTxFullySpent(txSu.txList)
 			batch.Put(key, txDat)
 		}
 	}
 
 	for mapKey, txL := range db.stakingTxMap {
-		key := heightStakingTxToKey(txL.expiredHeight, mapKey)
+		key := StakingTxToKey(txL.expiredTimestamp, mapKey)
 		if txL.delete {
 			batch.Delete(key)
 		} else {
@@ -426,7 +450,7 @@ func (db *ChainDb) processBlockBatch() error {
 	}
 
 	for mapKey, txU := range db.expiredStakingTxMap {
-		key := heightExpiredStakingTxToKey(txU.expiredHeight, mapKey)
+		key := expiredStakingTxToKey(txU.expiredTimestamp, mapKey)
 		if txU.delete {
 			batch.Delete(key)
 		} else {
@@ -437,16 +461,19 @@ func (db *ChainDb) processBlockBatch() error {
 
 	for mapKey, record := range db.stakingAwardedRecordMap {
 		key := stakingAwardedRecordToKey(mapKey)
-		value := make([]byte, 8)
-		binary.LittleEndian.PutUint64(value, record.AwardedTime)
-		batch.Put(key, value)
+		if record.delete {
+			batch.Delete(key)
+		} else {
+			value := db.formatSTxAwardedRecord(record)
+			batch.Put(key, value)
+		}
 	}
 
 	db.txUpdateMap = map[wire.Hash]*txUpdateEntry{}
 	db.txSpentUpdateMap = make(map[wire.Hash]*spentTxUpdate)
 	db.stakingTxMap = map[stakingTxMapKey]*stakingTx{}
 	db.expiredStakingTxMap = map[stakingTxMapKey]*stakingTx{}
-	db.stakingAwardedRecordMap = map[stakingAwardedRecordMapKey]*database.StakingAwardedRecord{}
+	db.stakingAwardedRecordMap = map[stakingAwardedRecordMapKey]*stakingAwardedRecord{}
 	return nil
 }
 func (db *ChainDb) InitByGenesisBlock(block *chainutil.Block) error {

@@ -825,12 +825,12 @@ func (chain *Blockchain) NewBlockTemplate(payoutAddress chainutil.Address, templ
 	var rewardAddresses []database.Rank
 	// new epoch merge staking pool
 	if nextBlockHeight >= consensus.StakingPoolAwardActivation && nextBlockHeight%consensus.StakingPoolMergeEpoch >= consensus.StakingPoolAwardStart {
-		records, err := chain.db.FetchStakingAwardedRecordByTime(uint64(bestNode.Timestamp.Unix()))
+		records, err := chain.db.FetchStakingAwardedRecordByTimestamp(uint64(bestNode.Timestamp.Unix()))
 		if err != nil {
 			return err
 		}
 		if len(records) == 0 {
-			rewardAddresses, err = chain.db.FetchUnexpiredStakingRank(nextBlockHeight, true)
+			rewardAddresses, err = chain.db.FetchUnexpiredStakingRank(uint64(bestNode.Timestamp.Unix()), nextBlockHeight, true)
 			if err != nil {
 				return err
 			}

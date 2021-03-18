@@ -14,65 +14,86 @@ import (
 
 var (
 	// stakingTx
-	recordStakingTx        = []byte("TXL")
-	recordExpiredStakingTx = []byte("TXU")
-	recordStakingAwarded   = []byte("TXR")
-	recordStakingPoolTx    = []byte("TXP")
+	recordStakingTx            = []byte("TXL")
+	recordExpiredStakingTx     = []byte("TXU")
+	recordStakingAwardedRecord = []byte("TXR")
+	recordStakingPoolTx        = []byte("TXP")
 )
 
 const (
 	//
 	// Each stakingTx/expiredStakingTx key is 55 bytes:
-	// ----------------------------------------------------------------
-	// |  Prefix | expiredHeight | blockHeight |   TxID   | TxOutIndex |
-	// ----------------------------------------------------------------
-	// | 3 bytes |    8 bytes   |   8 bytes  | 32 bytes |   4 bytes   |
-	// ----------------------------------------------------------------
-	stakingTxKeyLength = 55
+	// 0         3                 11            19             27         59            63
+	// +---------+------------------+-------------+-------------+----------+--------------+
+	// |  Prefix | expiredTimestamp |  timestamp  | blockHeight |   TxID   | TxOutIndex   |
+	// |---------+------------------+-------------+-------------+----------+--------------+
+	// | 3 bytes |    8 bytes       |   8 bytes   | 8 bytes     | 32 bytes |   4 bytes    |
+	// +---------+------------------+-------------+-------------+----------+--------------+
+	stakingTxKeyLength = 63
 
-	// ----------------------------------------------------------------
-	// |  Prefix |     day      |        TxID                         |
-	// ----------------------------------------------------------------
-	// | 3 bytes |    8 bytes   |       32 bytes                      |
-	// ----------------------------------------------------------------
-	stakingAwardedSearchKeyLength = 43
+	// 0        3               11            19
+	// +---------+--------------+--------------+
+	// |  Prefix | period  day  |  timestamp   |
+	// |---------+-----------------------------+
+	// | 3 bytes |    8 bytes   |  8 bytes     |
+	// +---------+--------------+--------------+
+	stakingAwardedSearchKeyLength = 19
 
 	// Each stakingTx/expiredStakingTx value is 40 bytes:
-	// -----------------------
-	// | ScriptHash | Value  |
-	// -----------------------
-	// |  32 bytes  | 8 byte |
-	// -----------------------
+	// 0            32          40
+	// +------------+-----------+
+	// | ScriptHash | Value     |
+	// |------------+-----------|
+	// |  32 bytes  | 8 byte    |
+	// +------------+-----------+
 
 	stakingTxValueLength = 40
 
 	// Each stakingTx/expiredStakingTx search key is 11 bytes:
-	// ----------------------------
-	// |   Prefix  | expiredHeight |
-	// ----------------------------
-	// |  3 bytes  |    8 byte    |
-	// ----------------------------
+	// 0           3                   11
+	// +-----------+-------------------+
+	// |   Prefix  | expiredTimestamp  |
+	// |-----------+-------------------+
+	// |  3 bytes  |    8 byte         |
+	// +-----------+-------------------+
 	stakingTxSearchKeyLength = 11
 
 	// Each stakingTx/expiredStakingTx value is 44 bytes:
-	// ---------------------------------------
-	// | blockHeight |   TxID   | TxOutIndex |
-	// ---------------------------------------
-	// |   8 bytes  | 32 bytes |    4 byte  |
-	// ---------------------------------------
+	// 0             8          40               44
+	// +-------------+----------+----------------+
+	// | blockHeight |   TxID   | TxOutIndex     |
+	// |-------------+----------+----------------|
+	// |   8 bytes   | 32 bytes |    4 byte      |
+	// +-------------+----------+----------------+
 	stakingTxMapKeyLength = 44
 )
 
 // stakingTx
 //
 type stakingTx struct {
-	txSha         *wire.Hash        //  bytes
-	index         uint32            //  4 bytes
-	expiredHeight uint64            //  8 bytes
-	scriptHash    [sha256.Size]byte // 32 bytes
-	value         uint64            //  8 bytes
-	blockHeight   uint64            //  8 bytes
-	delete        bool              //  1 bytes
+	txID             *wire.Hash        //  bytes
+	index            uint32            //  4 bytes
+	expiredTimestamp uint64            //  8 bytes expired timestamp
+	timestamp        uint64            //  8 bytes staking timestamp
+	scriptHash       [sha256.Size]byte // 32 bytes
+	value            uint64            //  8 bytes
+	blockHeight      uint64            //  8 bytes
+	delete           bool              //  1 bytes
+}
+
+type stakingAwardedRecordMapKey struct {
+	period    uint64 // 8 bytes   day
+	timestamp uint64 // award timestamp
+}
+
+// Staking Awarded Record
+// +----------+------------+     +--------------+
+// |  prefix  | timestamp  | --> | tx sha       |
+// +----------+------------+     +--------------+
+type stakingAwardedRecord struct {
+	txID      *wire.Hash // award tx sha
+	timestamp uint64     // award timestamp
+	delete    bool       // delete from db when this is true
 }
 
 //  Key:
@@ -84,7 +105,7 @@ type stakingTx struct {
 //  | scriptHash  | isCoinbase  | spent      |
 //  +-------------+-------------+------------+
 type stakingPoolTx struct {
-	txSha      *wire.Hash        // txId
+	txID       *wire.Hash        // txId
 	index      uint32            // Tx Out Index
 	scriptHash [sha256.Size]byte // 32 bytes
 	value      uint64            // value
@@ -110,13 +131,10 @@ func mustDecodeStakingTxValue(bs []byte) (scriptHash [sha256.Size]byte, value ui
 }
 
 type stakingTxMapKey struct {
-	blockHeight uint64    // 8  bytes
-	txID        wire.Hash // 32 bytes
-	index       uint32    // 4  bytes
-}
-type stakingAwardedRecordMapKey struct {
-	day  uint64    // 8 bytes   day
-	txID wire.Hash // 32 bytes  TxId
+	blockHeight uint64    // block height 8  bytes
+	txID        wire.Hash // tx id        32 bytes
+	index       uint32    // staking tx index  4  bytes
+	timestamp   uint64    // staking timestamp 8 bytes
 }
 
 func mustDecodeStakingTxKey(buf []byte) (expiredHeight uint64, mapKey stakingTxMapKey) {
@@ -170,27 +188,28 @@ func mustEncodeStakingTxMapKey(mapKey stakingTxMapKey) []byte {
 	return key[:]
 }
 
-// heightStakingTxToKey
-//
-// +--------+----------------+-----------------+----------------+---------------+
-// | prefix | expired height | height  8 bytes | tx id 32 bytes | index 4 bytes |
-// +--------+----------------+-----------------+----------------+---------------+
-func heightStakingTxToKey(expiredHeight uint64, mapKey stakingTxMapKey) []byte {
+// StakingTxToKey
+// 0        3                  11                 19
+// +--------+-------------------+------------------+-----------------+----------------+---------------+
+// | prefix | expired timestamp | timestamp 8 bytes| height  8 bytes | tx id 32 bytes | index 4 bytes |
+// +--------+-------------------+------------------+-----------------+----------------+---------------+
+func StakingTxToKey(expiredTimestamp uint64, mapKey stakingTxMapKey) []byte {
 	mapKeyData := mustEncodeStakingTxMapKey(mapKey)
 	key := make([]byte, stakingTxKeyLength)
-
-	copy(key[:len(recordStakingTx)], recordStakingTx)
-	binary.LittleEndian.PutUint64(key[len(recordStakingTx):len(recordStakingTx)+8], expiredHeight)
-	copy(key[len(recordStakingTx)+8:], mapKeyData)
+	recordStakingTxPrefixLen := len(recordStakingTx)
+	copy(key[:recordStakingTxPrefixLen], recordStakingTx)
+	binary.LittleEndian.PutUint64(key[recordStakingTxPrefixLen:recordStakingTxPrefixLen+8], expiredTimestamp)
+	binary.LittleEndian.PutUint64(key[recordStakingTxPrefixLen+8:recordStakingTxPrefixLen+16], mapKey.timestamp)
+	copy(key[recordStakingTxPrefixLen+16:], mapKeyData)
 	return key
 }
 
-// heightExpiredStakingTxToKey
-// 0         3                        11
-// +---------+------------------------+
-// | prefix  | expired height 8 bytes |
-// +---------+------------------------+
-func heightExpiredStakingTxToKey(expiredHeight uint64, mapKey stakingTxMapKey) []byte {
+// expiredStakingTxToKey
+// 0         3                          11
+// +---------+---------------------------+
+// | prefix  | expired timestamp 8 bytes |
+// +---------+---------------------------+
+func expiredStakingTxToKey(expiredHeight uint64, mapKey stakingTxMapKey) []byte {
 	mapKeyData := mustEncodeStakingTxMapKey(mapKey)
 	key := make([]byte, stakingTxKeyLength)
 
@@ -201,15 +220,16 @@ func heightExpiredStakingTxToKey(expiredHeight uint64, mapKey stakingTxMapKey) [
 }
 
 // stakingAwardedRecordToKey
-// 0         3                        11                         43
+// 0         3                        11                         19
 // +---------+------------------------+---------------------------+
-// | prefix  | day    8 bytes         | tx id 32 bytes            |
+// | prefix  | period   8 bytes       | timestamp 8 bytes         |
 // +---------+------------------------+---------------------------+
 func stakingAwardedRecordToKey(mapKey stakingAwardedRecordMapKey) []byte {
 	key := make([]byte, stakingAwardedSearchKeyLength)
-	copy(key[:len(recordStakingAwarded)], recordStakingAwarded) //3 bytes
-	binary.LittleEndian.PutUint64(key[len(recordStakingAwarded):len(recordStakingAwarded)+8], mapKey.day)
-	copy(key[len(recordStakingAwarded)+8:stakingAwardedSearchKeyLength], mapKey.txID[:])
+	recordStakingAwardedRecordLen := len(recordStakingAwardedRecord)
+	copy(key[:recordStakingAwardedRecordLen], recordStakingAwardedRecord) //3 bytes
+	binary.LittleEndian.PutUint64(key[recordStakingAwardedRecordLen:recordStakingAwardedRecordLen+8], mapKey.period)
+	binary.LittleEndian.PutUint64(key[recordStakingAwardedRecordLen+8:stakingAwardedSearchKeyLength], mapKey.timestamp)
 	return key
 }
 
@@ -218,55 +238,66 @@ func stakingAwardedRecordToKey(mapKey stakingAwardedRecordMapKey) []byte {
 // +----------------+------------------------+
 // | prefix 3 bytes | expired height 8 bytes |
 // +----------------+------------------------+
-func stakingTxSearchKey(expiredHeight uint64) []byte {
+func stakingTxSearchKey(expiredTimestamp uint64) []byte {
 	prefix := make([]byte, stakingTxSearchKeyLength)
-	copy(prefix[:len(recordStakingTx)], recordStakingTx)
-	binary.LittleEndian.PutUint64(prefix[len(recordStakingTx):stakingTxSearchKeyLength], expiredHeight)
+	recordStakingTxPrefixLen := len(recordStakingTx)
+	copy(prefix[:recordStakingTxPrefixLen], recordStakingTx)
+	binary.LittleEndian.PutUint64(prefix[recordStakingTxPrefixLen:stakingTxSearchKeyLength], expiredTimestamp)
 	return prefix
 }
 
 // stakingAwardedSearchKey
-// 0                3                        11
-// +----------------+------------------------+
-// | prefix 3 bytes |  day 8 bytes           |
-// +----------------+------------------------+
-func stakingAwardedSearchKey(queryTime uint64) []byte {
-	day := queryTime / 86400
+// 0                3                        11                       19
+// +----------------+------------------------+------------------------+
+// | prefix 3 bytes | expired height 8 bytes | timestamp 8 bytes      |
+// +----------------+------------------------+------------------------+
+func stakingAwardedRecordSearchKey(queryTime uint64) []byte {
+	period := queryTime / 86400
 	prefix := make([]byte, stakingAwardedSearchKeyLength)
-	copy(prefix[:len(recordStakingAwarded)], recordStakingAwarded)
-	binary.LittleEndian.PutUint64(prefix[len(recordStakingAwarded):stakingAwardedSearchKeyLength], day)
+	recordStakingAwardedLen := len(recordStakingAwardedRecord)
+	copy(prefix[:recordStakingAwardedLen], recordStakingAwardedRecord)
+	binary.LittleEndian.PutUint64(prefix[recordStakingAwardedLen:stakingAwardedSearchKeyLength], period)
 	return prefix
 }
 
 // expiredStakingTxSearchKey
-// 0                3                        11
-// +----------------+------------------------+
-// | prefix 3 bytes | expired height 8 bytes |
-// +----------------+------------------------+
-func expiredStakingTxSearchKey(expiredHeight uint64) []byte {
+// 0                3                          11
+// +----------------+---------------------------+
+// | prefix 3 bytes | expired timestamp 8 bytes |
+// +----------------+---------------------------+
+func expiredStakingTxSearchKey(expiredTimestamp uint64) []byte {
 	prefix := make([]byte, stakingTxSearchKeyLength)
-	copy(prefix[:len(recordExpiredStakingTx)], recordExpiredStakingTx)
-	binary.LittleEndian.PutUint64(prefix[len(recordExpiredStakingTx):stakingTxSearchKeyLength], expiredHeight)
+	recordExpiredStakingTxPrefixLen := len(recordExpiredStakingTx)
+	copy(prefix[:recordExpiredStakingTxPrefixLen], recordExpiredStakingTx)
+	binary.LittleEndian.PutUint64(prefix[recordExpiredStakingTxPrefixLen:stakingTxSearchKeyLength], expiredTimestamp)
 	return prefix
 }
 
-func (db *ChainDb) insertStakingTx(txSha *wire.Hash, index uint32, frozenPeriod uint64, blockHeight uint64, rsh [sha256.Size]byte, value int64) (err error) {
+// insertStakingTx
+// txID --> staking tx id
+func (db *ChainDb) insertStakingTx(txID *wire.Hash, index uint32, frozenPeriod uint64, timestamp, blockHeight uint64, rsh [sha256.Size]byte, value int64) (err error) {
 	var txL stakingTx
 	var mapKey = stakingTxMapKey{
 		blockHeight: blockHeight,
-		txID:        *txSha,
+		txID:        *txID,
 		index:       index,
 	}
-
-	txL.txSha = txSha
+	txL.txID = txID
 	txL.index = index
-	txL.expiredHeight = frozenPeriod + blockHeight
+	txL.timestamp = timestamp
+	txL.expiredTimestamp = frozenPeriod + timestamp
 	txL.scriptHash = rsh
 	txL.value = uint64(value)
 	txL.blockHeight = blockHeight
-	logging.CPrint(logging.DEBUG, "insertStakingTx in the height", logging.LogFormat{"startHeight": blockHeight, "expiredHeight": txL.expiredHeight})
+	logging.CPrint(logging.DEBUG, "insertStakingTx",
+		logging.LogFormat{
+			"startHeight":      blockHeight,
+			"stakingTimestamp": timestamp,
+			"expiredTimestamp": txL.expiredTimestamp,
+			"txID":             txID,
+			"value":            value,
+		})
 	db.stakingTxMap[mapKey] = &txL
-
 	return nil
 }
 
@@ -297,15 +328,21 @@ func (db *ChainDb) FetchUnSpentStakingPoolTxOutByHeight(startHeight uint64, endH
 	return replies, nil
 }
 
+// formatSTx format staking tx bytes
 func (db *ChainDb) formatSTx(stx *stakingTx) []byte {
 	rsh := stx.scriptHash
 	value := stx.value
-
 	txW := make([]byte, 40)
 	copy(txW[:32], rsh[:])
 	binary.LittleEndian.PutUint64(txW[32:40], value)
-
 	return txW
+}
+
+// formatSTxRecord format staking award record to bytes
+func (db *ChainDb) formatSTxAwardedRecord(record *stakingAwardedRecord) []byte {
+	buf := make([]byte, 32)
+	copy(buf, (*record.txID)[:])
+	return buf
 }
 
 func (db *ChainDb) FetchExpiredStakingTxListByHeight(expiredHeight uint64) (database.StakingNodes, error) {
@@ -407,7 +444,7 @@ func (db *ChainDb) fetchActiveStakingTxFromUnexpired(height uint64) (map[[sha256
 
 		if height > blockHeight &&
 			height <= expiredHeight &&
-			height-blockHeight >= consensus.StakingTxRewardStart {
+			height-blockHeight >= consensus.StakingTxRewardStartHeight {
 			stakingTxInfos[scriptHash] = append(stakingTxInfos[scriptHash], database.StakingTxInfo{
 				Value:        amount,
 				FrozenPeriod: expiredHeight - blockHeight,
@@ -423,26 +460,30 @@ func (db *ChainDb) fetchActiveStakingTxFromUnexpired(height uint64) (map[[sha256
 
 //
 //fetchStakingAwardedRecordByTime
-// +-----------+-----------+--------------+   +-----------+
-// | prefix(3) |  day(8)   | TxId(32)     | ->| timestamp |
-// +-----------+-----------+--------------+   +-----------+
-func (db *ChainDb) FetchStakingAwardedRecordByTime(queryTime uint64) ([]database.StakingAwardedRecord, error) {
+// 0           3           11                  19   0                  32
+// +-----------+-----------+--------------------+   +------------------+
+// | prefix(3) |  day(8)   | timestamp 8 bytes  | ->|  txID  32 bytes  |
+// +-----------+-----------+--------------------+   +------------------+
+// timestamp seconds
+func (db *ChainDb) FetchStakingAwardedRecordByTimestamp(timestamp uint64) ([]database.StakingAwardedRecord, error) {
 	stakingAwardedRecords := make([]database.StakingAwardedRecord, 0)
-	iter := db.localStorage.NewIterator(storage.BytesPrefix(recordStakingAwarded))
+	iter := db.localStorage.NewIterator(storage.BytesPrefix(recordStakingAwardedRecord))
 	defer iter.Release()
-	expectedDay := queryTime / 86400
+	queryPeriod := timestamp / consensus.DayPeriod
+	recodeLen := len(recordStakingAwardedRecord)
 	for iter.Next() {
 		key := iter.Key()
-		day := binary.LittleEndian.Uint64(key[len(recordStakingAwarded) : len(recordStakingAwarded)+8])
-		if day != expectedDay {
+		period := binary.LittleEndian.Uint64(key[recodeLen : recodeLen+8])
+		if period != queryPeriod {
 			continue
 		}
-		value := iter.Value()
-		timestamp := binary.LittleEndian.Uint64(value)
+
+		stakingTimestamp := binary.LittleEndian.Uint64(key[recodeLen+8 : 19])
 		record := database.StakingAwardedRecord{
-			AwardedTime: timestamp,
+			Timestamp: stakingTimestamp,
 		}
-		copy(record.TxId[:], key[len(recordStakingAwarded)+8:stakingAwardedSearchKeyLength])
+		value := iter.Value()
+		copy(record.TxID[:], value)
 		stakingAwardedRecords = append(stakingAwardedRecords, record)
 	}
 	if err := iter.Error(); err != nil {
@@ -451,28 +492,36 @@ func (db *ChainDb) FetchStakingAwardedRecordByTime(queryTime uint64) ([]database
 	return stakingAwardedRecords, nil
 }
 
-func (db *ChainDb) insertStakingAwardedRecord(txSha *wire.Hash, awardedTime uint64) (err error) {
-	day := awardedTime / 86400
+// insertStakingAwardedRecord
+//  timestamp : the time of the award
+func (db *ChainDb) insertStakingAwardedRecord(txSha *wire.Hash, timestamp uint64) (err error) {
+	period := timestamp / consensus.DayPeriod
 	var mapKey = stakingAwardedRecordMapKey{
-		txID: *txSha,
-		day:  day,
+		period:    period,
+		timestamp: timestamp,
 	}
-	db.stakingAwardedRecordMap[mapKey] = &database.StakingAwardedRecord{
-		TxId:        *txSha,
-		AwardedTime: awardedTime,
+	db.stakingAwardedRecordMap[mapKey] = &stakingAwardedRecord{
+		txID:      txSha,
+		timestamp: timestamp,
+		delete:    false,
 	}
-	logging.CPrint(logging.DEBUG, "insertStakingAwardedRecord in the time", logging.LogFormat{"timestamp": awardedTime, "txId": *txSha})
+	logging.CPrint(logging.DEBUG, "insertStakingAwardedRecord in the time",
+		logging.LogFormat{
+			"txSha":     *txSha,
+			"period":    period,
+			"timestamp": timestamp,
+		})
 	return nil
 }
 
 // FetchUnexpiredStakingRank returns only currently unexpired staking rank at
 // target height. This function is for mining and validating block.
-func (db *ChainDb) FetchUnexpiredStakingRank(height uint64, onlyOnList bool) ([]database.Rank, error) {
+func (db *ChainDb) FetchUnexpiredStakingRank(timestamp, height uint64, onlyOnList bool) ([]database.Rank, error) {
 	stakingTxInfos, err := db.fetchActiveStakingTxFromUnexpired(height)
 	if err != nil {
 		return nil, err
 	}
-	sortedStakingTx, err := database.SortMap(stakingTxInfos, height, onlyOnList)
+	sortedStakingTx, err := database.SortMap(stakingTxInfos, timestamp, height, onlyOnList)
 	if err != nil {
 		return nil, err
 	}
@@ -488,34 +537,32 @@ func (db *ChainDb) FetchUnexpiredStakingRank(height uint64, onlyOnList bool) ([]
 	return rankList, nil
 }
 
-func (db *ChainDb) FetchStakingStakingRewardInfo(height uint64) (*database.StakingRewardInfo, error) {
-	info := new(database.StakingRewardInfo)
-	return info, nil
-}
-
 // fetchActiveStakingTxFromExpired returns once unexpired staking at 'height'
-func (db *ChainDb) fetchActiveStakingTxFromExpired(height uint64) (map[[sha256.Size]byte][]database.StakingTxInfo, error) {
+func (db *ChainDb) fetchActiveStakingTxFromExpired(timestamp, height uint64) (map[[sha256.Size]byte][]database.StakingTxInfo, error) {
 	stakingTxInfos := make(map[[sha256.Size]byte][]database.StakingTxInfo)
 
 	iter := db.localStorage.NewIterator(storage.BytesPrefix(recordExpiredStakingTx))
 	defer iter.Release()
-
+	recordPrefixLen := len(recordExpiredStakingTx)
 	for iter.Next() {
 		key := iter.Key()
-		expiredHeight := binary.LittleEndian.Uint64(key[len(recordExpiredStakingTx) : len(recordExpiredStakingTx)+8])
-		mapKey := mustDecodeStakingTxMapKey(key[len(recordExpiredStakingTx)+8:])
+		expiredTimestamp := binary.LittleEndian.Uint64(key[recordPrefixLen : recordPrefixLen+8])
+		stakingTimestamp := binary.LittleEndian.Uint64(key[recordPrefixLen+8 : recordPrefixLen+16])
+		frozenPeriod := expiredTimestamp - stakingTimestamp
+		mapKey := mustDecodeStakingTxMapKey(key[recordPrefixLen+16:])
 		blockHeight := mapKey.blockHeight
 
 		value := iter.Value()
 		scriptHash, amount := mustDecodeStakingTxValue(value)
 
 		if height > blockHeight &&
-			height <= expiredHeight &&
-			height-blockHeight >= consensus.StakingTxRewardStart {
+			timestamp <= expiredTimestamp &&
+			height-blockHeight >= consensus.StakingTxRewardStartHeight && (frozenPeriod+consensus.StakingTxRewardDeviationTime) < timestamp {
 			stakingTxInfos[scriptHash] = append(stakingTxInfos[scriptHash], database.StakingTxInfo{
 				Value:        amount,
-				FrozenPeriod: expiredHeight - blockHeight,
+				FrozenPeriod: frozenPeriod,
 				BlockHeight:  blockHeight,
+				Timestamp:    stakingTimestamp,
 			})
 		}
 	}
@@ -528,13 +575,13 @@ func (db *ChainDb) fetchActiveStakingTxFromExpired(height uint64) (map[[sha256.S
 
 // FetchStakingRank returns staking rank at any height. This
 // function may be slow.
-func (db *ChainDb) FetchStakingRank(height uint64, onlyOnList bool) ([]database.Rank, error) {
+func (db *ChainDb) FetchStakingRank(timestamp, height uint64, onlyOnList bool) ([]database.Rank, error) {
 	stakingTxInfos, err := db.fetchActiveStakingTxFromUnexpired(height)
 	if err != nil {
 		return nil, err
 	}
 
-	expired, err := db.fetchActiveStakingTxFromExpired(height)
+	expired, err := db.fetchActiveStakingTxFromExpired(timestamp, height)
 	if err != nil {
 		return nil, err
 	}
@@ -547,7 +594,7 @@ func (db *ChainDb) FetchStakingRank(height uint64, onlyOnList bool) ([]database.
 		stakingTxInfos[expiredK] = append(stakingTxInfos[expiredK], expiredV...)
 	}
 
-	sortedStakingTx, err := database.SortMap(stakingTxInfos, height, onlyOnList)
+	sortedStakingTx, err := database.SortMap(stakingTxInfos, timestamp, height, onlyOnList)
 	if err != nil {
 		return nil, err
 	}
@@ -563,7 +610,7 @@ func (db *ChainDb) FetchStakingRank(height uint64, onlyOnList bool) ([]database.
 	return rankList, nil
 }
 
-func (db *ChainDb) expireStakingTx(currentHeight uint64) error {
+func (db *ChainDb) expireStakingTx(timestamp, currentHeight uint64) error {
 	searchKey := stakingTxSearchKey(currentHeight)
 
 	iter := db.localStorage.NewIterator(storage.BytesPrefix(searchKey))
@@ -578,23 +625,24 @@ func (db *ChainDb) expireStakingTx(currentHeight uint64) error {
 
 		// stakingTxMap
 		db.stakingTxMap[mapKey] = &stakingTx{
-			txSha:         &mapKey.txID,
-			index:         mapKey.index,
-			expiredHeight: currentHeight,
-			scriptHash:    scriptHash,
-			value:         val,
-			blockHeight:   mapKey.blockHeight,
-			delete:        true,
+			txID:             &mapKey.txID,
+			index:            mapKey.index,
+			timestamp:        timestamp,
+			expiredTimestamp: currentHeight,
+			scriptHash:       scriptHash,
+			value:            val,
+			blockHeight:      mapKey.blockHeight,
+			delete:           true,
 		}
 
 		// expiredStakingTxMap
 		db.expiredStakingTxMap[mapKey] = &stakingTx{
-			txSha:         &mapKey.txID,
-			index:         mapKey.index,
-			expiredHeight: currentHeight,
-			scriptHash:    scriptHash,
-			value:         val,
-			blockHeight:   mapKey.blockHeight,
+			txID:             &mapKey.txID,
+			index:            mapKey.index,
+			expiredTimestamp: currentHeight,
+			scriptHash:       scriptHash,
+			value:            val,
+			blockHeight:      mapKey.blockHeight,
 		}
 
 	}
@@ -604,8 +652,9 @@ func (db *ChainDb) expireStakingTx(currentHeight uint64) error {
 	return nil
 }
 
-func (db *ChainDb) freezeStakingTx(currentHeight uint64) error {
-	searchKey := expiredStakingTxSearchKey(currentHeight)
+// freezeStakingTx
+func (db *ChainDb) freezeStakingTx(currentTimestamp uint64) error {
+	searchKey := expiredStakingTxSearchKey(currentTimestamp)
 
 	iter := db.localStorage.NewIterator(storage.BytesPrefix(searchKey))
 	defer iter.Release()
@@ -619,23 +668,24 @@ func (db *ChainDb) freezeStakingTx(currentHeight uint64) error {
 
 		// expiredStakingTxMap
 		db.expiredStakingTxMap[mapKey] = &stakingTx{
-			txSha:         &mapKey.txID,
-			index:         mapKey.index,
-			expiredHeight: currentHeight,
-			scriptHash:    scriptHash,
-			value:         val,
-			blockHeight:   mapKey.blockHeight,
-			delete:        true,
+			txID:             &mapKey.txID,
+			index:            mapKey.index,
+			expiredTimestamp: currentTimestamp,
+			timestamp:        currentTimestamp,
+			scriptHash:       scriptHash,
+			value:            val,
+			blockHeight:      mapKey.blockHeight,
+			delete:           true,
 		}
 
 		// stakingTxMap
 		db.stakingTxMap[mapKey] = &stakingTx{
-			txSha:         &mapKey.txID,
-			index:         mapKey.index,
-			expiredHeight: currentHeight,
-			scriptHash:    scriptHash,
-			value:         val,
-			blockHeight:   mapKey.blockHeight,
+			txID:             &mapKey.txID,
+			index:            mapKey.index,
+			expiredTimestamp: currentTimestamp,
+			scriptHash:       scriptHash,
+			value:            val,
+			blockHeight:      mapKey.blockHeight,
 		}
 
 	}

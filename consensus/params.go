@@ -8,8 +8,9 @@ const (
 	DefaultBlockPrioritySize = 50000 // bytes  40MB
 
 	// staking tx
-	MaxStakingRewardNum                = 100
-	defaultStakingTxRewardStart uint64 = 24
+	MaxStakingRewardNum = 100
+	// start day period
+	defaultStakingTxRewardStart uint64 = 1
 
 	defaultCoinbaseMaturity    uint64 = 10
 	defaultTransactionMaturity uint64 = 1
@@ -37,8 +38,8 @@ const (
 	defaultBaseSubsidy            uint64 = 128 * SukhavatiPerSkt
 	defaultMinHalvedSubsidy       uint64 = 6250000
 
-	DayPeriod              uint64 = 1920
-	defaultMinFrozenPeriod uint64 = 61440
+	DayPeriod              uint64 = 86400 //seconds
+	defaultMinFrozenPeriod uint64 = 55 * DayPeriod
 	defaultMinStakingValue uint64 = 2048 * SukhavatiPerSkt
 
 	Ip1Activation uint64 = 694000
@@ -88,8 +89,9 @@ var (
 	//MinStakingValue minimum StakingScriptHash output in Sukhavati
 	MinStakingValue = defaultMinStakingValue
 
-	//
-	StakingTxRewardStart = defaultStakingTxRewardStart
+	// staking start after height
+	StakingTxRewardStartHeight   = defaultStakingTxRewardStart
+	StakingTxRewardDeviationTime = DayPeriod
 
 	BindingRequiredSkt = map[int]float64{
 		24: 0.006144,

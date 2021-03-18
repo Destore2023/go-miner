@@ -459,8 +459,10 @@ func NewTxFromProto(pb *wirepb.Tx) (*MsgTx, error) {
 	return msg, nil
 }
 
-func IsValidFrozenPeriod(height uint64) bool {
-	return height >= consensus.MinFrozenPeriod && height <= SequenceLockTimeMask-1
+// IsValidFrozenPeriod
+// period
+func IsValidFrozenPeriod(period uint64) bool {
+	return period >= consensus.MinFrozenPeriod && period <= SequenceLockTimeMask-1
 }
 
 func IsValidPoolType(poolType uint16) bool {

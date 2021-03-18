@@ -6,8 +6,6 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/Sukhavati-Labs/go-miner/wire"
-
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/chainutil/safetype"
 	"github.com/Sukhavati-Labs/go-miner/consensus"
@@ -15,22 +13,17 @@ import (
 )
 
 type StakingTxInfo struct {
-	Value        uint64
-	FrozenPeriod uint64
-	BlockHeight  uint64
+	Value        uint64 // staking value
+	FrozenPeriod uint64 // staking frozen seconds
+	BlockHeight  uint64 // staking block height
+	Timestamp    uint64 // staking timestamp
 }
 
-// Staking Awarded Record
-type StakingAwardedRecord struct {
-	AwardedTime uint64    // award timestamp
-	TxId        wire.Hash // award tx sha
-}
-
-type StakingRewardInfo struct {
-	CurrentTime     uint64
-	LastRecord      StakingAwardedRecord
-	RewardAddresses []Rank
-}
+//type StakingRewardInfo struct {
+//	CurrentTime     uint64
+//	LastRecord      StakingAwardedRecord
+//	RewardAddresses []Rank
+//}
 
 type Rank struct {
 	Rank       int32
@@ -125,7 +118,8 @@ func (p Pairs) Less(i, j int) bool {
 	//return string(key1) < string(key2)
 }
 
-func SortMap(m map[[sha256.Size]byte][]StakingTxInfo, newestHeight uint64, isOnlyReward bool) (Pairs, error) {
+// newestPeriod : seconds
+func SortMap(m map[[sha256.Size]byte][]StakingTxInfo, timestamp, height uint64, isOnlyReward bool) (Pairs, error) {
 	length := len(m)
 	if length == 0 {
 		return Pairs{}, nil
@@ -144,63 +138,72 @@ func SortMap(m map[[sha256.Size]byte][]StakingTxInfo, newestHeight uint64, isOnl
 			value, err := chainutil.NewAmountFromUint(stakingTx.Value)
 			if err != nil {
 				logging.CPrint(logging.ERROR, "invalid value", logging.LogFormat{
-					"value":        stakingTx.Value,
-					"blockHeight":  stakingTx.BlockHeight,
-					"frozenPeriod": stakingTx.FrozenPeriod,
-					"newestHeight": newestHeight,
-					"isOnlyReward": isOnlyReward,
-					"err":          err,
+					"value":                stakingTx.Value,
+					"staking block height": stakingTx.BlockHeight,
+					"current height":       height,
+					"frozenPeriod":         stakingTx.FrozenPeriod,
+					"staking timestamp":    stakingTx.Timestamp,
+					"current timestamp":    timestamp,
+					"isOnlyReward":         isOnlyReward,
+					"err":                  err,
 				})
 				return nil, err
 			}
 			totalValue, err = totalValue.Add(value)
 			if err != nil {
 				logging.CPrint(logging.ERROR, "calc total value error", logging.LogFormat{
-					"value":        value.String(),
-					"blockHeight":  stakingTx.BlockHeight,
-					"frozenPeriod": stakingTx.FrozenPeriod,
-					"newestHeight": newestHeight,
-					"isOnlyReward": isOnlyReward,
-					"err":          err,
+					"value":             value.String(),
+					"blockHeight":       stakingTx.BlockHeight,
+					"current height":    height,
+					"frozenPeriod":      stakingTx.FrozenPeriod,
+					"staking timestamp": stakingTx.Timestamp,
+					"current timestamp": timestamp,
+					"isOnlyReward":      isOnlyReward,
+					"err":               err,
 				})
 				return nil, err
 			}
 
-			if newestHeight < stakingTx.BlockHeight+consensus.StakingTxRewardStart {
+			if height < stakingTx.BlockHeight+consensus.StakingTxRewardStartHeight {
 				logging.CPrint(logging.ERROR, "try to reward a staking tx before allow height", logging.LogFormat{
-					"newestHeight": newestHeight,
-					"blockHeight":  stakingTx.BlockHeight,
-					"startHeight":  stakingTx.BlockHeight + consensus.StakingTxRewardStart,
+					"staking timestamp": stakingTx.Timestamp,
+					"current timestamp": timestamp,
+					"blockHeight":       stakingTx.BlockHeight,
+					"timestamp":         stakingTx.Timestamp,
+					"startHeight":       stakingTx.BlockHeight,
 				})
 				return nil, errors.New("try to reward a staking tx before allow height")
 			}
 
-			if stakingTx.BlockHeight+stakingTx.FrozenPeriod < newestHeight {
+			if (stakingTx.Timestamp + stakingTx.FrozenPeriod + consensus.StakingTxRewardDeviationTime) < timestamp {
 				logging.CPrint(logging.ERROR, "expired staking tx found", logging.LogFormat{
-					"newestHeight": newestHeight,
-					"blockHeight":  stakingTx.BlockHeight,
-					"frozenPeriod": stakingTx.FrozenPeriod,
+					"current timestamp": timestamp,
+					"staking timestamp": stakingTx.Timestamp,
+					"block height":      stakingTx.BlockHeight,
+					"current height":    height,
+					"frozenPeriod":      stakingTx.FrozenPeriod,
 				})
 				return nil, errors.New("expired staking tx found")
 			}
 
-			var equities uint64 = 0
-			for period, equity := range consensus.StakingFrozenPeriodWeight {
-				if stakingTx.FrozenPeriod/consensus.DayPeriod >= period && equity > equities {
-					equities = equity
+			var currentCoefficient uint64 = 0
+			for period, coefficient := range consensus.StakingFrozenPeriodWeight {
+				if stakingTx.FrozenPeriod/consensus.DayPeriod >= period && coefficient > currentCoefficient {
+					currentCoefficient = coefficient
 				}
 			}
-			gain := safetype.NewUint128FromUint(equities)
-			uWeight, err := value.Value().Mul(gain)
+			uCurrentCoefficient := safetype.NewUint128FromUint(currentCoefficient)
+			uWeight, err := value.Value().Mul(uCurrentCoefficient)
 			if err != nil {
 				logging.CPrint(logging.ERROR, "calc weight error", logging.LogFormat{
-					"value":        stakingTx.Value,
-					"equities":     equities,
-					"blockHeight":  stakingTx.BlockHeight,
-					"frozenPeriod": stakingTx.FrozenPeriod,
-					"newestHeight": newestHeight,
-					"isOnlyReward": isOnlyReward,
-					"err":          err,
+					"value":             stakingTx.Value,
+					"coefficient":       uCurrentCoefficient,
+					"blockHeight":       stakingTx.BlockHeight,
+					"frozenPeriod":      stakingTx.FrozenPeriod,
+					"current timestamp": timestamp,
+					"staking timestamp": stakingTx.Timestamp,
+					"isOnlyReward":      isOnlyReward,
+					"err":               err,
 				})
 				return nil, err
 			}
@@ -208,13 +211,15 @@ func SortMap(m map[[sha256.Size]byte][]StakingTxInfo, newestHeight uint64, isOnl
 			totalWeight, err = totalWeight.Add(uWeight)
 			if err != nil {
 				logging.CPrint(logging.ERROR, "calc total weight error", logging.LogFormat{
-					"value":        stakingTx.Value,
-					"weight":       uWeight.String(),
-					"blockHeight":  stakingTx.BlockHeight,
-					"frozenPeriod": stakingTx.FrozenPeriod,
-					"newestHeight": newestHeight,
-					"isOnlyReward": isOnlyReward,
-					"err":          err,
+					"value":                stakingTx.Value,
+					"weight":               uWeight.String(),
+					"staking block height": stakingTx.BlockHeight,
+					"current height":       height,
+					"current timestamp":    timestamp,
+					"staking timestamp":    stakingTx.Timestamp,
+					"frozenPeriod":         stakingTx.FrozenPeriod,
+					"isOnlyReward":         isOnlyReward,
+					"err":                  err,
 				})
 				return nil, err
 			}
@@ -238,109 +243,3 @@ func SortMap(m map[[sha256.Size]byte][]StakingTxInfo, newestHeight uint64, isOnl
 
 	return pl.pairs, nil
 }
-
-// A function to turn a map into a PairList, then sort and return it.
-/*
-func SortMapByValue(m map[[sha256.Size]byte][]StakingTxInfo, newestHeight uint64, isOnlyReward bool) (Pairs, error) {
-	length := len(m)
-	if length == 0 {
-		return Pairs{}, nil
-	}
-	ps := make(Pairs, length)
-	i := 0
-	for k, stakingTxs := range m {
-		totalValue := chainutil.ZeroAmount()
-		totalWeight := safetype.NewUint128()
-		for _, stakingTx := range stakingTxs {
-			va, err := chainutil.NewAmountFromUint(stakingTx.Value)
-			if err != nil {
-				logging.CPrint(logging.ERROR, "invalid value", logging.LogFormat{
-					"value":        stakingTx.Value,
-					"blockHeight":    stakingTx.BlockHeight,
-					"frozenPeriod": stakingTx.FrozenPeriod,
-					"newestHeight": newestHeight,
-					"isOnlyReward": isOnlyReward,
-					"err":          err,
-				})
-				return nil, err
-			}
-			totalValue, err = totalValue.Add(va)
-			if err != nil {
-				logging.CPrint(logging.ERROR, "calc total value error", logging.LogFormat{
-					"value":        va.String(),
-					"blockHeight":    stakingTx.BlockHeight,
-					"frozenPeriod": stakingTx.FrozenPeriod,
-					"newestHeight": newestHeight,
-					"isOnlyReward": isOnlyReward,
-					"err":          err,
-				})
-				return nil, err
-			}
-
-			if newestHeight < stakingTx.BlockHeight+consensus.StakingTxRewardStart {
-				logging.CPrint(logging.ERROR, "try to reward a staking tx before allow height", logging.LogFormat{
-					"newestHeight": newestHeight,
-					"blockHeight":    stakingTx.BlockHeight,
-					"startHeight":  stakingTx.BlockHeight + consensus.StakingTxRewardStart,
-				})
-				return nil, errors.New("try to reward a staking tx before allow height")
-			}
-
-			if stakingTx.BlockHeight+stakingTx.FrozenPeriod < newestHeight {
-				logging.CPrint(logging.ERROR, "expired staking tx found", logging.LogFormat{
-					"newestHeight": newestHeight,
-					"blockHeight":    stakingTx.BlockHeight,
-					"frozenPeriod": stakingTx.FrozenPeriod,
-				})
-				return nil, errors.New("expired staking tx found")
-			}
-
-			uHeight := safetype.NewUint128FromUint(stakingTx.BlockHeight + stakingTx.FrozenPeriod - newestHeight + 1)
-			uWeight, err := va.Value().Mul(uHeight)
-			if err != nil {
-				logging.CPrint(logging.ERROR, "calc weight error", logging.LogFormat{
-					"value":        stakingTx.Value,
-					"height":       uHeight.String(),
-					"blockHeight":    stakingTx.BlockHeight,
-					"frozenPeriod": stakingTx.FrozenPeriod,
-					"newestHeight": newestHeight,
-					"isOnlyReward": isOnlyReward,
-					"err":          err,
-				})
-				return nil, err
-			}
-
-			totalWeight, err = totalWeight.Add(uWeight)
-			if err != nil {
-				logging.CPrint(logging.ERROR, "calc total weight error", logging.LogFormat{
-					"value":        stakingTx.Value,
-					"weight":       uWeight.String(),
-					"blockHeight":    stakingTx.BlockHeight,
-					"frozenPeriod": stakingTx.FrozenPeriod,
-					"newestHeight": newestHeight,
-					"isOnlyReward": isOnlyReward,
-					"err":          err,
-				})
-				return nil, err
-			}
-		}
-		ps[i] = Pair{k, totalValue.IntValue(), totalWeight}
-		i++
-	}
-	sort.Stable(sort.Reverse(ps))
-
-	if isOnlyReward && len(ps) > consensus.MaxStakingRewardNum {
-		var length int
-		for i := consensus.MaxStakingRewardNum; i > 0; i-- {
-			if ps[i].Value == ps[i-1].Value && ps[i].Weight.Eq(ps[i-1].Weight) {
-				continue
-			}
-			length = i
-			break
-		}
-		return ps[:length], nil
-	}
-
-	return ps, nil
-}
-*/

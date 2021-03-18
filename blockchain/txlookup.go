@@ -364,8 +364,7 @@ func connectStakingTransactions(txStore database.StakingNodes, block *chainutil.
 				if err != nil {
 					return err
 				}
-
-				stakingTxInfo := database.StakingTxInfo{Value: uint64(txOut.Value), FrozenPeriod: frozenPeriod, BlockHeight: block.Height()}
+				stakingTxInfo := database.StakingTxInfo{Value: uint64(txOut.Value), FrozenPeriod: frozenPeriod, BlockHeight: block.Height(), Timestamp: uint64(block.MsgBlock().Header.Timestamp.Unix())}
 				outPoint := wire.OutPoint{Hash: msgTx.TxHash(), Index: uint32(i)}
 				if !txStore.Get(rsh).Put(outPoint, stakingTxInfo) {
 					return ErrDuplicateStaking
@@ -377,7 +376,7 @@ func connectStakingTransactions(txStore database.StakingNodes, block *chainutil.
 	for rsh, node := range txStore {
 		for _, m := range node {
 			for k, v := range m {
-				if block.Height() == v.BlockHeight+v.FrozenPeriod {
+				if uint64(block.MsgBlock().Header.Timestamp.Unix()) >= v.Timestamp+v.FrozenPeriod {
 					delete(m, k)
 				}
 			}
@@ -445,19 +444,20 @@ func disconnectStakingTransactions(db database.DB, txStore database.StakingNodes
 	return nil
 }
 
-func getReward(stakingTxStore database.StakingNodes, height uint64) ([]database.Rank, error) {
+// period --> seconds
+func getReward(stakingTxStore database.StakingNodes, timestamp, height uint64) ([]database.Rank, error) {
 	txList := make(map[[sha256.Size]byte][]database.StakingTxInfo)
 	for rsh, node := range stakingTxStore {
 		for _, m := range node {
 			for _, v := range m {
-				if height-v.BlockHeight >= consensus.StakingTxRewardStart {
+				if height-v.BlockHeight >= consensus.StakingTxRewardStartHeight && (v.Timestamp+v.FrozenPeriod+consensus.StakingTxRewardDeviationTime) < timestamp {
 					txList[rsh] = append(txList[rsh], v)
 				}
 			}
 		}
 	}
 
-	SortedStakingTx, err := database.SortMap(txList, height, true)
+	SortedStakingTx, err := database.SortMap(txList, timestamp, height, true)
 	if err != nil {
 		return nil, err
 	}
@@ -489,7 +489,7 @@ func (chain *Blockchain) fetchStakingTxStore(node *BlockNode) ([]database.Rank, 
 	// spent transactions in the results.  This is a little more efficient
 	// since it means less transaction lookups are needed.
 	if chain.blockTree.bestBlockNode() == nil || (prevNode != nil && prevNode.Hash.IsEqual(chain.blockTree.bestBlockNode().Hash)) {
-		stakingTxRank, err := chain.db.FetchUnexpiredStakingRank(node.Height, true)
+		stakingTxRank, err := chain.db.FetchUnexpiredStakingRank(uint64(node.Timestamp.Unix()), node.Height, true)
 		if err != nil {
 			return nil, err
 		}
@@ -529,8 +529,9 @@ func (chain *Blockchain) fetchStakingTxStore(node *BlockNode) ([]database.Rank, 
 	// the requested node is an old node on the main chain.  Entries in the
 	// attachNodes list indicate the requested node is on a side chain, so
 	// if there are no nodes to attach, we're done.
+	currentTimestamp := uint64(node.Timestamp.Unix())
 	if attachNodes.Len() == 0 {
-		reward, err := getReward(stakingTxStore, node.Height)
+		reward, err := getReward(stakingTxStore, currentTimestamp, node.Height)
 		if err != nil {
 			return nil, err
 		}
@@ -551,7 +552,7 @@ func (chain *Blockchain) fetchStakingTxStore(node *BlockNode) ([]database.Rank, 
 			return nil, err
 		}
 	}
-	reward, err := getReward(stakingTxStore, node.Height)
+	reward, err := getReward(stakingTxStore, currentTimestamp, node.Height)
 	if err != nil {
 		return nil, err
 	}

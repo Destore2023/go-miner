@@ -57,6 +57,7 @@ func (t *Tx) GetPkScriptInfo(i int) *PkScriptInfo {
 	return psi
 }
 
+// TxHash --> tx Id
 func (t *Tx) Hash() *wire.Hash {
 	// Return the cached hash if it has already been generated.
 	if t.txHash != nil {

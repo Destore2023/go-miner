@@ -636,7 +636,6 @@ func (db *ChainDb) setClearSpentData(txSha *wire.Hash, idx uint32, isSpent bool)
 				spentData[i] = ^byte(0)
 			}
 		}
-
 		txU.txSha = txSha
 		txU.blockHeight = blockHeight
 		txU.txOffset = txOffset

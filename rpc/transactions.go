@@ -134,7 +134,7 @@ func (s *Server) GetStakingTxPoolAwardRecord(ctx context.Context, in *pb.GetStak
 	if queryTime == 0 {
 		queryTime = uint64(time.Now().Unix())
 	}
-	awardRecords, err := s.db.FetchStakingAwardedRecordByTime(queryTime)
+	awardRecords, err := s.db.FetchStakingAwardedRecordByTimestamp(queryTime)
 	if err != nil {
 		return nil, err
 	}
@@ -144,13 +144,13 @@ func (s *Server) GetStakingTxPoolAwardRecord(ctx context.Context, in *pb.GetStak
 
 	records := make([]*pb.StakingTxPoolAwardRecord, len(awardRecords))
 	for i, record := range awardRecords {
-		transaction, err := s.getRawTransaction(record.TxId.String())
+		transaction, err := s.getRawTransaction(record.TxID.String())
 		if err != nil {
 			return nil, err
 		}
 		records[i] = &pb.StakingTxPoolAwardRecord{
-			TxId:        record.TxId.String(),
-			AwardedTime: record.AwardedTime,
+			TxId:        record.TxID.String(),
+			AwardedTime: record.Timestamp,
 			Tx:          transaction,
 		}
 	}
