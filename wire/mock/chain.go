@@ -78,6 +78,7 @@ type utxo struct {
 	prePoint     *wire.OutPoint
 	blockIndex   int
 	txIndex      uint32
+	timestamp    uint64
 	redeemScript []byte
 	privateKey   *btcec.PrivateKey
 	value        int64

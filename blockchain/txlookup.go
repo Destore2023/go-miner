@@ -430,7 +430,7 @@ func disconnectStakingTransactions(db database.DB, txStore database.StakingNodes
 				} else {
 					logging.CPrint(logging.INFO, "disconnect staking transaction",
 						logging.LogFormat{
-							"txid":   outPoint.Hash,
+							"txId":   outPoint.Hash,
 							"index":  outPoint.Index,
 							"height": block.Height(),
 						})
