@@ -6,7 +6,7 @@
     "p2p": {
       "seeds": "139.196.80.115:43458",
       "listen_address": "tcp://0.0.0.0:43458",
-      "skip_upnp": false
+      "skip_upnp": true
     },
     "rpc": {
       "api_port_grpc": "9687",
