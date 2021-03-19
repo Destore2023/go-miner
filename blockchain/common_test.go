@@ -260,7 +260,7 @@ func TestMain(m *testing.M) {
 	consensus.CoinbaseMaturity = comTestCoinbaseMaturity
 	consensus.MinStakingValue = comTestMinStakingValue
 	consensus.MinFrozenPeriod = comTestMinFrozenPeriod
-	consensus.StakingTxRewardStart = comTestStakingTxRewardStart
+	consensus.StakingTxRewardStartHeight = comTestStakingTxRewardStart
 
 	fmt.Println("coinbase maturity:", consensus.CoinbaseMaturity)
 	fmt.Println("mininum frozen period:", consensus.MinFrozenPeriod)

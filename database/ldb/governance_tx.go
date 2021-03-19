@@ -58,7 +58,7 @@ func (db *ChainDb) FetchGovernanceConfig(configType int, status byte) ([]databas
 	defer iter.Release()
 	for iter.Next() {
 		key := iter.Key()
-		if len(key) < stakingAwardedSearchKeyLength {
+		if len(key) < 19 {
 			continue
 		}
 		currentType := binary.LittleEndian.Uint32(key[len(recordGovernanceTx) : len(recordGovernanceTx)+4])

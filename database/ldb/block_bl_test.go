@@ -63,7 +63,7 @@ func TestPubkblRecords(t *testing.T) {
 	assert.Nil(t, err)
 
 	for _, block := range blocks200[:100] {
-		slice, err := db.GetPubkeyBitLengthAndHeightRecord(block.MsgBlock().Header.PubKey)
+		slice, err := db.GetPubkeyBLHeightRecord(block.MsgBlock().Header.PubKey)
 		ex := m[string(block.MsgBlock().Header.PubKey.SerializeCompressed())]
 		assert.Nil(t, err)
 		assert.Equal(t, len(ex), len(slice))
@@ -74,10 +74,10 @@ func TestPubkblRecords(t *testing.T) {
 	}
 
 	// test reindex
-	err = db.IndexPubKeyBitLengthAndHeight(true)
+	err = db.IndexPubKeyBLHeight(true)
 	assert.Nil(t, err)
 	for _, block := range blocks200[:100] {
-		slice, err := db.GetPubkeyBitLengthAndHeightRecord(block.MsgBlock().Header.PubKey)
+		slice, err := db.GetPubkeyBLHeightRecord(block.MsgBlock().Header.PubKey)
 		ex := m[string(block.MsgBlock().Header.PubKey.SerializeCompressed())]
 		assert.Nil(t, err)
 		assert.Equal(t, len(ex), len(slice))
@@ -98,7 +98,7 @@ func TestPubkblRecords(t *testing.T) {
 	}
 
 	for _, block := range blocks200[:100] {
-		slice, err := db.GetPubkeyBitLengthAndHeightRecord(block.MsgBlock().Header.PubKey)
+		slice, err := db.GetPubkeyBLHeightRecord(block.MsgBlock().Header.PubKey)
 		assert.Nil(t, err)
 		assert.Zero(t, len(slice))
 	}

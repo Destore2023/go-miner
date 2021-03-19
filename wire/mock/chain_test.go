@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 	consensus.CoinbaseMaturity = 20
 	consensus.MinStakingValue = 100 * consensus.SukhavatiPerSkt
 	consensus.MinFrozenPeriod = 4
-	consensus.StakingTxRewardStart = 2
+	consensus.StakingTxRewardStartHeight = 2
 	DefaultFrozenPeriodRange = [2]uint64{consensus.MinFrozenPeriod, consensus.MinFrozenPeriod + 20}
 
 	if consensus.CoinbaseMaturity > challengeInterval {

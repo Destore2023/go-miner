@@ -111,7 +111,7 @@ func TestSortMapByValue(t *testing.T) {
 			},
 		},
 	}
-	pairs, err := SortMap(tests, 590602, true)
+	pairs, err := SortMap(tests, 590602, 590602, true)
 	if err != nil {
 		t.Fatalf("failed to sort, %v", err)
 	}
@@ -123,7 +123,7 @@ func TestSortMapByValue(t *testing.T) {
 		t.Logf("")
 	}
 
-	pairs, err = SortMap(tests, 600002, true)
+	pairs, err = SortMap(tests, 600002, 600002, true)
 	if err != nil {
 		t.Fatalf("failed to sort, %v", err)
 	}

@@ -231,7 +231,7 @@ func (c *Chain) autoMockForkChain() error {
 			}
 		case FPStakingRewardBegin:
 			if c.stats[len(c.stats)-1].stat[TxStaking] > 0 {
-				stakingRewardForkPoint[i+int(consensus.StakingTxRewardStart)-1] = struct{}{}
+				stakingRewardForkPoint[i+int(consensus.StakingTxRewardStartHeight)-1] = struct{}{}
 			}
 			if _, ok := stakingRewardForkPoint[i-1]; ok {
 				for len(forks) < c.opt.ForkOpt.maxForks {

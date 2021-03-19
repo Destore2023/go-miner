@@ -33,8 +33,6 @@ var (
 	// |   6-bytes  |   32-bytes   |  ->  |    8-bytes     |
 	// +------------+--------------+      +----------------+
 	blockShaKeyPrefix = []byte("BLKSHA")
-
-	//
 )
 
 const (
@@ -46,6 +44,7 @@ const (
 )
 
 //makeBlockHeightKey
+// 0                    6                        14
 // +--------------------+------------------------+
 // | BLKHGT (6 bytes )  |  height   (8 bytes)    |
 // +--------------------+------------------------+
@@ -57,6 +56,7 @@ func makeBlockHeightKey(height uint64) []byte {
 }
 
 // makeBlockShaKey
+// 0                   6                     38
 // +-------------------+----------------------+
 // | BLKSHA (6 bytes)  | blockSha  (32 bytes) |
 // +-------------------+----------------------+
@@ -143,6 +143,7 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 		return err
 	}
 
+	timestamp := uint64(block.MsgBlock().Header.Timestamp.Unix())
 	// staking award tx record
 	transactions := block.Transactions()
 
@@ -215,6 +216,7 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 							db.insertGovernanceConfig(0, &config, true)
 						}
 					}
+
 				}
 			}
 		}
@@ -237,7 +239,7 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 			return err
 		}
 
-		err = db.expireStakingTx(uint64(block.MsgBlock().Header.Timestamp.Unix()), block.Height())
+		err = db.expireStakingTx(timestamp, block.Height())
 		if err != nil {
 			logging.CPrint(logging.ERROR, "block failed to expire tx", logging.LogFormat{
 				"block":  blockHash,
@@ -368,6 +370,7 @@ func (db *ChainDb) deleteBlock(blockSha *wire.Hash) (err error) {
 					return err
 				}
 				txStk.expiredTimestamp = timestamp + frozenPeriod
+				txStk.blockHeight = height
 				txStk.delete = true
 				var key = stakingTxMapKey{
 					blockHeight: height,

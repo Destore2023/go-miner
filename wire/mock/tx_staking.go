@@ -45,7 +45,7 @@ func (m *lUtxoMgr) constructRewardTxOut(blockHeight uint64, tx *wire.MsgTx) (out
 			if UTXO.spent {
 				continue
 			}
-			if blockHeight-UTXO.blockHeight < consensus.StakingTxRewardStart {
+			if blockHeight-UTXO.blockHeight < consensus.StakingTxRewardStartHeight {
 				continue
 			}
 
