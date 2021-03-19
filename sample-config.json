@@ -4,13 +4,13 @@
   },
   "network": {
     "p2p": {
-      "seeds": "139.196.182.70:43453",
-      "listen_address": "tcp://0.0.0.0:43453",
+      "seeds": "139.196.80.115:43458",
+      "listen_address": "tcp://0.0.0.0:43458",
       "skip_upnp": false
     },
     "rpc": {
-      "api_port_grpc": "9685",
-      "api_port_http": "9686",
+      "api_port_grpc": "9687",
+      "api_port_http": "9688",
       "api_whitelist": [],
       "api_allowed_lan": []
     }
@@ -25,6 +25,6 @@
     "allow_solo": false,
     "proof_list": "",
     "plot": false,
-    "private_password": "yourPrivatePassword"
+    "private_password": "123456"
   }
 }
