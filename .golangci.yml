@@ -143,7 +143,9 @@ linters-settings:
     # To check which checks are enabled run `GL_DEBUG=gocritic golangci-lint run`
     # By default list of stable checks is used.
     enabled-checks:
-      - rangeValCopy
+      - nestingreduce
+      - ruleguard
+      - truncatecmp
 
     # Which checks should be disabled; can't be combined with 'enabled-checks'; default is empty
     disabled-checks:
@@ -245,7 +247,7 @@ linters-settings:
   goimports:
     # put imports beginning with prefix after 3rd-party packages;
     # it's a comma-separated list of prefixes
-    local-prefixes: github.com/org/project
+    local-prefixes: github.com/Sukhavati-Labs/go-miner
   golint:
     # minimal confidence for issues, default is 0.8
     min-confidence: 0.8
@@ -423,6 +425,12 @@ linters:
   enable:
     - megacheck
     - govet
+    - errcheck
+    - goimports
+    - golint
+    - govet
+    - staticcheck
+
   disable:
     - maligned
     - prealloc

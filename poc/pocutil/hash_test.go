@@ -9,11 +9,11 @@ import (
 )
 
 func TestMASSHash_String(t *testing.T) {
-	var h = pocutil.MASSSHA256([]byte("TestMASSHash_String"))
+	var h = pocutil.SktSHA256([]byte("TestMASSHash_String"))
 	var testRound = 10000
 
 	for i := 0; i < testRound; i++ {
-		h = pocutil.MASSSHA256(h[:])
+		h = pocutil.SktSHA256(h[:])
 		str := h.String()
 		if h != mustDecodeStringToHash(str) {
 			t.Error("Hash String decode error")
@@ -21,7 +21,7 @@ func TestMASSHash_String(t *testing.T) {
 	}
 
 	for i := 0; i < testRound; i++ {
-		h = pocutil.MASSDoubleSHA256(h[:])
+		h = pocutil.SktDoubleSHA256(h[:])
 		str := h.String()
 		if h != mustDecodeStringToHash(str) {
 			t.Error("Hash String decode error")
