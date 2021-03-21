@@ -10,9 +10,8 @@ const (
 	// staking tx
 	MaxStakingRewardNum                = 100
 	defaultStakingTxRewardStart uint64 = 24
-
-	defaultCoinbaseMaturity    uint64 = 10
-	defaultTransactionMaturity uint64 = 1
+	defaultCoinbaseMaturity     uint64 = 10
+	defaultTransactionMaturity  uint64 = 1
 
 	// +-----------+--------------------+
 	// | mining    | 381945005          |
@@ -40,8 +39,6 @@ const (
 	DayPeriod              uint64 = 1920
 	defaultMinFrozenPeriod uint64 = 61440
 	defaultMinStakingValue uint64 = 2048 * SukhavatiPerSkt
-
-	Ip1Activation uint64 = 694000
 	// after 90 days  activation ,and dev only 1
 	StakingPoolAwardActivation uint64 = 1
 	MaxValidPeriod                    = defaultMinFrozenPeriod * 24 // 1474560
@@ -57,7 +54,7 @@ const (
 	// 5.838% --> 94.162%   --> 94162/100000
 	CoinbaseSubsidyAttenuation            = 94162
 	CoinbaseSubsidyAttenuationDenominator = 100000
-	StakingPoolAddress                    = "sk1qqggu42p34335mwrutv88t7fqh6sp5eqlawglmx457dhn0w7ks2nzsm0rq7q"
+	StakingPoolAddress                    = "pool1qpggu42p34335mwrutv88t7fqh6sp5eqlawglmx457dhn0w7ks2nzsdrn9cs"
 	StakingPoolType                       = uint16(1)
 )
 
@@ -87,11 +84,9 @@ var (
 	MinFrozenPeriod = defaultMinFrozenPeriod
 	//MinStakingValue minimum StakingScriptHash output in Sukhavati
 	MinStakingValue = defaultMinStakingValue
-
 	//
 	StakingTxRewardStart = defaultStakingTxRewardStart
-
-	BindingRequiredSkt = map[int]float64{
+	BindingRequiredSkt   = map[int]float64{
 		24: 0.006144,
 		26: 0.026624,
 		28: 0.112,
@@ -108,6 +103,4 @@ var (
 		144: 16180,
 		377: 26180,
 	}
-	//
-	StakingFrozenWeightDenominator = 10000
 )

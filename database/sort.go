@@ -184,18 +184,18 @@ func SortMap(m map[[sha256.Size]byte][]StakingTxInfo, newestHeight uint64, isOnl
 				return nil, errors.New("expired staking tx found")
 			}
 
-			var equities uint64 = 0
-			for period, equity := range consensus.StakingFrozenPeriodWeight {
-				if stakingTx.FrozenPeriod/consensus.DayPeriod >= period && equity > equities {
-					equities = equity
+			var currentCoefficient uint64 = 0
+			for period, coefficient := range consensus.StakingFrozenPeriodWeight {
+				if stakingTx.FrozenPeriod/consensus.DayPeriod >= period && coefficient > currentCoefficient {
+					currentCoefficient = coefficient
 				}
 			}
-			gain := safetype.NewUint128FromUint(equities)
-			uWeight, err := value.Value().Mul(gain)
+			uCoefficient := safetype.NewUint128FromUint(currentCoefficient)
+			uWeight, err := value.Value().Mul(uCoefficient)
 			if err != nil {
 				logging.CPrint(logging.ERROR, "calc weight error", logging.LogFormat{
 					"value":        stakingTx.Value,
-					"equities":     equities,
+					"coefficient":  currentCoefficient,
 					"blockHeight":  stakingTx.BlockHeight,
 					"frozenPeriod": stakingTx.FrozenPeriod,
 					"newestHeight": newestHeight,
