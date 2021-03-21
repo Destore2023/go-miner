@@ -17,7 +17,6 @@ var (
 	recordStakingTx        = []byte("TXL")
 	recordExpiredStakingTx = []byte("TXU")
 	recordStakingAwarded   = []byte("TXR")
-	recordStakingPoolTx    = []byte("TXP")
 )
 
 const (
@@ -75,6 +74,21 @@ type stakingTx struct {
 	delete        bool              //  1 bytes
 }
 
+type stakingAwardedRecordMapKey struct {
+	day  uint64    // 8 bytes   day
+	txID wire.Hash // 32 bytes  TxId
+}
+
+// Staking Awarded Record
+// +------+------------+      +-------------+
+// | day  | txSha      |  --> | timestamp   |
+// +------+------------+      +-------------+
+type stakingAwardedRecord struct {
+	timestamp uint64    // award timestamp
+	txId      wire.Hash // award tx sha
+	delete    bool
+}
+
 //  Key:
 //  +--------+------+-------+----------+
 //  | height | type | txId  | index    |
@@ -113,10 +127,6 @@ type stakingTxMapKey struct {
 	blockHeight uint64    // 8  bytes
 	txID        wire.Hash // 32 bytes
 	index       uint32    // 4  bytes
-}
-type stakingAwardedRecordMapKey struct {
-	day  uint64    // 8 bytes   day
-	txID wire.Hash // 32 bytes  TxId
 }
 
 func mustDecodeStakingTxKey(buf []byte) (expiredHeight uint64, mapKey stakingTxMapKey) {
@@ -297,14 +307,12 @@ func (db *ChainDb) FetchUnSpentStakingPoolTxOutByHeight(startHeight uint64, endH
 	return replies, nil
 }
 
-func (db *ChainDb) formatSTx(stx *stakingTx) []byte {
+func (db *ChainDb) formatStakingTx(stx *stakingTx) []byte {
 	rsh := stx.scriptHash
 	value := stx.value
-
 	txW := make([]byte, 40)
 	copy(txW[:32], rsh[:])
 	binary.LittleEndian.PutUint64(txW[32:40], value)
-
 	return txW
 }
 
@@ -457,9 +465,9 @@ func (db *ChainDb) insertStakingAwardedRecord(txSha *wire.Hash, awardedTime uint
 		txID: *txSha,
 		day:  day,
 	}
-	db.stakingAwardedRecordMap[mapKey] = &database.StakingAwardedRecord{
-		TxId:        *txSha,
-		AwardedTime: awardedTime,
+	db.stakingAwardedRecordMap[mapKey] = &stakingAwardedRecord{
+		txId:      *txSha,
+		timestamp: awardedTime,
 	}
 	logging.CPrint(logging.DEBUG, "insertStakingAwardedRecord in the time", logging.LogFormat{"timestamp": awardedTime, "txId": *txSha})
 	return nil

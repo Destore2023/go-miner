@@ -47,7 +47,7 @@ type ChainDb struct {
 
 	stakingTxMap            map[stakingTxMapKey]*stakingTx
 	expiredStakingTxMap     map[stakingTxMapKey]*stakingTx
-	stakingAwardedRecordMap map[stakingAwardedRecordMapKey]*database.StakingAwardedRecord
+	stakingAwardedRecordMap map[stakingAwardedRecordMapKey]*stakingAwardedRecord
 	governanceConfigMap     map[int]*database.GovernanceConfig
 }
 
@@ -97,7 +97,7 @@ func NewChainDb(dbpath string, dbStorage storage.Storage) (*ChainDb, error) {
 		txSpentUpdateMap:        make(map[wire.Hash]*spentTxUpdate),
 		stakingTxMap:            make(map[stakingTxMapKey]*stakingTx),
 		expiredStakingTxMap:     make(map[stakingTxMapKey]*stakingTx),
-		stakingAwardedRecordMap: make(map[stakingAwardedRecordMapKey]*database.StakingAwardedRecord),
+		stakingAwardedRecordMap: make(map[stakingAwardedRecordMapKey]*stakingAwardedRecord),
 	}
 
 	blockMeta, err := cdb.getBlockStorageMeta()

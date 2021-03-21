@@ -40,10 +40,10 @@ var genesisCoinbaseTx = wire.MsgTx{
 }
 
 var genesisHeader = wire.BlockHeader{
-	ChainID:         mustDecodeHash("8ecd463882c2ffcd9a82a6b85e52dcb3cb7e330819196334af7a9702ca2661ca"),
+	ChainID:         mustDecodeHash("3e5c9bbb72a812303dd01b99ffe7fba755a7272a3a42abf2e983fdc2c0ec34b8"),
 	Version:         1,
 	Height:          0,
-	Timestamp:       time.Unix(0x60531443, 0), // 2021-01-01 00:00:00 +0000 UTC, 1608250088 0x5FEE6600
+	Timestamp:       time.Unix(0x60572CB4, 0), // 2021-03-21 11:24:00 +0000 UTC, 1616325812 0x60572CB4
 	Previous:        mustDecodeHash("0000000000000000000000000000000000000000000000000000000000000000"),
 	TransactionRoot: mustDecodeHash("ada8ce6758af6b5291349f58900f87f6b0e051fb43d9f756ea54c3fb708d950f"),
 	WitnessRoot:     mustDecodeHash("ada8ce6758af6b5291349f58900f87f6b0e051fb43d9f756ea54c3fb708d950f"),
@@ -71,9 +71,9 @@ var genesisBlock = wire.MsgBlock{
 	Transactions: []*wire.MsgTx{&genesisCoinbaseTx},
 }
 
-var genesisHash = mustDecodeHash("a03d8ac0d7899d5a92e38c47aa7f7e2cf493e9f0441bdeed887b43c65c1bf8eb")
+var genesisHash = mustDecodeHash("7f56dee203d1798c2e34180ed8f763ea62e01758a3cfa91373999a1a1a7b53fb")
 
-var genesisChainID = mustDecodeHash("1b9d4594f1ede614b81a141d9b098ca6dc76a60f9efcf34d76c7c90645c4aa0b")
+var genesisChainID = mustDecodeHash("3e5c9bbb72a812303dd01b99ffe7fba755a7272a3a42abf2e983fdc2c0ec34b8")
 
 func hexToBigInt(str string) *big.Int {
 	return new(big.Int).SetBytes(mustDecodeString(str))

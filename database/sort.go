@@ -6,8 +6,6 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/Sukhavati-Labs/go-miner/wire"
-
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/chainutil/safetype"
 	"github.com/Sukhavati-Labs/go-miner/consensus"
@@ -18,18 +16,6 @@ type StakingTxInfo struct {
 	Value        uint64
 	FrozenPeriod uint64
 	BlockHeight  uint64
-}
-
-// Staking Awarded Record
-type StakingAwardedRecord struct {
-	AwardedTime uint64    // award timestamp
-	TxId        wire.Hash // award tx sha
-}
-
-type StakingRewardInfo struct {
-	CurrentTime     uint64
-	LastRecord      StakingAwardedRecord
-	RewardAddresses []Rank
 }
 
 type Rank struct {

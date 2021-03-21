@@ -231,6 +231,18 @@ type UtxoReply struct {
 	Value    chainutil.Amount
 }
 
+// Staking Awarded Record
+type StakingAwardedRecord struct {
+	AwardedTime uint64    // award timestamp
+	TxId        wire.Hash // award tx sha
+}
+
+type StakingRewardInfo struct {
+	CurrentTime     uint64
+	LastRecord      StakingAwardedRecord
+	RewardAddresses []Rank
+}
+
 //
 // only Tx Out info
 type TxOutReply struct {
