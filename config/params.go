@@ -209,12 +209,12 @@ func UpdateGenesisBlock(block *wire.MsgBlock) {
 		panic(err) // should not happen
 	}
 	ChainParams.ChainID = &chainID
-	//genesisChainID = chainID
+	genesisChainID = chainID
 	genesisHeader.ChainID = chainID
 	ChainParams.GenesisBlock.Header.ChainID = chainID
 	//update Block Hash
-	//genesisHash = genesisHeader.BlockHash()
-	//ChainParams.GenesisHash = &genesisHash
+	genesisHash = genesisHeader.BlockHash()
+	ChainParams.GenesisHash = &genesisHash
 }
 
 func init() {
