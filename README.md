@@ -35,14 +35,15 @@
   # libprotoc
   libprotoc 3.15.0
   
-  # github.com/golang/protobuf 1.4.3
+  # github.com/golang/protobuf 1.5.1
   protoc-gen-go
+  # go get github.com/golang/protobuf/protoc-gen-go@v1.5.1
   
   # github.com/gogo/protobuf 1.3.2
   protoc-gen-gogo
   # go get  github.com/gogo/protobuf/protoc-gen-gogo@v1.3.2
   protoc-gen-gofast
-  # 
+  # go get github.com/gogo/protobuf/protoc-gen-gofast@v1.3.2
   
   # github.com/grpc-ecosystem/grpc-gateway 1.16.0
   protoc-gen-grpc-gateway
@@ -53,8 +54,15 @@
 
 #### Modifying Code
 
+```bash
+# install goimports
+go install golang.org/x/tools/cmd/goimports@latest
+# install golangci
+go get github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+```
+
 - New codes should be compatible with Go 1.15 or newer.
-- Run `gofmt` and `goimports` to lint go files.
+- Run `gofmt` and `goimports` or `golangci-lint run` to lint go files.
 - Run `make test` before building executables.
 
 #### Reporting Bugs
