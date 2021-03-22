@@ -31,26 +31,26 @@
 
 - Install [Golang](http://golang.org) 1.15 or newer.
 - Install the specific version or [ProtoBuf](https://developers.google.com/protocol-buffers), and related `protoc-*`:
-  ```
-  # libprotoc
-  libprotoc 3.15.0
-  
-  # github.com/golang/protobuf 1.5.1
-  protoc-gen-go
-  # go get github.com/golang/protobuf/protoc-gen-go@v1.5.1
-  
-  # github.com/gogo/protobuf 1.3.2
-  protoc-gen-gogo
-  # go get  github.com/gogo/protobuf/protoc-gen-gogo@v1.3.2
-  protoc-gen-gofast
-  # go get github.com/gogo/protobuf/protoc-gen-gofast@v1.3.2
-  
-  # github.com/grpc-ecosystem/grpc-gateway 1.16.0
-  protoc-gen-grpc-gateway
-  # go get  github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
-  protoc-gen-swagger
-  # go get  github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
-  ```
+
+```bash
+# libprotoc
+libprotoc 3.6.1
+
+# go get github.com/golang/protobuf@v1.4.3
+protoc-gen-go
+
+# github.com/gogo/protobuf 1.3.2
+protoc-gen-gogo
+# go get  github.com/gogo/protobuf/protoc-gen-gogo@v1.3.2
+protoc-gen-gofast
+# go get github.com/gogo/protobuf/protoc-gen-gofast@v1.3.2
+
+# github.com/grpc-ecosystem/grpc-gateway 1.16.0
+protoc-gen-grpc-gateway
+# go get  github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
+protoc-gen-swagger
+# go get  github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
+```
 
 #### Modifying Code
 
