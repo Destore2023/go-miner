@@ -816,7 +816,6 @@ type BlockTemplateGenerator struct {
 func (chain *Blockchain) NewBlockTemplate(payoutAddress chainutil.Address, templateCh chan interface{}) error {
 	chain.l.Lock()
 	defer chain.l.Unlock()
-
 	// Get snapshot of chain/txPool
 	bestNode := chain.blockTree.bestBlockNode()
 	nextBlockHeight := bestNode.Height + 1
@@ -827,11 +826,19 @@ func (chain *Blockchain) NewBlockTemplate(payoutAddress chainutil.Address, templ
 	if nextBlockHeight >= consensus.StakingPoolAwardActivation && nextBlockHeight%consensus.StakingPoolMergeEpoch >= consensus.StakingPoolAwardStart {
 		records, err := chain.db.FetchStakingAwardedRecordByTime(uint64(bestNode.Timestamp.Unix()))
 		if err != nil {
+			logging.CPrint(logging.ERROR, "NewBlockTemplate  FetchStakingAwardedRecordByTime",
+				logging.LogFormat{
+					"error":  err,
+					"height": nextBlockHeight})
 			return err
 		}
 		if len(records) == 0 {
 			rewardAddresses, err = chain.db.FetchUnexpiredStakingRank(nextBlockHeight, true)
 			if err != nil {
+				logging.CPrint(logging.ERROR, "NewBlockTemplate  FetchUnexpiredStakingRank",
+					logging.LogFormat{
+						"error":  err,
+						"height": nextBlockHeight})
 				return err
 			}
 		}

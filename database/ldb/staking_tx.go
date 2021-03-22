@@ -280,12 +280,6 @@ func (db *ChainDb) insertStakingTx(txSha *wire.Hash, index uint32, frozenPeriod 
 	return nil
 }
 
-// insertStakingPoolTx
-//
-func (db *ChainDb) insertStakingPoolTx(txSha *wire.Hash, index uint32, height uint64, rawScriptHash [sha256.Size]byte, value int64) error {
-	return nil
-}
-
 func (db *ChainDb) FetchUnSpentStakingPoolTxOutByHeight(startHeight uint64, endHeight uint64) ([]*database.TxOutReply, error) {
 	if endHeight < startHeight {
 		return nil, fmt.Errorf("error height startHeight:%d > endHeight:%d ", startHeight, endHeight)
