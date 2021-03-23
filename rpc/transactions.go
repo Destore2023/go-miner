@@ -182,7 +182,6 @@ func (s *Server) getRawTransaction(txId string) (*pb.TxRawResult, error) {
 	var mtx *wire.MsgTx
 	var chainHeight uint64
 	var blockHeader *wire.BlockHeader
-	var blockSha string
 
 	tx, err := s.txMemPool.FetchTransaction(txHash)
 	if err != nil {
@@ -198,11 +197,10 @@ func (s *Server) getRawTransaction(txId string) (*pb.TxRawResult, error) {
 		}
 
 		lastTx := txList[len(txList)-1]
-		blockSha = lastTx.BlockSha.String()
+		blockSha := lastTx.BlockSha
 		mtx = lastTx.Tx
-
 		// query block header
-		blockHeader, err = s.chain.GetHeaderByHash(lastTx.BlockSha)
+		blockHeader, err = s.chain.GetHeaderByHash(blockSha)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "failed to query the block header according to the block hash",
 				logging.LogFormat{
@@ -218,7 +216,7 @@ func (s *Server) getRawTransaction(txId string) (*pb.TxRawResult, error) {
 		mtx = tx.MsgTx()
 	}
 
-	rep, err := s.createTxRawResult(&config.ChainParams, mtx, txHash.String(), blockHeader, blockSha, blockHeader.Height, chainHeight, false)
+	rep, err := s.createTxRawResult(mtx, blockHeader, chainHeight, false)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "failed to query information of transaction according to the transaction hash",
 			logging.LogFormat{
@@ -491,16 +489,15 @@ func (s *Server) showCoinbaseOutputDetails(mtx *wire.MsgTx, chainParams *config.
 	return voutList, totalFees.IntValue(), nil
 }
 
-func (s *Server) createTxRawResult(chainParams *config.Params, mtx *wire.MsgTx, txHash string,
-	blockHeader *wire.BlockHeader, blockHash string, blockHeight uint64, chainHeight uint64, detail bool) (*pb.TxRawResult, error) {
-
-	voutList, totalOutValue, err := createVoutList(mtx, chainParams, nil)
+func (s *Server) createTxRawResult(mtx *wire.MsgTx, blockHeader *wire.BlockHeader, chainHeight uint64, detail bool) (*pb.TxRawResult, error) {
+	blockHeight := blockHeader.Height
+	vouts, totalOutValue, err := createVoutList(mtx, &config.ChainParams, nil)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "failed to create vout list", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	to := make([]*pb.ToAddressForTx, 0)
-	for _, voutR := range voutList {
+	for _, voutR := range vouts {
 		to = append(to, &pb.ToAddressForTx{
 			Address: voutR.ScriptPublicKey.Addresses,
 			Value:   voutR.Value,
@@ -510,18 +507,14 @@ func (s *Server) createTxRawResult(chainParams *config.Params, mtx *wire.MsgTx, 
 		mtx.Payload = make([]byte, 0)
 	}
 
-	vins, fromAddrs, inputs, totalInValue, err := s.createVinList(mtx, chainParams)
+	vins, fromAddrs, inputs, totalInValue, err := s.createVinList(mtx, &config.ChainParams)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "failed to create vin list", logging.LogFormat{"error": err})
 		return nil, err
 	}
 
-	txid, err := wire.NewHashFromStr(txHash)
-	if err != nil {
-		st := status.New(ErrAPIShaHashFromStr, ErrCode[ErrAPIShaHashFromStr])
-		return nil, st.Err()
-	}
-	code, err := s.getTxStatus(txid)
+	txid := mtx.TxHash()
+	code, err := s.getTxStatus(&txid)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "Failed to getTxStatus ", logging.LogFormat{"err": err, "txId": txid})
 		return nil, err
@@ -543,11 +536,11 @@ func (s *Server) createTxRawResult(chainParams *config.Params, mtx *wire.MsgTx, 
 	}
 
 	txReply := &pb.TxRawResult{
-		TxId:          txHash,
+		TxId:          txid.String(),
 		Version:       mtx.Version,
 		LockTime:      mtx.LockTime,
 		Vin:           vins,
-		Vout:          voutList,
+		Vout:          vouts,
 		FromAddress:   fromAddrs,
 		To:            to,
 		Inputs:        inputs,
@@ -564,8 +557,12 @@ func (s *Server) createTxRawResult(chainParams *config.Params, mtx *wire.MsgTx, 
 
 	if blockHeader != nil {
 		// This is not a typo, they are identical in skt as well.
-		txReply.Block = &pb.BlockInfoForTx{Height: blockHeight, BlockHash: blockHash, Timestamp: blockHeader.Timestamp.Unix()}
-		txReply.Confirmations = uint64(1 + chainHeight - blockHeight)
+		txReply.Block = &pb.BlockInfoForTx{
+			Height:    blockHeight,
+			BlockHash: blockHeader.BlockHash().String(),
+			Timestamp: blockHeader.Timestamp.Unix(),
+		}
+		txReply.Confirmations = 1 + chainHeight - blockHeight
 	}
 	if detail {
 		// Hex

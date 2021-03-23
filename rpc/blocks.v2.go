@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
-	"github.com/Sukhavati-Labs/go-miner/config"
 	"github.com/Sukhavati-Labs/go-miner/logging"
 	pb "github.com/Sukhavati-Labs/go-miner/rpc/proto"
 	"github.com/Sukhavati-Labs/go-miner/wire"
@@ -166,8 +165,7 @@ func (s *Server) marshalGetBlockResponse(block *chainutil.Block) (*pb.GetBlockRe
 	txns := block.Transactions()
 	rawTxns := make([]*pb.TxRawResult, len(txns))
 	for i, tx := range txns {
-		rawTxn, err := s.createTxRawResult(&config.ChainParams, tx.MsgTx(), tx.Hash().String(), blockHeader,
-			blockHash, idx, maxIdx, false)
+		rawTxn, err := s.createTxRawResult(tx.MsgTx(), blockHeader, maxIdx, false)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "failed to query transactions in the block", logging.LogFormat{
 				"height":   idx,
