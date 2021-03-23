@@ -63,7 +63,7 @@ func (s *Server) GetCoinbase(ctx context.Context, in *pb.GetCoinbaseRequest) (*p
 	}
 
 	return &pb.GetCoinbaseResponse{
-		Txid:     msgTx.TxHash().String(),
+		TxId:     msgTx.TxHash().String(),
 		Version:  msgTx.Version,
 		LockTime: msgTx.LockTime,
 		Block: &pb.BlockInfoForTx{
@@ -126,7 +126,7 @@ func (s *Server) GetStakingTxPoolInfo(ctx context.Context, in *empty.Empty) (*pb
 	return resp, nil
 }
 
-func (s *Server) GetStakingTxPoolAwardRecord(ctx context.Context, in *pb.GetStakingTxPoolAwardRecordRequest) (*pb.GetStakingTxPoolAwardRecordResponse, error) {
+func (s *Server) GetStakingRewardRecord(ctx context.Context, in *pb.GetStakingRewardRecordRequest) (*pb.GetStakingRewardRecordResponse, error) {
 	if in.Timestamp < 0 || in.Timestamp > 9999999999 {
 		return nil, errors.New("error Timestamp")
 	}
@@ -139,22 +139,22 @@ func (s *Server) GetStakingTxPoolAwardRecord(ctx context.Context, in *pb.GetStak
 		return nil, err
 	}
 	if len(awardRecords) == 0 {
-		return &pb.GetStakingTxPoolAwardRecordResponse{}, err
+		return &pb.GetStakingRewardRecordResponse{}, err
 	}
 
-	records := make([]*pb.StakingTxPoolAwardRecord, len(awardRecords))
+	records := make([]*pb.StakingRewardRecord, len(awardRecords))
 	for i, record := range awardRecords {
 		transaction, err := s.getRawTransaction(record.TxId.String())
 		if err != nil {
 			return nil, err
 		}
-		records[i] = &pb.StakingTxPoolAwardRecord{
+		records[i] = &pb.StakingRewardRecord{
 			TxId:        record.TxId.String(),
 			AwardedTime: record.AwardedTime,
 			Tx:          transaction,
 		}
 	}
-	resp := &pb.GetStakingTxPoolAwardRecordResponse{
+	resp := &pb.GetStakingRewardRecordResponse{
 		Records: records,
 	}
 	return resp, nil
@@ -218,7 +218,7 @@ func (s *Server) getRawTransaction(txId string) (*pb.TxRawResult, error) {
 		mtx = tx.MsgTx()
 	}
 
-	rep, err := s.createTxRawResult(&config.ChainParams, mtx, txHash.String(), blockHeader, blockSha, blockHeader.Height, chainHeight)
+	rep, err := s.createTxRawResult(&config.ChainParams, mtx, txHash.String(), blockHeader, blockSha, blockHeader.Height, chainHeight, false)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "failed to query information of transaction according to the transaction hash",
 			logging.LogFormat{
@@ -340,7 +340,7 @@ func (s *Server) marshalGetTxDescResponse(resp reflect.Value, txD *blockchain.Tx
 		txIns := txD.Tx.MsgTx().TxIn
 		depends := make([]*pb.TxOutPoint, 0, len(txIns))
 		for _, txIn := range txIns {
-			depends = append(depends, &pb.TxOutPoint{Txid: txIn.PreviousOutPoint.Hash.String(), Index: txIn.PreviousOutPoint.Index})
+			depends = append(depends, &pb.TxOutPoint{TxId: txIn.PreviousOutPoint.Hash.String(), Index: txIn.PreviousOutPoint.Index})
 		}
 		resp.FieldByName("CurrentPriority").SetFloat(priority)
 		resp.FieldByName("Depends").Set(reflect.ValueOf(depends))
@@ -357,7 +357,7 @@ func (s *Server) marshalGetOrphanTxDescResponse(resp reflect.Value, orphan *chai
 	txIns := orphan.MsgTx().TxIn
 	depends := make([]*pb.TxOutPoint, 0, len(txIns))
 	for _, txIn := range txIns {
-		depends = append(depends, &pb.TxOutPoint{Txid: txIn.PreviousOutPoint.Hash.String(), Index: txIn.PreviousOutPoint.Index})
+		depends = append(depends, &pb.TxOutPoint{TxId: txIn.PreviousOutPoint.Hash.String(), Index: txIn.PreviousOutPoint.Index})
 	}
 	resp.FieldByName("Depends").Set(reflect.ValueOf(depends))
 
@@ -370,7 +370,7 @@ func (s *Server) showCoinbaseInputDetails(mtx *wire.MsgTx) ([]*pb.Vin, int64, er
 	if blockchain.IsCoinBaseTx(mtx) {
 		txIn := mtx.TxIn[0]
 		vinTemp := &pb.Vin{
-			Txid:     txIn.PreviousOutPoint.Hash.String(),
+			TxId:     txIn.PreviousOutPoint.Hash.String(),
 			Sequence: txIn.Sequence,
 			Witness:  txWitnessToHex(txIn.Witness),
 		}
@@ -378,7 +378,7 @@ func (s *Server) showCoinbaseInputDetails(mtx *wire.MsgTx) ([]*pb.Vin, int64, er
 
 		for i, txIn := range mtx.TxIn[1:] {
 			vinTemp := &pb.Vin{
-				Txid:     txIn.PreviousOutPoint.Hash.String(),
+				TxId:     txIn.PreviousOutPoint.Hash.String(),
 				Vout:     txIn.PreviousOutPoint.Index,
 				Sequence: txIn.Sequence,
 			}
@@ -492,7 +492,7 @@ func (s *Server) showCoinbaseOutputDetails(mtx *wire.MsgTx, chainParams *config.
 }
 
 func (s *Server) createTxRawResult(chainParams *config.Params, mtx *wire.MsgTx, txHash string,
-	blockHeader *wire.BlockHeader, blockHash string, blockHeight uint64, chainHeight uint64) (*pb.TxRawResult, error) {
+	blockHeader *wire.BlockHeader, blockHash string, blockHeight uint64, chainHeight uint64, detail bool) (*pb.TxRawResult, error) {
 
 	voutList, totalOutValue, err := createVoutList(mtx, chainParams, nil)
 	if err != nil {
@@ -506,11 +506,6 @@ func (s *Server) createTxRawResult(chainParams *config.Params, mtx *wire.MsgTx, 
 			Value:   voutR.Value,
 		})
 	}
-
-	if blockchain.IsCoinBaseTx(mtx) {
-		totalOutValue = 0
-	}
-
 	if mtx.Payload == nil {
 		mtx.Payload = make([]byte, 0)
 	}
@@ -528,38 +523,57 @@ func (s *Server) createTxRawResult(chainParams *config.Params, mtx *wire.MsgTx, 
 	}
 	code, err := s.getTxStatus(txid)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "Failed to getTxStatus ", logging.LogFormat{"err": err, "txId": txid})
 		return nil, err
 	}
 	txType, err := s.getTxType(mtx)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "Failed to getTxType ", logging.LogFormat{"err": err, "txId": txid})
 		return nil, err
 	}
 
-	fee, err := AmountToString(totalInValue - totalOutValue)
-	if err != nil {
-		return nil, err
+	isCoinbase := blockchain.IsCoinBaseTx(mtx)
+	fee := "0"
+	if !isCoinbase {
+		fee, err = AmountToString(totalInValue - totalOutValue)
+		if err != nil {
+			logging.CPrint(logging.ERROR, "Failed to transfer amount to string", logging.LogFormat{"err": err})
+			return nil, err
+		}
 	}
 
 	txReply := &pb.TxRawResult{
-		Txid:        txHash,
-		Version:     mtx.Version,
-		LockTime:    mtx.LockTime,
-		Vin:         vins,
-		Vout:        voutList,
-		FromAddress: fromAddrs,
-		To:          to,
-		Inputs:      inputs,
-		Payload:     hex.EncodeToString(mtx.Payload),
-		TxSize:      uint32(mtx.PlainSize()),
-		Fee:         fee,
-		Status:      code,
-		Type:        txType,
+		TxId:          txHash,
+		Version:       mtx.Version,
+		LockTime:      mtx.LockTime,
+		Vin:           vins,
+		Vout:          voutList,
+		FromAddress:   fromAddrs,
+		To:            to,
+		Inputs:        inputs,
+		Payload:       hex.EncodeToString(mtx.Payload),
+		TxSize:        uint32(mtx.PlainSize()),
+		Fee:           fee,
+		Gas:           "0",
+		Status:        code,
+		Type:          txType,
+		Coinbase:      isCoinbase,
+		TotalInValue:  totalInValue,
+		TotalOutValue: totalInValue,
 	}
 
 	if blockHeader != nil {
 		// This is not a typo, they are identical in skt as well.
-		txReply.Block = &pb.BlockInfoForTx{Height: uint64(blockHeight), BlockHash: blockHash, Timestamp: blockHeader.Timestamp.Unix()}
+		txReply.Block = &pb.BlockInfoForTx{Height: blockHeight, BlockHash: blockHash, Timestamp: blockHeader.Timestamp.Unix()}
 		txReply.Confirmations = uint64(1 + chainHeight - blockHeight)
+	}
+	if detail {
+		// Hex
+		bs, err := mtx.Bytes(wire.Packet)
+		if err != nil {
+			return nil, err
+		}
+		txReply.Hex = hex.EncodeToString(bs)
 	}
 
 	return txReply, nil
@@ -695,7 +709,7 @@ func (s *Server) createVinList(mtx *wire.MsgTx, chainParams *config.Params) ([]*
 	if blockchain.IsCoinBaseTx(mtx) {
 		txIn := mtx.TxIn[0]
 		vinTemp := &pb.Vin{
-			Txid:     txIn.PreviousOutPoint.Hash.String(),
+			TxId:     txIn.PreviousOutPoint.Hash.String(),
 			Sequence: txIn.Sequence,
 			Witness:  txWitnessToHex(txIn.Witness),
 		}
@@ -703,7 +717,7 @@ func (s *Server) createVinList(mtx *wire.MsgTx, chainParams *config.Params) ([]*
 
 		for i, txIn := range mtx.TxIn[1:] {
 			vinTemp := &pb.Vin{
-				Txid:     txIn.PreviousOutPoint.Hash.String(),
+				TxId:     txIn.PreviousOutPoint.Hash.String(),
 				Vout:     txIn.PreviousOutPoint.Index,
 				Sequence: txIn.Sequence,
 			}
@@ -715,7 +729,7 @@ func (s *Server) createVinList(mtx *wire.MsgTx, chainParams *config.Params) ([]*
 
 	for i, txIn := range mtx.TxIn {
 		vinEntry := &pb.Vin{
-			Txid:     txIn.PreviousOutPoint.Hash.String(),
+			TxId:     txIn.PreviousOutPoint.Hash.String(),
 			Vout:     txIn.PreviousOutPoint.Index,
 			Sequence: txIn.Sequence,
 			Witness:  txWitnessToHex(txIn.Witness),
@@ -731,10 +745,10 @@ func (s *Server) createVinList(mtx *wire.MsgTx, chainParams *config.Params) ([]*
 		totalInValue = totalInValue + inValue
 		val, err := AmountToString(inValue)
 		if err != nil {
-			logging.CPrint(logging.ERROR, "")
+			logging.CPrint(logging.ERROR, "createVinList AmountToString")
 			return nil, nil, nil, -1, err
 		}
-		inputs = append(inputs, &pb.InputsInTx{Txid: txIn.PreviousOutPoint.Hash.String(), Index: txIn.PreviousOutPoint.Index, Address: addrs, Value: val})
+		inputs = append(inputs, &pb.InputsInTx{TxId: txIn.PreviousOutPoint.Hash.String(), Index: txIn.PreviousOutPoint.Index, Address: addrs, Value: val})
 	}
 
 	return vinList, addrs, inputs, totalInValue, nil

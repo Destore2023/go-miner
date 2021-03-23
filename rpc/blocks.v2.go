@@ -166,9 +166,8 @@ func (s *Server) marshalGetBlockResponse(block *chainutil.Block) (*pb.GetBlockRe
 	txns := block.Transactions()
 	rawTxns := make([]*pb.TxRawResult, len(txns))
 	for i, tx := range txns {
-		rawTxn, err := s.createTxRawResult(&config.ChainParams,
-			tx.MsgTx(), tx.Hash().String(), blockHeader,
-			blockHash, idx, maxIdx)
+		rawTxn, err := s.createTxRawResult(&config.ChainParams, tx.MsgTx(), tx.Hash().String(), blockHeader,
+			blockHash, idx, maxIdx, false)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "failed to query transactions in the block", logging.LogFormat{
 				"height":   idx,

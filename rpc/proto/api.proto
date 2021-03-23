@@ -118,9 +118,9 @@ service ApiService {
     };
   }
 
-  rpc GetStakingTxPoolAwardRecord (GetStakingTxPoolAwardRecordRequest) returns (GetStakingTxPoolAwardRecordResponse) {
+  rpc GetStakingRewardRecord (GetStakingRewardRecordRequest) returns (GetStakingRewardRecordResponse) {
     option (google.api.http) = {
-      post: "/v1/transactions/staking/award/record"
+      post: "/v1/transactions/staking/reward/record"
       body: "*"
     };
   }
@@ -370,10 +370,10 @@ message BlockInfoForTx {
 }
 
 message Vin {
-  string txid             = 1;
-  uint32 vout             = 2;
-  uint64 sequence         = 3;
-  repeated string witness = 4;
+  string tx_id             = 1;
+  uint32 vout              = 2;
+  uint64 sequence          = 3;
+  repeated string witness  = 4;
 }
 
 message ToAddressForTx {
@@ -382,10 +382,10 @@ message ToAddressForTx {
 }
 
 message InputsInTx {
-  string txid             = 1;
-  uint32 index            = 2;
-  repeated string address = 3;
-  string value            = 4;
+  string tx_id             = 1;
+  uint32 index             = 2;
+  repeated string address  = 3;
+  string value             = 4;
 }
 
 message ScriptPubKeyResult {
@@ -405,21 +405,26 @@ message Vout {
 }
 
 message TxRawResult {
-  string txid = 1;
-  uint32 version = 2;
-  uint64 lock_time = 3;
-  BlockInfoForTx block = 4;
-  repeated Vin vin = 5;
-  repeated Vout vout = 6;
-  repeated string from_address = 7;
-  repeated ToAddressForTx to   = 8;
-  repeated InputsInTx inputs = 9;
-  string payload = 10;
-  uint64 confirmations = 11;
-  uint32 tx_size = 12;
-  string fee = 13;
-  int32 status = 14;
-  int32 type = 15;
+  string                 hex   = 1;
+  string                 tx_id = 2;
+  uint32               version = 3;
+  uint64             lock_time = 4;
+  BlockInfoForTx         block = 5;
+  repeated             Vin vin = 6;
+  repeated           Vout vout = 7;
+  repeated string from_address = 8;
+  repeated ToAddressForTx   to = 9;
+  repeated InputsInTx   inputs = 10;
+  string               payload = 11;
+  uint64         confirmations = 12;
+  uint32               tx_size = 13;
+  string                   fee = 14;
+  string                   gas = 15;
+  int32                 status = 16;
+  int32                   type = 17;
+  bool                coinbase = 18;
+  int64         total_in_value = 19;
+  int64        total_out_value = 20;
 }
 
 message Header {
@@ -543,7 +548,7 @@ message GetBlockResponseV2 {
 }
 
 message TxOutPoint {
-  string txid = 1;
+  string tx_id = 1;
   uint32 index = 2;
 }
 
@@ -568,7 +573,7 @@ message GetRawTransactionResponse {
 }
 
 message GetTxDescVerbose0Response {
-  string txid = 1;
+  string tx_id = 1;
   uint32 plain_size = 2;
   uint32 packet_size = 3;
   int64  time = 4;
@@ -579,7 +584,7 @@ message GetTxDescVerbose0Response {
 }
 
 message GetTxDescVerbose1Response {
-  string txid = 1;
+  string tx_id = 1;
   uint32 plain_size = 2;
   uint32 packet_size = 3;
   int64 time = 4;
@@ -592,7 +597,7 @@ message GetTxDescVerbose1Response {
 }
 
 message GetOrphanTxDescResponse {
-  string txid = 1;
+  string tx_id = 1;
   uint32 plain_size = 2;
   uint32 packet_size = 3;
   repeated TxOutPoint depends = 4;
@@ -645,18 +650,18 @@ message GetStakingTxPoolInfoResponse {
   uint64 timestamp = 7;
 }
 
-message GetStakingTxPoolAwardRecordRequest {
+message GetStakingRewardRecordRequest {
   uint64 timestamp = 1;
 }
 
-message StakingTxPoolAwardRecord {
+message StakingRewardRecord {
   string tx_id        = 1;
   uint64 awarded_time = 2;
   TxRawResult  tx     = 3;
 }
 
-message GetStakingTxPoolAwardRecordResponse {
-  repeated StakingTxPoolAwardRecord records = 1;
+message GetStakingRewardRecordResponse {
+  repeated StakingRewardRecord records = 1;
 }
 
 message ConfigureSpaceKeeperRequest {
@@ -776,7 +781,7 @@ message CoinbaseVout {
 }
 
 message GetCoinbaseResponse {
-  string txid = 1;
+  string tx_id = 1;
   uint32 version = 2;
   uint64 lock_time = 3;
   BlockInfoForTx block = 4;
@@ -904,8 +909,8 @@ message GovernanceSenateConfig {
 }
 
 message GetGovernanceConfigResponse {
-  string txid = 1;
-  uint64 height = 2;
+  string tx_id      = 1;
+  uint64 height     = 2;
   int32 config_type = 3;
   oneof config {
       GovernanceSenateConfig senate_nodes_config = 4;

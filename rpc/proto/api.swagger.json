@@ -890,45 +890,6 @@
         ]
       }
     },
-    "/v1/transactions/staking/award/record": {
-      "post": {
-        "operationId": "ApiService_GetStakingTxPoolAwardRecord",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/rpcprotobufGetStakingTxPoolAwardRecordResponse"
-            }
-          },
-          "404": {
-            "description": "Not found.",
-            "schema": {
-              "type": "string",
-              "format": "string"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/rpcprotobufGetStakingTxPoolAwardRecordRequest"
-            }
-          }
-        ],
-        "tags": [
-          "ApiService"
-        ]
-      }
-    },
     "/v1/transactions/staking/pool/info": {
       "get": {
         "operationId": "ApiService_GetStakingTxPoolInfo",
@@ -953,6 +914,45 @@
             }
           }
         },
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/transactions/staking/reward/record": {
+      "post": {
+        "operationId": "ApiService_GetStakingRewardRecord",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetStakingRewardRecordResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetStakingRewardRecordRequest"
+            }
+          }
+        ],
         "tags": [
           "ApiService"
         ]
@@ -2150,7 +2150,7 @@
     "rpcprotobufGetCoinbaseResponse": {
       "type": "object",
       "properties": {
-        "txid": {
+        "tx_id": {
           "type": "string"
         },
         "version": {
@@ -2202,7 +2202,7 @@
     "rpcprotobufGetGovernanceConfigResponse": {
       "type": "object",
       "properties": {
-        "txid": {
+        "tx_id": {
           "type": "string"
         },
         "height": {
@@ -2254,7 +2254,7 @@
     "rpcprotobufGetOrphanTxDescResponse": {
       "type": "object",
       "properties": {
-        "txid": {
+        "tx_id": {
           "type": "string"
         },
         "plain_size": {
@@ -2273,7 +2273,7 @@
         }
       }
     },
-    "rpcprotobufGetStakingTxPoolAwardRecordRequest": {
+    "rpcprotobufGetStakingRewardRecordRequest": {
       "type": "object",
       "properties": {
         "timestamp": {
@@ -2282,13 +2282,13 @@
         }
       }
     },
-    "rpcprotobufGetStakingTxPoolAwardRecordResponse": {
+    "rpcprotobufGetStakingRewardRecordResponse": {
       "type": "object",
       "properties": {
         "records": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/rpcprotobufStakingTxPoolAwardRecord"
+            "$ref": "#/definitions/rpcprotobufStakingRewardRecord"
           }
         }
       }
@@ -2328,7 +2328,7 @@
     "rpcprotobufGetTxDescVerbose0Response": {
       "type": "object",
       "properties": {
-        "txid": {
+        "tx_id": {
           "type": "string"
         },
         "plain_size": {
@@ -2363,7 +2363,7 @@
     "rpcprotobufGetTxDescVerbose1Response": {
       "type": "object",
       "properties": {
-        "txid": {
+        "tx_id": {
           "type": "string"
         },
         "plain_size": {
@@ -2730,7 +2730,7 @@
     "rpcprotobufInputsInTx": {
       "type": "object",
       "properties": {
-        "txid": {
+        "tx_id": {
           "type": "string"
         },
         "index": {
@@ -2901,7 +2901,7 @@
         }
       }
     },
-    "rpcprotobufStakingTxPoolAwardRecord": {
+    "rpcprotobufStakingRewardRecord": {
       "type": "object",
       "properties": {
         "tx_id": {
@@ -2933,7 +2933,7 @@
     "rpcprotobufTxOutPoint": {
       "type": "object",
       "properties": {
-        "txid": {
+        "tx_id": {
           "type": "string"
         },
         "index": {
@@ -2945,7 +2945,10 @@
     "rpcprotobufTxRawResult": {
       "type": "object",
       "properties": {
-        "txid": {
+        "hex": {
+          "type": "string"
+        },
+        "tx_id": {
           "type": "string"
         },
         "version": {
@@ -3003,6 +3006,9 @@
         "fee": {
           "type": "string"
         },
+        "gas": {
+          "type": "string"
+        },
         "status": {
           "type": "integer",
           "format": "int32"
@@ -3010,6 +3016,17 @@
         "type": {
           "type": "integer",
           "format": "int32"
+        },
+        "coinbase": {
+          "type": "boolean"
+        },
+        "total_in_value": {
+          "type": "string",
+          "format": "int64"
+        },
+        "total_out_value": {
+          "type": "string",
+          "format": "int64"
         }
       }
     },
@@ -3035,7 +3052,7 @@
     "rpcprotobufVin": {
       "type": "object",
       "properties": {
-        "txid": {
+        "tx_id": {
           "type": "string"
         },
         "vout": {
