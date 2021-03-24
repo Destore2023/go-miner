@@ -3,10 +3,6 @@ package rpc
 import (
 	"encoding/hex"
 	"errors"
-	"reflect"
-	"sort"
-	"time"
-
 	"github.com/Sukhavati-Labs/go-miner/blockchain"
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/config"
@@ -18,6 +14,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/status"
+	"reflect"
+	"sort"
 )
 
 func (s *Server) GetCoinbase(ctx context.Context, in *pb.GetCoinbaseRequest) (*pb.GetCoinbaseResponse, error) {
@@ -132,7 +130,7 @@ func (s *Server) GetStakingRewardRecord(ctx context.Context, in *pb.GetStakingRe
 	}
 	queryTime := in.Timestamp
 	if queryTime == 0 {
-		queryTime = uint64(time.Now().Unix())
+		queryTime = uint64(s.chain.BestBlockNode().Timestamp.Unix())
 	}
 	awardRecords, err := s.db.FetchStakingAwardedRecordByTime(queryTime)
 	if err != nil {
