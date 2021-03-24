@@ -36,7 +36,7 @@ const (
 	defaultBaseSubsidy            uint64 = 128 * SukhavatiPerSkt
 	defaultMinHalvedSubsidy       uint64 = 6250000
 
-	DayPeriod              uint64 = 1920
+	DayPeriod              uint64 = 5760
 	defaultMinFrozenPeriod uint64 = 61440
 	defaultMinStakingValue uint64 = 2048 * SukhavatiPerSkt
 	// after 90 days  activation ,and dev only 1
