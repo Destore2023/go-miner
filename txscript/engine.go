@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
+	"github.com/Sukhavati-Labs/go-miner/consensus"
 	"math/big"
 
 	"github.com/Sukhavati-Labs/go-miner/logging"
@@ -567,7 +568,17 @@ func (vm *Engine) verifyWitnessProgram(witness [][]byte) error {
 
 		// binding tx
 		if len(vm.witnessExtProg[0].data) == WitnessV0PoCPubKeyHashDataSize {
-			// do nothing
+			buf := make([]byte, 8)
+			binary.LittleEndian.PutUint64(buf, consensus.BindingTxFrozenPeriod)
+			pkScript, err := NewScriptBuilder().AddData(buf).AddOp(OP_CHECKSEQUENCEVERIFY).AddOp(OP_DROP).Script()
+			if err != nil {
+				return err
+			}
+			pops, err := parseScript(pkScript)
+			if err != nil {
+				return err
+			}
+			vm.scripts = append(vm.scripts, pops)
 			break
 		}
 		// pool tx default error

@@ -7,6 +7,7 @@ package txscript
 import (
 	"encoding/binary"
 	"errors"
+	"github.com/Sukhavati-Labs/go-miner/consensus"
 
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/config"
@@ -137,8 +138,7 @@ func GetScriptInfo(script []byte) (ScriptClass, []parsedOpcode) {
 
 func GetParsedOpcode(pops []parsedOpcode, class ScriptClass) (uint64, [32]byte, error) {
 	var rsh [32]byte
-	height := make([]byte, 8)
-
+	var height uint64
 	switch class {
 	case StakingScriptHashTy:
 		scriptHash := pops[1].data
@@ -146,7 +146,7 @@ func GetParsedOpcode(pops []parsedOpcode, class ScriptClass) (uint64, [32]byte, 
 			return 0, rsh, ErrWitnessProgramLength
 		}
 		copy(rsh[:], scriptHash[:])
-		height = pops[2].data
+		height = binary.LittleEndian.Uint64(pops[2].data)
 	case WitnessV0ScriptHashTy:
 		scriptHash := pops[1].data
 		if len(scriptHash) != WitnessV0ScriptHashDataSize {
@@ -161,6 +161,7 @@ func GetParsedOpcode(pops []parsedOpcode, class ScriptClass) (uint64, [32]byte, 
 		if len(pops[2].data) != WitnessV0PoCPubKeyHashDataSize {
 			return 0, rsh, ErrWitnessExtProgramLength
 		}
+		height = consensus.BindingTxFrozenPeriod
 		copy(rsh[:], scriptHash[:])
 	case GovernanceScriptHashTy:
 		scriptHash := pops[1].data
@@ -172,13 +173,12 @@ func GetParsedOpcode(pops []parsedOpcode, class ScriptClass) (uint64, [32]byte, 
 		if len(scriptHash) != WitnessV0ScriptHashDataSize {
 			return 0, rsh, ErrWitnessProgramLength
 		}
-
 	default:
 		logging.CPrint(logging.ERROR, "invalid script hash type", logging.LogFormat{"class": class})
 		return 0, [32]byte{}, errors.New("invalid script hash type")
 	}
-	hgt := binary.LittleEndian.Uint64(height)
-	return hgt, rsh, nil
+
+	return height, rsh, nil
 }
 
 // expectedInputs returns the number of arguments required by a script.
