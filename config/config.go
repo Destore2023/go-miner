@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Sukhavati-Labs/go-miner/wire"
 	"io/ioutil"
 	"net"
 	"os"
@@ -16,7 +17,6 @@ import (
 	"github.com/Sukhavati-Labs/go-miner/consensus"
 	"github.com/Sukhavati-Labs/go-miner/poc"
 	"github.com/Sukhavati-Labs/go-miner/version"
-	"github.com/Sukhavati-Labs/go-miner/wire"
 	"github.com/btcsuite/go-flags"
 )
 

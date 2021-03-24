@@ -7,7 +7,6 @@ import (
 	"github.com/Sukhavati-Labs/go-miner/wire"
 
 	"github.com/Sukhavati-Labs/go-miner/config"
-	"github.com/Sukhavati-Labs/go-miner/poc"
 )
 
 const (
@@ -38,7 +37,7 @@ func CalcNextRequiredDifficulty(lastHeader *wire.BlockHeader, newBlockTime time.
 	ParentDiff := lastHeader.Target
 
 	// Calc max(1 - (block_slot - parent_slot) // 10, -199)
-	MaxOne := new(big.Int).SetInt64(max(1-(newBlockTime.Unix()/poc.PoCSlot-lastHeader.Timestamp.Unix()/poc.PoCSlot)/toleranceSlot, -199))
+	MaxOne := new(big.Int).SetInt64(max(1-(newBlockTime.Unix()-lastHeader.Timestamp.Unix())/toleranceSlot, -199))
 
 	// Calc adjusted part, parent_diff // 2048 * MaxOne
 	Adjusted := new(big.Int).Mul(new(big.Int).Div(ParentDiff, diffUnit), MaxOne)

@@ -18,8 +18,8 @@ import (
 const defaultTransactionAlloc = 2048
 
 // MaxBlockPayload is the maximum bytes a block message can be in bytes.
-// 2MB.
-const MaxBlockPayload = 2000000
+// 512KB.
+const MaxBlockPayload = 512000
 
 // maxTxPerBlock is the maximum number of transactions that could
 // possibly fit into a block.
