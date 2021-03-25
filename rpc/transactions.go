@@ -704,33 +704,43 @@ func (s *Server) createVinList(mtx *wire.MsgTx, chainParams *config.Params) ([]*
 	if blockchain.IsCoinBaseTx(mtx) {
 		txIn := mtx.TxIn[0]
 		vinTemp := &pb.Vin{
-			TxId:     txIn.PreviousOutPoint.Hash.String(),
-			Sequence: txIn.Sequence,
-			Witness:  txWitnessToHex(txIn.Witness),
+			TxId:         txIn.PreviousOutPoint.Hash.String(),
+			Sequence:     txIn.Sequence,
+			Witness:      txWitnessToHex(txIn.Witness),
+			SequenceLock: &pb.SequenceLock{Seconds: 0, BlockHeight: 0},
 		}
 		vinList[0] = vinTemp
 
 		for i, txIn := range mtx.TxIn[1:] {
 			vinTemp := &pb.Vin{
-				TxId:     txIn.PreviousOutPoint.Hash.String(),
-				Vout:     txIn.PreviousOutPoint.Index,
-				Sequence: txIn.Sequence,
+				TxId:         txIn.PreviousOutPoint.Hash.String(),
+				Vout:         txIn.PreviousOutPoint.Index,
+				Sequence:     txIn.Sequence,
+				SequenceLock: &pb.SequenceLock{Seconds: 0, BlockHeight: 0},
 			}
 			vinList[i+1] = vinTemp
 		}
 
 		return vinList, addrs, inputs, totalInValue, nil
 	}
-
+	tx := chainutil.NewTx(mtx)
+	txStore := s.chain.GetTxPool().FetchInputTransactions(tx, false)
+	sequenceLock, err := s.chain.CalcSequenceLock(tx, txStore)
+	if err != nil {
+		return nil, nil, nil, 0, err
+	}
 	for i, txIn := range mtx.TxIn {
 		vinEntry := &pb.Vin{
 			TxId:     txIn.PreviousOutPoint.Hash.String(),
 			Vout:     txIn.PreviousOutPoint.Index,
 			Sequence: txIn.Sequence,
 			Witness:  txWitnessToHex(txIn.Witness),
+			SequenceLock: &pb.SequenceLock{
+				Seconds:     sequenceLock.Seconds,
+				BlockHeight: sequenceLock.BlockHeight,
+			},
 		}
 		vinList[i] = vinEntry
-
 		addrs, inValue, err := s.getTxInAddr(&txIn.PreviousOutPoint.Hash, txIn.PreviousOutPoint.Index, chainParams)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "No information available about transaction in db", logging.LogFormat{"err": err.Error(), "txid": txIn.PreviousOutPoint.Hash.String()})

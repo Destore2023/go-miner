@@ -177,7 +177,6 @@ func GetParsedOpcode(pops []parsedOpcode, class ScriptClass) (uint64, [32]byte, 
 		logging.CPrint(logging.ERROR, "invalid script hash type", logging.LogFormat{"class": class})
 		return 0, [32]byte{}, errors.New("invalid script hash type")
 	}
-
 	return height, rsh, nil
 }
 

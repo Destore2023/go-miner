@@ -369,11 +369,17 @@ message BlockInfoForTx {
   int64 timestamp   = 3;
 }
 
+message SequenceLock {
+  int64   seconds     = 1;
+  uint64 block_height = 2;
+}
+
 message Vin {
-  string tx_id             = 1;
-  uint32 vout              = 2;
-  uint64 sequence          = 3;
-  repeated string witness  = 4;
+  string tx_id               = 1;
+  uint32 vout                = 2;
+  uint64 sequence            = 3;
+  repeated string witness    = 4;
+  SequenceLock sequence_lock = 5;
 }
 
 message ToAddressForTx {

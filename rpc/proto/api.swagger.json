@@ -2901,6 +2901,19 @@
         }
       }
     },
+    "rpcprotobufSequenceLock": {
+      "type": "object",
+      "properties": {
+        "seconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "block_height": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
     "rpcprotobufStakingRewardRecord": {
       "type": "object",
       "properties": {
@@ -3068,6 +3081,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "sequence_lock": {
+          "$ref": "#/definitions/rpcprotobufSequenceLock"
         }
       }
     },
