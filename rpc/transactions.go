@@ -158,7 +158,7 @@ func (s *Server) GetStakingRewardRecord(ctx context.Context, in *pb.GetStakingRe
 }
 
 func (s *Server) getRawTransaction(txId string) (*pb.TxRawResult, error) {
-	logging.CPrint(logging.INFO, "rpc: GetRawTransaction", logging.LogFormat{"txid": txId})
+	logging.CPrint(logging.INFO, "rpc: GetRawTransaction", logging.LogFormat{"txId": txId})
 	err := checkTransactionIdLen(txId)
 	if err != nil {
 		return nil, err
@@ -314,7 +314,7 @@ func (s *Server) marshalGetTxDescResponse(resp reflect.Value, txD *blockchain.Tx
 	totalInputAge, _ := txD.TotalInputAge()
 
 	// write common parts of GetTxDescV0Response, GetTxDescV1Response
-	resp.FieldByName("Txid").SetString(txD.Tx.Hash().String())
+	resp.FieldByName("TxId").SetString(txD.Tx.Hash().String())
 	resp.FieldByName("PlainSize").SetUint(uint64(txD.Tx.PlainSize()))
 	resp.FieldByName("PacketSize").SetUint(uint64(txD.Tx.PacketSize()))
 	resp.FieldByName("Time").SetInt(txD.Added.UnixNano())
@@ -329,7 +329,7 @@ func (s *Server) marshalGetTxDescResponse(resp reflect.Value, txD *blockchain.Tx
 		txStore := s.chain.FetchTransactionStore(txD.Tx, false)
 		priority, err := txD.CurrentPriority(txStore, s.chain.BestBlockHeight())
 		if err != nil {
-			logging.CPrint(logging.ERROR, "error on rpc get txD current priority", logging.LogFormat{"err": err, "txid": txD.Tx.Hash()})
+			logging.CPrint(logging.ERROR, "error on rpc get txD current priority", logging.LogFormat{"err": err, "txId": txD.Tx.Hash()})
 			return err
 		}
 		txIns := txD.Tx.MsgTx().TxIn
@@ -346,7 +346,7 @@ func (s *Server) marshalGetTxDescResponse(resp reflect.Value, txD *blockchain.Tx
 
 func (s *Server) marshalGetOrphanTxDescResponse(resp reflect.Value, orphan *chainutil.Tx) error {
 	resp = reflect.Indirect(resp)
-	resp.FieldByName("Txid").SetString(orphan.Hash().String())
+	resp.FieldByName("TxId").SetString(orphan.Hash().String())
 	resp.FieldByName("PlainSize").SetUint(uint64(orphan.PlainSize()))
 	resp.FieldByName("PacketSize").SetUint(uint64(orphan.PacketSize()))
 	txIns := orphan.MsgTx().TxIn
@@ -510,15 +510,15 @@ func (s *Server) createTxRawResult(mtx *wire.MsgTx, blockHeader *wire.BlockHeade
 		return nil, err
 	}
 
-	txid := mtx.TxHash()
-	code, confirmations, err := s.getTxStatus(&txid)
+	txId := mtx.TxHash()
+	code, confirmations, err := s.getTxStatus(&txId)
 	if err != nil {
-		logging.CPrint(logging.ERROR, "Failed to getTxStatus ", logging.LogFormat{"err": err, "txId": txid})
+		logging.CPrint(logging.ERROR, "Failed to getTxStatus ", logging.LogFormat{"err": err, "txId": txId})
 		return nil, err
 	}
 	txType, err := s.getTxType(mtx)
 	if err != nil {
-		logging.CPrint(logging.ERROR, "Failed to getTxType ", logging.LogFormat{"err": err, "txId": txid})
+		logging.CPrint(logging.ERROR, "Failed to getTxType ", logging.LogFormat{"err": err, "txId": txId})
 		return nil, err
 	}
 
@@ -533,7 +533,7 @@ func (s *Server) createTxRawResult(mtx *wire.MsgTx, blockHeader *wire.BlockHeade
 	}
 
 	txReply := &pb.TxRawResult{
-		TxId:          txid.String(),
+		TxId:          txId.String(),
 		Version:       mtx.Version,
 		LockTime:      mtx.LockTime,
 		Vin:           vins,
@@ -582,14 +582,14 @@ func (s *Server) createTxRawResult(mtx *wire.MsgTx, blockHeader *wire.BlockHeade
 //   ----------------------------------------------------
 func (s *Server) getTxType(tx *wire.MsgTx) (int32, error) {
 	if blockchain.IsCoinBaseTx(tx) {
-		return 4, nil
+		return CoinbaseTX, nil
 	}
 	for _, txOut := range tx.TxOut {
 		if txscript.IsPayToStakingScriptHash(txOut.PkScript) {
-			return 1, nil
+			return StakingTX, nil
 		}
 		if txscript.IsPayToBindingScriptHash(txOut.PkScript) {
-			return 2, nil
+			return BindingTX, nil
 		}
 	}
 	for _, txIn := range tx.TxIn {
@@ -597,18 +597,21 @@ func (s *Server) getTxType(tx *wire.MsgTx) (int32, error) {
 		index := txIn.PreviousOutPoint.Index
 		tx, err := s.chain.GetTransaction(&hash)
 		if err != nil {
-			logging.CPrint(logging.ERROR, "No information available about transaction in db", logging.LogFormat{"err": err, "txid": hash.String()})
+			logging.CPrint(logging.ERROR, "No information available about transaction in db", logging.LogFormat{"err": err, "txId": hash.String()})
 			st := status.New(ErrAPINoTxInfo, ErrCode[ErrAPINoTxInfo])
-			return -1, st.Err()
+			return UndeclaredTX, st.Err()
 		}
 		if txscript.IsPayToStakingScriptHash(tx.TxOut[index].PkScript) {
-			return 1, nil
+			return StakingTX, nil
 		}
 		if txscript.IsPayToBindingScriptHash(tx.TxOut[index].PkScript) {
-			return 2, nil
+			return BindingTX, nil
+		}
+		if txscript.IsPayToPoolingScriptHash(tx.TxOut[index].PkScript) {
+			return PoolingTX, nil
 		}
 	}
-	return 3, nil
+	return OrdinaryTX, nil
 }
 
 func createVoutList(mtx *wire.MsgTx, chainParams *config.Params, filterAddrMap map[string]struct{}) ([]*pb.Vout, int64, error) {
@@ -743,7 +746,7 @@ func (s *Server) createVinList(mtx *wire.MsgTx, chainParams *config.Params) ([]*
 		vinList[i] = vinEntry
 		addrs, inValue, err := s.getTxInAddr(&txIn.PreviousOutPoint.Hash, txIn.PreviousOutPoint.Index, chainParams)
 		if err != nil {
-			logging.CPrint(logging.ERROR, "No information available about transaction in db", logging.LogFormat{"err": err.Error(), "txid": txIn.PreviousOutPoint.Hash.String()})
+			logging.CPrint(logging.ERROR, "No information available about transaction in db", logging.LogFormat{"err": err.Error(), "txId": txIn.PreviousOutPoint.Hash.String()})
 			st := status.New(ErrAPINoTxInfo, ErrCode[ErrAPINoTxInfo])
 			return nil, nil, nil, -1, st.Err()
 		}
@@ -759,15 +762,15 @@ func (s *Server) createVinList(mtx *wire.MsgTx, chainParams *config.Params) ([]*
 	return vinList, addrs, inputs, totalInValue, nil
 }
 
-func (s *Server) getTxInAddr(txid *wire.Hash, index uint32, chainParams *config.Params) ([]string, int64, error) {
+func (s *Server) getTxInAddr(txId *wire.Hash, index uint32, chainParams *config.Params) ([]string, int64, error) {
 	addrStrs := make([]string, 0)
 	var inValue int64
-	tx, err := s.txMemPool.FetchTransaction(txid)
+	tx, err := s.txMemPool.FetchTransaction(txId)
 	var inmtx *wire.MsgTx
 	if err != nil {
-		txReply, err := s.chain.GetTransactionInDB(txid)
+		txReply, err := s.chain.GetTransactionInDB(txId)
 		if err != nil || len(txReply) == 0 {
-			logging.CPrint(logging.ERROR, "No information available about transaction in db", logging.LogFormat{"err": err, "txid": txid.String()})
+			logging.CPrint(logging.ERROR, "No information available about transaction in db", logging.LogFormat{"err": err, "txId": txId.String()})
 			st := status.New(ErrAPINoTxInfo, ErrCode[ErrAPINoTxInfo])
 			return addrStrs, inValue, st.Err()
 		}

@@ -10,6 +10,15 @@ const (
 	txStatusUndefined        = math.MaxInt32
 )
 
+const (
+	UndeclaredTX int32 = -1
+	StakingTX    int32 = 1
+	BindingTX    int32 = 2
+	OrdinaryTX   int32 = 3
+	CoinbaseTX   int32 = 4
+	PoolingTX    int32 = 5
+)
+
 // staking tx status
 const (
 	stakingStatusPending     uint32 = 0
