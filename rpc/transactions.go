@@ -50,11 +50,10 @@ func (s *Server) GetCoinbase(ctx context.Context, in *pb.GetCoinbaseRequest) (*p
 	confirmations := currentHeight - block.Height()
 	var status int32
 	if confirmations >= consensus.CoinbaseMaturity {
-		status = 4
+		status = txStatusConfirmed
 	} else {
-		status = 3
+		status = txStatusConfirming
 	}
-
 	feesStr, err := AmountToString(totalFees)
 	if err != nil {
 		return nil, err
@@ -512,7 +511,7 @@ func (s *Server) createTxRawResult(mtx *wire.MsgTx, blockHeader *wire.BlockHeade
 	}
 
 	txid := mtx.TxHash()
-	code, err := s.getTxStatus(&txid)
+	code, confirmations, err := s.getTxStatus(&txid)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "Failed to getTxStatus ", logging.LogFormat{"err": err, "txId": txid})
 		return nil, err
@@ -551,6 +550,7 @@ func (s *Server) createTxRawResult(mtx *wire.MsgTx, blockHeader *wire.BlockHeade
 		Coinbase:      isCoinbase,
 		TotalInValue:  totalInValue,
 		TotalOutValue: totalInValue,
+		Confirmations: confirmations,
 	}
 
 	if blockHeader != nil {
@@ -786,49 +786,39 @@ func (s *Server) getTxInAddr(txid *wire.Hash, index uint32, chainParams *config.
 	return addrStrs, inValue, nil
 }
 
-func (s *Server) getTxStatus(txHash *wire.Hash) (code int32, err error) {
+func (s *Server) getTxStatus(txHash *wire.Hash) (code int32, confirmations uint64, err error) {
 	txList, err := s.chain.GetTransactionInDB(txHash)
 	if err != nil || len(txList) == 0 {
 		_, err := s.txMemPool.FetchTransaction(txHash)
 		if err != nil {
-			code = -1
-			//stats = "failed"
-			return code, nil
+			code = txStatusMissing
+			return code, 0, nil
 		} else {
-			code = 2
+			code = txStatusPacking
 			//stats = "packing"
-			return code, nil
+			return code, 0, nil
 		}
 	}
 
 	lastTx := txList[len(txList)-1]
 	txHeight := lastTx.Height
 	bestHeight := s.chain.BestBlockHeight()
-	confirmations := 1 + bestHeight - txHeight
-	if confirmations < 0 {
-		code = -1
-		//stats = "failed"
-		return code, nil
-	}
+	confirmations = 1 + bestHeight - txHeight
 	if blockchain.IsCoinBaseTx(lastTx.Tx) {
 		if confirmations >= consensus.CoinbaseMaturity {
-			code = 4
-			//stats = "succeed"
-			return code, nil
+			code = txStatusConfirmed
+			return code, confirmations, nil
 		} else {
-			code = 3
-			//stats = "confirming"
-			return code, nil
+			code = txStatusConfirming
+			return code, confirmations, nil
 		}
 	}
 	if confirmations >= consensus.TransactionMaturity {
-		code = 4
-		//stats = "succeed"
-		return code, nil
+		code = txStatusConfirmed
+		return code, confirmations, nil
 	} else {
-		code = 3
-		//stats = "confirming"
-		return code, nil
+		code = txStatusConfirming
+		return code, confirmations, nil
 	}
 }
 

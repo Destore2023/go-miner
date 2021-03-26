@@ -647,13 +647,13 @@ message GetTxPoolVerbose1Response {
 }
 
 message GetStakingTxPoolInfoResponse {
-  uint64 total = 1;
-  uint64 maturity_value = 2;
+  uint64            total = 1;
+  uint64   maturity_value = 2;
   uint64 immaturity_value = 3;
-  uint64 award_value = 4;
-  uint64 height = 5;
-  string block_hash = 6;
-  uint64 timestamp = 7;
+  uint64      award_value = 4;
+  uint64           height = 5;
+  string       block_hash = 6;
+  uint64        timestamp = 7;
 }
 
 message GetStakingRewardRecordRequest {
@@ -678,12 +678,12 @@ message ConfigureSpaceKeeperRequest {
 }
 
 message WorkSpace {
-  int64  ordinal = 1;
+  int64     ordinal = 1;
   string public_key = 2;
-  string address = 3;
+  string    address = 3;
   uint32 bit_length = 4;
-  string state = 5;
-  double progress = 6;
+  string      state = 5;
+  double   progress = 6;
 }
 
 message WorkSpaceRequest {
@@ -691,27 +691,27 @@ message WorkSpaceRequest {
 }
 
 message WorkSpaceResponse {
-  WorkSpace space = 1;
-  uint32 error_code = 2;
+  WorkSpace      space = 1;
+  uint32    error_code = 2;
   string error_message = 3;
 }
 
 message WorkSpacesResponse {
-  uint32 space_count = 1;
+  uint32        space_count = 1;
   repeated WorkSpace spaces = 2;
-  uint32 error_code = 3;
-  string error_message = 4;
+  uint32         error_code = 3;
+  string      error_message = 4;
 }
 
 message ActOnSpaceKeeperResponse {
-  uint32 error_code = 1;
+  uint32    error_code = 1;
   string error_message = 2;
 }
 
 message ConfigureSpaceKeeperByDirsRequest {
   message Allocation {
     string directory = 1;
-    uint64 capacity = 2;
+    uint64  capacity = 2;
   }
   repeated Allocation allocations = 1;
   repeated string payout_addresses = 2;
@@ -722,49 +722,49 @@ message ConfigureSpaceKeeperByDirsRequest {
 
 message WorkSpacesByDirsResponse {
   message Allocation {
-    string directory = 1;
-    string capacity = 2;
-    uint32 space_count = 3;
+    string          directory = 1;
+    string           capacity = 2;
+    uint32        space_count = 3;
     repeated WorkSpace spaces = 4;
   }
-  uint32 directory_count = 1;
+  uint32          directory_count = 1;
   repeated Allocation allocations = 2;
-  uint32 error_code = 3;
-  string error_message = 4;
+  uint32               error_code = 3;
+  string            error_message = 4;
 }
 
 message GetClientStatusResponse{
   message peerCountInfo {
-    uint32 total = 1;
-    uint32 outbound = 2;
-    uint32 inbound = 3;
+    uint32     total = 1;
+    uint32  outbound = 2;
+    uint32   inbound = 3;
   }
   message peerInfo {
-    string id = 1;
-    string address = 2;
+    string        id = 1;
+    string   address = 2;
     string direction = 3;
   }
   message peerList {
     repeated peerInfo outbound = 1;
-    repeated peerInfo inbound = 2;
-    repeated peerInfo other = 3;
+    repeated peerInfo  inbound = 2;
+    repeated peerInfo    other = 3;
   }
-  string version = 1;
-  bool peer_listening = 2;
-  bool syncing = 3;
-  bool mining = 4;
-  bool space_keeping = 5;
-  string chain_id = 6;
+  string           version = 1;
+  bool      peer_listening = 2;
+  bool             syncing = 3;
+  bool              mining = 4;
+  bool       space_keeping = 5;
+  string          chain_id = 6;
   uint64 local_best_height = 7;
   uint64 known_best_height = 8;
-  string p2p_id = 9;
+  string            p2p_id = 9;
   peerCountInfo peer_count = 10;
-  peerList peers = 11;
+  peerList           peers = 11;
 }
 
 message QuitClientResponse{
   uint32 error_code = 1;
-  string msg = 2;
+  string        msg = 2;
 }
 
 message GetBlockHeightByPubKeyRequest {
@@ -780,35 +780,35 @@ message GetCoinbaseRequest {
 }
 
 message CoinbaseVout {
-  string value = 1;
-  uint32 n = 2;
+  string                         value = 1;
+  uint32                             n = 2;
   ScriptPubKeyResult script_public_key = 3;
-  string type = 4;
+  string                          type = 4;
 }
 
 message GetCoinbaseResponse {
-  string tx_id = 1;
-  uint32 version = 2;
-  uint64 lock_time = 3;
-  BlockInfoForTx block = 4;
-  string binding_value = 5;
-  repeated Vin vin = 6;
+  string               tx_id = 1;
+  uint32             version = 2;
+  uint64           lock_time = 3;
+  BlockInfoForTx       block = 4;
+  string       binding_value = 5;
+  repeated Vin           vin = 6;
   repeated CoinbaseVout vout = 7;
-  string payload = 8;
-  uint64 confirmations = 9;
-  uint32 tx_size = 10;
-  string total_fees = 11;
-  int32 status = 12;
+  string             payload = 8;
+  uint64       confirmations = 9;
+  uint32             tx_size = 10;
+  string          total_fees = 11;
+  int32               status = 12;
 }
 
 message ExportKeystoreRequest {
-  string wallet_id = 1;
-  string passphrase = 2;
+  string   wallet_id = 1;
+  string  passphrase = 2;
   string export_path = 3;
 }
 
 message ExportKeystoreResponse {
-  string keystore = 1;
+  string         keystore = 1;
   AddrManager addrManager = 2;
 }
 
@@ -820,20 +820,20 @@ message ExportKeystoreByDirRequest {
 }
 
 message ExportKeystoreByDirResponse {
-  string         keystores = 1;
+  string                  keystores = 1;
   repeated AddrManager addrManagers = 2;
 }
 
 message ImportKeystoreRequest {
-  string import_path = 1;
+  string    import_path = 1;
   string old_passphrase = 2;
   string new_passphrase = 3;
 }
 
 message ImportKeystoreResponse {
-  bool   status          = 1;
-  string wallet_id       = 2;
-  string remark          = 3;
+  bool    status          = 1;
+  string  wallet_id       = 2;
+  string  remark          = 3;
   AddrManager addrManager = 4;
 }
 
@@ -852,7 +852,7 @@ message ImportKeystoreByDirResponse {
 
 message WalletSummary {
   string wallet_id = 1;
-  string remark = 2; // optional
+  string    remark = 2; // optional
 }
 
 message GetKeystoreDetailRequest {
@@ -861,7 +861,7 @@ message GetKeystoreDetailRequest {
 }
 
 message GetKeystoreDetailResponse {
-  string wallet_id = 1;
+  string  wallet_id = 1;
   PocWallet wallet  = 2;
 }
 

@@ -8,10 +8,11 @@ const (
 	DefaultBlockPrioritySize = 50000 // bytes  40MB
 
 	// staking tx
-	MaxStakingRewardNum                = 100
-	defaultStakingTxRewardStart uint64 = 24
-	defaultCoinbaseMaturity     uint64 = 10
-	defaultTransactionMaturity  uint64 = 1
+	MaxStakingRewardNum                  = 100
+	defaultStakingTxRewardStart   uint64 = 24
+	defaultGovernanceTxTakeEffect uint64 = 24
+	defaultCoinbaseMaturity       uint64 = 10
+	defaultTransactionMaturity    uint64 = 1
 
 	// +-----------+--------------------+
 	// | mining    | 381945005          |
