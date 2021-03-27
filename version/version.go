@@ -21,6 +21,28 @@ type Version struct {
 	versionString string
 }
 
+func (v Version) IsEqual(other *Version) bool {
+	if v.majorVersion == other.majorVersion && v.minorVersion == other.minorVersion && v.patchVersion == other.patchVersion {
+		return true
+	}
+	return false
+}
+
+// Cmp  if v < other  --> -1
+//         v == other --> 0
+//         v > other  --> +1
+func (v Version) Cmp(other *Version) int {
+	diff := int(v.majorVersion) - int(other.majorVersion)
+	if diff != 0 {
+		return diff
+	}
+	diff = int(v.minorVersion) - int(other.minorVersion)
+	if diff != 0 {
+		return diff
+	}
+	return int(v.patchVersion) - int(other.majorVersion)
+}
+
 // Format version to "<majorVersion>.<minorVersion>.<patchVersion>[+<gitCommit>]",
 // like "1.0.0", or "1.0.0+1a2b3c4d".
 func (v Version) String() string {
