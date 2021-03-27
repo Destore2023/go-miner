@@ -133,7 +133,7 @@ func ParseConfig() (*Config, []string, error) {
 	appName := "skt-client"
 	usageMessage := fmt.Sprintf("Use %s -h to show usage", appName)
 	if preCfg.ShowVersion {
-		fmt.Println(appName, "version", version.GetVersion())
+		fmt.Println(appName, "version", version.GetVersion().String())
 		os.Exit(0)
 	}
 

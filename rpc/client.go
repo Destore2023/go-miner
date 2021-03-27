@@ -13,7 +13,7 @@ func (s *Server) GetClientStatus(ctx context.Context, in *empty.Empty) (*pb.GetC
 	logging.CPrint(logging.INFO, "a request is received to query the status of client")
 
 	resp := &pb.GetClientStatusResponse{
-		Version:         version.GetVersion(),
+		Version:         version.GetVersion().String(),
 		PeerListening:   s.syncManager.Switch().IsListening(),
 		Syncing:         !s.syncManager.IsCaughtUp(),
 		Mining:          s.pocMiner.Started(),

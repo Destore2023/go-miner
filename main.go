@@ -59,7 +59,7 @@ func minerMain(serverChan chan<- *server) error {
 	logging.Init(cfg.Log.LogDir, config.DefaultLoggingFilename, cfg.Log.LogLevel, 1, cfg.Log.DisableCprint)
 
 	// Show version at startup.
-	logging.CPrint(logging.INFO, fmt.Sprintf("version %s", version.GetVersion()))
+	logging.CPrint(logging.INFO, fmt.Sprintf("version %s", version.GetVersion().String()))
 
 	// Init Miner Keystore
 	//if cfg.Init {

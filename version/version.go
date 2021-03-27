@@ -9,11 +9,12 @@ const (
 )
 
 var (
-	gitCommit string
-	ver       *version
+	gitCommit     string
+	ver           *Version
+	compatibleVer *Version
 )
 
-type version struct {
+type Version struct {
 	majorVersion  uint32
 	minorVersion  uint32
 	patchVersion  uint32
@@ -22,7 +23,7 @@ type version struct {
 
 // Format version to "<majorVersion>.<minorVersion>.<patchVersion>[+<gitCommit>]",
 // like "1.0.0", or "1.0.0+1a2b3c4d".
-func (v version) String() string {
+func (v Version) String() string {
 	if v.versionString != "" {
 		return v.versionString
 	}
@@ -34,14 +35,19 @@ func (v version) String() string {
 	return v.versionString
 }
 
-func GetVersion() string {
-	return ver.String()
+func GetVersion() *Version {
+	return ver
+}
+
+func GetCompatibleVersion() *Version {
+	return compatibleVer
 }
 
 func init() {
-	ver = &version{
+	ver = &Version{
 		majorVersion: majorVersion,
 		minorVersion: minorVersion,
 		patchVersion: patchVersion,
 	}
+	compatibleVer = ver
 }

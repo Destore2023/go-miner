@@ -140,7 +140,7 @@ func NewSwitch(conf *config.Config) (*Switch, error) {
 		PubKey:  pubKey,
 		Moniker: config.Moniker,
 		Network: config.ChainTag,
-		Version: version.GetVersion(),
+		Version: version.GetVersion().String(),
 		Other:   []string{strconv.FormatUint(uint64(consensus.DefaultServices), 10)},
 	}
 

@@ -34,7 +34,7 @@ var elog *eventlog.Log
 // been started to the Windows event log.
 func logServiceStartOfDay(srvr *server) {
 	var message string
-	message += fmt.Sprintf("Version %s\n", version.GetVersion())
+	message += fmt.Sprintf("Version %s\n", version.GetVersion().String())
 	message += fmt.Sprintf("Configuration directory: %s\n", config.AppHomeDir)
 	message += fmt.Sprintf("Configuration file: %s\n", cfg.ConfigFile)
 	message += fmt.Sprintf("Data directory: %s\n", cfg.Db.DataDir)
