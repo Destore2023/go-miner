@@ -53,6 +53,7 @@ type Blockchain struct {
 	proposalPool   *ProposalPool         // pool of proposals
 	addrIndexer    *AddrIndexer          // address indexer
 	dmd            *DoubleMiningDetector // double mining detector
+	govern         *Govern
 	processBlockCh chan *processBlockMsg
 	listeners      map[Listener]struct{}
 

@@ -560,7 +560,7 @@ func NewAddressStakingScriptHash(witnessProg []byte, net *config.Params) (*Addre
 
 //
 func NewAddressPoolScriptHash(witnessProg []byte, net *config.Params) (*AddressWitnessScriptHash, error) {
-	return newAddressWitnessScriptHash("pool", 1, witnessProg)
+	return newAddressWitnessScriptHash("pool", 0, witnessProg)
 }
 
 // newAddressWitnessScriptHash is an internal helper function to create an

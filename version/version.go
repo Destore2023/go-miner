@@ -9,9 +9,8 @@ const (
 )
 
 var (
-	gitCommit     string
-	ver           *Version
-	compatibleVer *Version
+	gitCommit string
+	ver       *Version
 )
 
 type Version struct {
@@ -57,12 +56,16 @@ func (v Version) String() string {
 	return v.versionString
 }
 
-func GetVersion() *Version {
-	return ver
+func (v Version) Clone() *Version {
+	return &Version{
+		majorVersion: v.majorVersion,
+		minorVersion: v.minorVersion,
+		patchVersion: v.patchVersion,
+	}
 }
 
-func GetCompatibleVersion() *Version {
-	return compatibleVer
+func GetVersion() *Version {
+	return ver
 }
 
 func init() {
@@ -71,5 +74,4 @@ func init() {
 		minorVersion: minorVersion,
 		patchVersion: patchVersion,
 	}
-	compatibleVer = ver
 }

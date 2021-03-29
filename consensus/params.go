@@ -56,6 +56,7 @@ const (
 	CoinbaseSubsidyAttenuation            = 94162
 	CoinbaseSubsidyAttenuationDenominator = 100000
 	StakingPoolAddress                    = "pool1qpggu42p34335mwrutv88t7fqh6sp5eqlawglmx457dhn0w7ks2nzsdrn9cs"
+	governAddress                         = "sk1qqpthgpk7yqjmenj6fe3klp9d98ay02e5sc4k8avk8985zty3spvdqdfdy3y"
 	StakingPoolType                       = uint16(1)
 	// default binding frozen period
 	BindingTxFrozenPeriod = 90 * DayPeriod
