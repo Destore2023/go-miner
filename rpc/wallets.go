@@ -91,6 +91,7 @@ func getAddrManagerDetail(addrManager *keystore.AddrManager) *pb.AddrManager {
 func (s *Server) GetKeystoreDetail(ctx context.Context, in *pb.GetKeystoreDetailRequest) (*pb.GetKeystoreDetailResponse, error) {
 	keystore, addrManager, err := s.pocWallet.ExportKeystore(in.WalletId, []byte(in.Passphrase))
 	if err != nil {
+		logging.CPrint(logging.ERROR, "GetKeystoreDetail ExportKeystore error", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	detail := getKeystoreDetail(keystore)
@@ -106,10 +107,12 @@ func (s *Server) ExportKeystore(ctx context.Context, in *pb.ExportKeystoreReques
 	logging.CPrint(logging.INFO, "a request is received to export keystore", logging.LogFormat{"export keystore id": in.WalletId})
 	err := checkWalletIdLen(in.WalletId)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "ExportKeystore  checkWalletIdLen error", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	err = checkPassLen(in.Passphrase)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "ExportKeystore  checkPassLen error", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	// get keystore json from wallet
@@ -186,27 +189,32 @@ func (s *Server) ExportKeystoreByDir(ctx context.Context, in *pb.ExportKeystoreB
 	pocWalletConfig := wallet.NewPocWalletConfig(in.WalletDir, "leveldb")
 	exportWallet, err := wallet.OpenPocWallet(pocWalletConfig, []byte(in.Passphrase))
 	if err != nil {
+		logging.CPrint(logging.ERROR, "ExportKeystoreByDir  OpenPocWallet error", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	defer exportWallet.Close()
 	keystores, managers, err := exportWallet.ExportKeystores([]byte(in.WalletPassphrase))
 	if err != nil {
+		logging.CPrint(logging.ERROR, "ExportKeystoreByDir  ExportKeystores error", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	keystoreJSON, err := json.Marshal(keystores)
+	if err != nil {
+		logging.CPrint(logging.ERROR, "ExportKeystoreByDir  json Marshal keystores error", logging.LogFormat{"error": err})
+		return nil, err
+	}
 	//addrManagersJson, err := json.Marshal(addrManagers)
 	addrManagers := make([]*pb.AddrManager, 0)
 	for _, a := range managers {
 		addrManagers = append(addrManagers, getAddrManagerDetail(a))
-	}
-	if err != nil {
-		return nil, err
 	}
 	// write keystore json file to disk
 	exportFileName := fmt.Sprintf("%s/%s-all.json", in.ExportPath, keystoreFileNamePrefix)
 	//exportAddrsFileName := fmt.Sprintf("%s/%s-addrs.json", in.ExportPath, keystoreFileNamePrefix)
 	err = pushJsonFile(exportFileName, keystoreJSON)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "ExportKeystoreByDir pushJsonFile keystores error",
+			logging.LogFormat{"error": err, "file name": exportFileName})
 		return nil, err
 	}
 	//err = pushJsonFile(exportAddrsFileName, addrManagersJson)
@@ -223,11 +231,15 @@ func (s *Server) ExportKeystoreByDir(ctx context.Context, in *pb.ExportKeystoreB
 func (s *Server) ImportKeystore(ctx context.Context, in *pb.ImportKeystoreRequest) (*pb.ImportKeystoreResponse, error) {
 	err := checkPassLen(in.OldPassphrase)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "ImportKeystore checkPassLen OldPassphrase",
+			logging.LogFormat{"error": err})
 		return nil, err
 	}
 	if len(in.NewPassphrase) != 0 {
 		err = checkPassLen(in.NewPassphrase)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "ImportKeystore checkPassLen NewPassphrase",
+				logging.LogFormat{"error": err})
 			return nil, err
 		}
 	}
@@ -269,11 +281,13 @@ func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreB
 	pocWalletConfig := wallet.NewPocWalletConfig(in.ImportKeystoreDir, "leveldb")
 	exportWallet, err := wallet.OpenPocWallet(pocWalletConfig, []byte(in.ImportPubpass))
 	if err != nil {
+		logging.CPrint(logging.ERROR, "failed to ImportKeystoreByDir OpenPocWallet", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	defer exportWallet.Close()
 	keystores, oldManagers, err := exportWallet.ExportKeystores([]byte(in.ImportPrivpass))
 	if err != nil {
+		logging.CPrint(logging.ERROR, "failed to ImportKeystoreByDir ExportKeystores", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	oldAddressManager := make([]*pb.AddrManager, 0)
@@ -286,10 +300,12 @@ func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreB
 	for _, ks := range keystores {
 		walletId, _, err := s.pocWallet.ImportKeystore(ks.Bytes(), []byte(in.ImportPrivpass), []byte(in.CurrentPrivpass))
 		if err != nil {
+			logging.CPrint(logging.ERROR, "failed to ImportKeystoreByDir ImportKeystore", logging.LogFormat{"error": err})
 			return nil, err
 		}
 		manager, b := s.pocWallet.GetAddrManager(walletId)
 		if !b {
+			logging.CPrint(logging.ERROR, "failed to ImportKeystoreByDir ImportKeystore GetAddrManager", logging.LogFormat{"error": err})
 			return nil, fmt.Errorf("Import With Error ")
 		}
 
@@ -297,6 +313,7 @@ func (s *Server) ImportKeystoreByDir(ctx context.Context, in *pb.ImportKeystoreB
 	}
 	keystores, _, err = s.pocWallet.ExportKeystores([]byte(in.CurrentPrivpass))
 	if err != nil {
+		logging.CPrint(logging.ERROR, "failed to ImportKeystoreByDir ExportKeystores", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	for walletId, ks := range keystores {
@@ -321,7 +338,7 @@ func (s *Server) UnlockWallet(ctx context.Context, in *pb.UnlockWalletRequest) (
 	resp := &pb.UnlockWalletResponse{}
 
 	if !s.pocWallet.IsLocked() {
-		logging.CPrint(logging.INFO, "rpc unlock wallet succeed")
+		logging.CPrint(logging.INFO, "rpc unlock wallet succeed yet")
 		resp.Success, resp.Error = true, ""
 		return resp, nil
 	}
@@ -347,7 +364,7 @@ func (s *Server) LockWallet(ctx context.Context, msg *empty.Empty) (*pb.LockWall
 	}
 
 	if s.pocMiner.Started() {
-		logging.CPrint(logging.ERROR, "rpc lock wallet failed", logging.LogFormat{"err": ErrCode[ErrAPIWalletIsMining]})
+		logging.CPrint(logging.WARN, "rpc lock wallet failed", logging.LogFormat{"err": ErrCode[ErrAPIWalletIsMining]})
 		return nil, status.New(ErrAPIWalletIsMining, ErrCode[ErrAPIWalletIsMining]).Err()
 	}
 
@@ -360,14 +377,17 @@ func (s *Server) LockWallet(ctx context.Context, msg *empty.Empty) (*pb.LockWall
 func (s *Server) ChangePrivatePass(ctx context.Context, in *pb.ChangePrivatePassRequest) (*pb.ChangePrivatePassResponse, error) {
 	err := checkPassLen(in.OldPrivpass)
 	if err != nil {
+		logging.CPrint(logging.WARN, "failed to ChangePrivatePass checkPassLen OldPrivpass", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	err = checkPassLen(in.NewPrivpass)
 	if err != nil {
+		logging.CPrint(logging.WARN, "failed to ChangePrivatePass checkPassLen NewPrivpass", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	err = s.pocWallet.ChangePrivPassphrase([]byte(in.OldPrivpass), []byte(in.NewPrivpass), nil)
 	if err != nil {
+		logging.CPrint(logging.WARN, "failed to ChangePrivatePass ChangePrivPassphrase", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	return &pb.ChangePrivatePassResponse{
@@ -378,14 +398,17 @@ func (s *Server) ChangePrivatePass(ctx context.Context, in *pb.ChangePrivatePass
 func (s *Server) ChangePublicPass(ctx context.Context, in *pb.ChangePublicPassRequest) (*pb.ChangePublicPassResponse, error) {
 	err := checkPassLen(in.OldPubpass)
 	if err != nil {
+		logging.CPrint(logging.WARN, "failed to ChangePublicPass checkPassLen OldPubpass", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	err = checkPassLen(in.NewPubpass)
 	if err != nil {
+		logging.CPrint(logging.WARN, "failed to ChangePublicPass checkPassLen NewPubpass", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	err = s.pocWallet.ChangePubPassphrase([]byte(in.OldPubpass), []byte(in.NewPubpass), nil)
 	if err != nil {
+		logging.CPrint(logging.WARN, "failed to ChangePublicPass ChangePubPassphrase", logging.LogFormat{"error": err})
 		return nil, err
 	}
 	return &pb.ChangePublicPassResponse{

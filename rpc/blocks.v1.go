@@ -25,6 +25,7 @@ func (s *Server) GetBlock(ctx context.Context, in *pb.GetBlockRequest) (*pb.GetB
 	logging.CPrint(logging.INFO, "a request is received to query the block according to the block hash", logging.LogFormat{"hash": in.Hash})
 	err := checkHashLen(in.Hash)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "failed to get block info Illegal length", logging.LogFormat{"input string": in.Hash, "error": err})
 		return nil, err
 	}
 	sha, err := wire.NewHashFromStr(in.Hash)

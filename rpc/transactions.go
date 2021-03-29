@@ -3,6 +3,7 @@ package rpc
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"github.com/Sukhavati-Labs/go-miner/blockchain"
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/config"
@@ -21,6 +22,7 @@ import (
 func (s *Server) GetCoinbase(ctx context.Context, in *pb.GetCoinbaseRequest) (*pb.GetCoinbaseResponse, error) {
 	block, err := s.chain.GetBlockByHeight(in.Height)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "GetCoinbase called", logging.LogFormat{"height": in.Height, "error": err})
 		return nil, err
 	}
 
@@ -28,6 +30,7 @@ func (s *Server) GetCoinbase(ctx context.Context, in *pb.GetCoinbaseRequest) (*p
 
 	txs := block.Transactions()
 	if len(txs) <= 0 {
+		logging.CPrint(logging.ERROR, "GetCoinbase called,cannot find transaction in block")
 		return nil, errors.New("cannot find transaction in block")
 	}
 	coinbase := txs[0]
@@ -35,27 +38,31 @@ func (s *Server) GetCoinbase(ctx context.Context, in *pb.GetCoinbaseRequest) (*p
 
 	vins, bindingValue, err := s.showCoinbaseInputDetails(msgTx)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "GetCoinbase called, call showCoinbaseInputDetails ", logging.LogFormat{"height": in.Height, "error": err})
 		return nil, err
 	}
 	bindingValueStr, err := AmountToString(bindingValue)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "GetCoinbase called, call AmountToString ", logging.LogFormat{"height": in.Height, "error": err})
 		return nil, err
 	}
 
 	vouts, totalFees, err := s.showCoinbaseOutputDetails(msgTx, &config.ChainParams, block.Height(), bindingValue, block.MsgBlock().Header.Proof.BitLength)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "GetCoinbase called, call showCoinbaseOutputDetails ", logging.LogFormat{"height": in.Height, "error": err})
 		return nil, err
 	}
 
 	confirmations := currentHeight - block.Height()
-	var status int32
+	var txStatus int32
 	if confirmations >= consensus.CoinbaseMaturity {
-		status = txStatusConfirmed
+		txStatus = txStatusConfirmed
 	} else {
-		status = txStatusConfirming
+		txStatus = txStatusConfirming
 	}
 	feesStr, err := AmountToString(totalFees)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "GetCoinbase called, call totalFees AmountToString ", logging.LogFormat{"height": in.Height, "error": err})
 		return nil, err
 	}
 
@@ -75,7 +82,7 @@ func (s *Server) GetCoinbase(ctx context.Context, in *pb.GetCoinbaseRequest) (*p
 		Confirmations: confirmations,
 		TxSize:        uint32(msgTx.PlainSize()),
 		TotalFees:     feesStr,
-		Status:        status,
+		Status:        txStatus,
 	}, nil
 }
 
@@ -111,7 +118,8 @@ func (s *Server) GetTxPoolVerbose1(ctx context.Context, in *empty.Empty) (*pb.Ge
 	defer logging.CPrint(logging.INFO, "GetTxPoolVerbose1 responded", logging.LogFormat{"req_id": reqID})
 
 	resp := &pb.GetTxPoolVerbose1Response{}
-	if err := s.marshalGetTxPoolResponse(reflect.ValueOf(resp), 1); err != nil {
+	err := s.marshalGetTxPoolResponse(reflect.ValueOf(resp), 1)
+	if err != nil {
 		logging.CPrint(logging.ERROR, "GetTxPoolVerbose1 fail on marshalGetTxPoolResponse", logging.LogFormat{"err": err})
 		return nil, err
 	}
@@ -124,7 +132,7 @@ func (s *Server) GetStakingTxPoolInfo(ctx context.Context, in *empty.Empty) (*pb
 }
 
 func (s *Server) GetStakingRewardRecord(ctx context.Context, in *pb.GetStakingRewardRecordRequest) (*pb.GetStakingRewardRecordResponse, error) {
-	if in.Timestamp < 0 || in.Timestamp > 9999999999 {
+	if in.Timestamp > 9999999999 {
 		return nil, errors.New("error Timestamp")
 	}
 	queryTime := in.Timestamp
@@ -133,6 +141,7 @@ func (s *Server) GetStakingRewardRecord(ctx context.Context, in *pb.GetStakingRe
 	}
 	awardRecords, err := s.db.FetchStakingAwardedRecordByTime(queryTime)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "GetStakingRewardRecord fail on FetchStakingAwardedRecordByTime", logging.LogFormat{"err": err, "timestamp": in.Timestamp})
 		return nil, err
 	}
 	if len(awardRecords) == 0 {
@@ -161,6 +170,7 @@ func (s *Server) getRawTransaction(txId string) (*pb.TxRawResult, error) {
 	logging.CPrint(logging.INFO, "rpc: GetRawTransaction", logging.LogFormat{"txId": txId})
 	err := checkTransactionIdLen(txId)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "getRawTransaction fail on checkTransactionIdLen", logging.LogFormat{"err": err, "txId": txId})
 		return nil, err
 	}
 
@@ -194,6 +204,14 @@ func (s *Server) getRawTransaction(txId string) (*pb.TxRawResult, error) {
 		}
 
 		lastTx := txList[len(txList)-1]
+		if lastTx.Err != nil {
+			logging.CPrint(logging.ERROR, "failed to query the transaction information in txPool or database according to the transaction hash,last tx with error",
+				logging.LogFormat{
+					"hash":  txHash.String(),
+					"error": lastTx.Err,
+				})
+			return nil, lastTx.Err
+		}
 		blockSha := lastTx.BlockSha
 		mtx = lastTx.Tx
 		// query block header
@@ -207,7 +225,6 @@ func (s *Server) getRawTransaction(txId string) (*pb.TxRawResult, error) {
 			st := status.New(ErrAPIBlockHeaderNotFound, ErrCode[ErrAPIBlockHeaderNotFound])
 			return nil, st.Err()
 		}
-
 		chainHeight = s.chain.BestBlockHeight()
 	} else {
 		mtx = tx.MsgTx()
@@ -269,6 +286,11 @@ func (s *Server) marshalGetTxPoolResponse(resp reflect.Value, verbose int) error
 		for _, tx := range txs {
 			txResp := &pb.GetTxDescVerbose0Response{}
 			if err = s.marshalGetTxDescResponse(reflect.ValueOf(txResp), tx, verbose); err != nil {
+				logging.CPrint(logging.ERROR, "marshalGetTxPoolResponse error",
+					logging.LogFormat{
+						"verbose": verbose,
+						"error":   err,
+					})
 				return err
 			}
 			txDescsV0 = append(txDescsV0, txResp)
@@ -289,6 +311,11 @@ func (s *Server) marshalGetTxPoolResponse(resp reflect.Value, verbose int) error
 		for _, tx := range txs {
 			txResp := &pb.GetTxDescVerbose1Response{}
 			if err = s.marshalGetTxDescResponse(reflect.ValueOf(txResp), tx, verbose); err != nil {
+				logging.CPrint(logging.ERROR, "marshalGetTxPoolResponse error",
+					logging.LogFormat{
+						"verbose": verbose,
+						"error":   err,
+					})
 				return err
 			}
 			txDescsV1 = append(txDescsV1, txResp)
@@ -297,6 +324,11 @@ func (s *Server) marshalGetTxPoolResponse(resp reflect.Value, verbose int) error
 		for _, orphan := range orphans {
 			orphanResp := &pb.GetOrphanTxDescResponse{}
 			if err = s.marshalGetOrphanTxDescResponse(reflect.ValueOf(orphanResp), orphan); err != nil {
+				logging.CPrint(logging.ERROR, "marshalGetTxPoolResponse error",
+					logging.LogFormat{
+						"verbose": verbose,
+						"error":   err,
+					})
 				return err
 			}
 			orphanDescs = append(orphanDescs, orphanResp)
@@ -360,43 +392,50 @@ func (s *Server) marshalGetOrphanTxDescResponse(resp reflect.Value, orphan *chai
 }
 
 func (s *Server) showCoinbaseInputDetails(mtx *wire.MsgTx) ([]*pb.Vin, int64, error) {
+	if mtx == nil {
+		logging.CPrint(logging.ERROR, "showCoinbaseInputDetails mtx is nil")
+		return nil, 0, fmt.Errorf("showCoinbaseInputDetails error, mtx is nil ")
+	}
 	vinList := make([]*pb.Vin, len(mtx.TxIn))
 	var bindingValue int64
 	if blockchain.IsCoinBaseTx(mtx) {
-		txIn := mtx.TxIn[0]
+		return nil, 0, errors.New("showCoinbaseInputDetails error, mtx isn't a coinbase tx ")
+	}
+	txIn := mtx.TxIn[0]
+	vinTemp := &pb.Vin{
+		TxId:     txIn.PreviousOutPoint.Hash.String(),
+		Sequence: txIn.Sequence,
+		Witness:  txWitnessToHex(txIn.Witness),
+	}
+	vinList[0] = vinTemp
+
+	for i, txIn := range mtx.TxIn[1:] {
 		vinTemp := &pb.Vin{
 			TxId:     txIn.PreviousOutPoint.Hash.String(),
+			Vout:     txIn.PreviousOutPoint.Index,
 			Sequence: txIn.Sequence,
-			Witness:  txWitnessToHex(txIn.Witness),
-		}
-		vinList[0] = vinTemp
-
-		for i, txIn := range mtx.TxIn[1:] {
-			vinTemp := &pb.Vin{
-				TxId:     txIn.PreviousOutPoint.Hash.String(),
-				Vout:     txIn.PreviousOutPoint.Index,
-				Sequence: txIn.Sequence,
-			}
-
-			originTx, err := s.chain.GetTransaction(&txIn.PreviousOutPoint.Hash)
-			if err != nil {
-				return nil, 0, err
-			}
-			bindingValue += originTx.TxOut[txIn.PreviousOutPoint.Index].Value
-			vinList[i+1] = vinTemp
 		}
 
-		return vinList, bindingValue, nil
-	} else {
-		return nil, 0, errors.New("")
+		originTx, err := s.chain.GetTransaction(&txIn.PreviousOutPoint.Hash)
+		if err != nil {
+			logging.CPrint(logging.ERROR, "showCoinbaseInputDetails GetTransaction with error", logging.LogFormat{"error": err})
+			return nil, 0, err
+		}
+		bindingValue += originTx.TxOut[txIn.PreviousOutPoint.Index].Value
+		vinList[i+1] = vinTemp
 	}
+	return vinList, bindingValue, nil
 }
 
 func (s *Server) showCoinbaseOutputDetails(mtx *wire.MsgTx, chainParams *config.Params, height uint64, bindingValue int64, bitlength int) ([]*pb.CoinbaseVout, int64, error) {
+	if mtx == nil {
+		return nil, 0, fmt.Errorf("showCoinbaseOutputDetails error, mtx is nil")
+	}
 	voutList := make([]*pb.CoinbaseVout, 0, len(mtx.TxOut))
 
 	g, err := chainutil.NewAmountFromInt(bindingValue)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "showCoinbaseInputDetails NewAmountFromInt with error", logging.LogFormat{"error": err})
 		return nil, -1, err
 	}
 
@@ -410,11 +449,13 @@ func (s *Server) showCoinbaseOutputDetails(mtx *wire.MsgTx, chainParams *config.
 
 	baseMiner, superNode, _, err := blockchain.CalcBlockSubsidy(height, chainParams, g, bitlength)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "showCoinbaseInputDetails CalcBlockSubsidy with error", logging.LogFormat{"error": err})
 		return nil, -1, err
 	}
 
 	blockSubsidy, err := baseMiner.Add(superNode)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "showCoinbaseInputDetails Calc base Miner reward with error", logging.LogFormat{"error": err})
 		return nil, -1, err
 	}
 
@@ -455,11 +496,13 @@ func (s *Server) showCoinbaseOutputDetails(mtx *wire.MsgTx, chainParams *config.
 
 		valueStr, err := AmountToString(v.Value)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "showCoinbaseInputDetails AmountToString with error", logging.LogFormat{"error": err})
 			return nil, -1, err
 		}
 
 		totalOut, err = totalOut.AddInt(v.Value)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "showCoinbaseInputDetails calc total out with error", logging.LogFormat{"error": err})
 			return nil, -1, err
 		}
 
@@ -480,6 +523,7 @@ func (s *Server) showCoinbaseOutputDetails(mtx *wire.MsgTx, chainParams *config.
 	}
 	totalFees, err := totalOut.Sub(blockSubsidy)
 	if err != nil {
+		logging.CPrint(logging.ERROR, "showCoinbaseInputDetails calc total fees with error", logging.LogFormat{"error": err})
 		return nil, -1, err
 	}
 
@@ -487,6 +531,10 @@ func (s *Server) showCoinbaseOutputDetails(mtx *wire.MsgTx, chainParams *config.
 }
 
 func (s *Server) createTxRawResult(mtx *wire.MsgTx, blockHeader *wire.BlockHeader, chainHeight uint64, detail bool) (*pb.TxRawResult, error) {
+	if mtx == nil {
+		logging.CPrint(logging.ERROR, "failed to create raw tx , mtx is nil! ")
+		return nil, fmt.Errorf("createTxRawResult get nil tx")
+	}
 	blockHeight := blockHeader.Height
 	vouts, totalOutValue, err := createVoutList(mtx, &config.ChainParams, nil)
 	if err != nil {
@@ -566,6 +614,7 @@ func (s *Server) createTxRawResult(mtx *wire.MsgTx, blockHeader *wire.BlockHeade
 		// Hex
 		bs, err := mtx.Bytes(wire.Packet)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "createTxRawResult get tx bytes error", logging.LogFormat{"error": err})
 			return nil, err
 		}
 		txReply.Hex = hex.EncodeToString(bs)
@@ -581,6 +630,9 @@ func (s *Server) createTxRawResult(mtx *wire.MsgTx, blockHeader *wire.BlockHeade
 // | Type Code |    1    |    2    |     3    |     4    |
 //   ----------------------------------------------------
 func (s *Server) getTxType(tx *wire.MsgTx) (int32, error) {
+	if tx == nil {
+		return UndeclaredTX, fmt.Errorf("get tx type error,tx is nil ")
+	}
 	if blockchain.IsCoinBaseTx(tx) {
 		return CoinbaseTX, nil
 	}
@@ -615,6 +667,10 @@ func (s *Server) getTxType(tx *wire.MsgTx) (int32, error) {
 }
 
 func createVoutList(mtx *wire.MsgTx, chainParams *config.Params, filterAddrMap map[string]struct{}) ([]*pb.Vout, int64, error) {
+	if mtx == nil {
+		logging.CPrint(logging.ERROR, "createVoutList error, mtx is nil ")
+		return nil, 0, fmt.Errorf("createVoutList fail, mtx is nil ")
+	}
 	voutList := make([]*pb.Vout, 0, len(mtx.TxOut))
 	var totalOutValue int64
 	for i, v := range mtx.TxOut {
@@ -650,6 +706,7 @@ func createVoutList(mtx *wire.MsgTx, chainParams *config.Params, filterAddrMap m
 
 			normalAddress, err := chainutil.NewAddressWitnessScriptHash(addrs[0].ScriptAddress(), chainParams)
 			if err != nil {
+				logging.CPrint(logging.ERROR, "createVoutList NewAddressWitnessScriptHash error", logging.LogFormat{"error": err})
 				return nil, -1, err
 			}
 			rewardAddress = normalAddress.String()
@@ -674,7 +731,7 @@ func createVoutList(mtx *wire.MsgTx, chainParams *config.Params, filterAddrMap m
 
 		valueStr, err := AmountToString(v.Value)
 		if err != nil {
-			logging.CPrint(logging.ERROR, "")
+			logging.CPrint(logging.ERROR, "createVoutList AmountToString error ")
 			return nil, -1, err
 		}
 
