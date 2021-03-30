@@ -342,8 +342,11 @@ func (db *ChainDb) deleteBlock(blockSha *wire.Hash) (err error) {
 		var txUo txUpdateEntry
 		var txStk stakingTx
 		txUo.delete = true
-		db.txUpdateMap[*tx.Hash()] = &txUo
+		txId := *tx.Hash()
+		db.txUpdateMap[txId] = &txUo
 
+		isPoolingTx := false
+		isPoolingRewardTx := false
 		// delete insert stakingTx in the block
 		for i, txOut := range tx.MsgTx().TxOut {
 			class, pushData := txscript.GetScriptInfo(txOut.PkScript)
@@ -360,10 +363,21 @@ func (db *ChainDb) deleteBlock(blockSha *wire.Hash) (err error) {
 					index:       uint32(i),
 				}
 				db.stakingTxMap[key] = &txStk
+			} else if class == txscript.PoolingScriptHashTy {
+				isPoolingTx = true
+			} else if class == txscript.WitnessV0ScriptHashTy {
+				if isPoolingTx {
+					isPoolingRewardTx = true
+				}
 			}
 		}
+		if isPoolingRewardTx {
+			batch.Delete(stakingAwardedRecordToKey(stakingAwardedRecordMapKey{
+				day:  uint64(block.MsgBlock().Header.Timestamp.Unix()) / 86400,
+				txID: txId,
+			}))
+		}
 	}
-
 	batch.Delete(makeBlockShaKey(blockSha))
 	batch.Delete(makeBlockHeightKey(height))
 	// If height is 0, reset dbStorageMetaDataKey to initial value.
