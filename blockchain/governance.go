@@ -15,6 +15,7 @@ const (
 type GovernProposal interface {
 	GetGovernAddressClass() GovernAddressClass
 	SyncConfig()
+	GetHeight()
 }
 
 type Govern struct {

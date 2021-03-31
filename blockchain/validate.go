@@ -1665,7 +1665,7 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *chainutil.Blo
 		if !SequenceLockActive(sequenceLock, node.Height, medianTime) {
 			return ErrSequenceNotSatisfied
 		}
-		err = checkParsePkScript(tx, txInputStore, true)
+		err = checkParsePkScript(tx, txInputStore)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "checkParsePkScript error", logging.LogFormat{"tx": tx.Hash(), "err": err})
 			return err
