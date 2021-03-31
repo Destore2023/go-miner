@@ -344,9 +344,18 @@ func (db *ChainDb) deleteBlock(blockSha *wire.Hash) (err error) {
 		txUo.delete = true
 		txId := *tx.Hash()
 		db.txUpdateMap[txId] = &txUo
-
+		rawTx, _, _, _, err := db.fetchTxDataBySha(tx.Hash())
+		if err != nil {
+			continue
+		}
 		isPoolingTx := false
 		isPoolingRewardTx := false
+		for _, txOut := range rawTx.TxOut {
+			class, _ := txscript.GetScriptInfo(txOut.PkScript)
+			if class == txscript.PoolingScriptHashTy {
+				isPoolingTx = true
+			}
+		}
 		// delete insert stakingTx in the block
 		for i, txOut := range tx.MsgTx().TxOut {
 			class, pushData := txscript.GetScriptInfo(txOut.PkScript)
@@ -363,8 +372,6 @@ func (db *ChainDb) deleteBlock(blockSha *wire.Hash) (err error) {
 					index:       uint32(i),
 				}
 				db.stakingTxMap[key] = &txStk
-			} else if class == txscript.PoolingScriptHashTy {
-				isPoolingTx = true
 			} else if class == txscript.WitnessV0ScriptHashTy {
 				if isPoolingTx {
 					isPoolingRewardTx = true

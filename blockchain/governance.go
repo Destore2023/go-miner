@@ -8,16 +8,19 @@ import (
 type GovernAddressClass uint32
 
 const (
-	SenateGovernAddress GovernAddressClass = iota // 0
+	SupperGovernAddress GovernAddressClass = iota // 0
+	SenateGovernAddress
 )
 
-type GovernAddress interface {
+type GovernProposal interface {
+	GetGovernAddressClass() GovernAddressClass
+	SyncConfig()
 }
 
 type Govern struct {
 	sync.RWMutex
 	compatibleVer   *version.Version
-	governAddresses map[GovernAddressClass]*GovernAddress
+	governAddresses map[GovernAddressClass]*GovernProposal
 }
 
 func (g *Govern) updateCompatibleVersion(ver *version.Version) {

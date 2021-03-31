@@ -77,7 +77,7 @@ func (db *ChainDb) CheckTxIndex_1_1_0() error {
 			}
 			if txInfo == nil {
 				txInfo = &TxInfo{}
-				txInfo.height, txInfo.loc.TxStart, txInfo.loc.TxLen, txInfo.spentBuf, err = db.getUnspentTxData(tx.TxHash().Ptr())
+				txInfo.height, txInfo.loc.TxStart, txInfo.loc.TxLen, txInfo.spentBuf, err = db.getTxData(tx.TxHash().Ptr())
 				if err != nil ||
 					txInfo.height != height ||
 					len(txInfo.spentBuf)*8 < len(tx.TxOut) {

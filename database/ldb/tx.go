@@ -113,7 +113,7 @@ func (db *ChainDb) insertTx(txSha *wire.Hash, height uint64, txOffset int, txLen
 // +-------------------+---------------+-----------------+----------------------+
 // | height ( 8 bytes) |txOff(4 bytes) |  txLen (4 bytes)| spentBuf             |
 // +-------------------+---------------+-----------------+----------------------+
-func (db *ChainDb) getUnspentTxData(txSha *wire.Hash) (uint64, int, int, []byte, error) {
+func (db *ChainDb) getTxData(txSha *wire.Hash) (uint64, int, int, []byte, error) {
 	key := txShaToKey(txSha)
 	buf, err := db.localStorage.Get(key)
 	if err != nil {
@@ -132,7 +132,7 @@ func (db *ChainDb) getUnspentTxData(txSha *wire.Hash) (uint64, int, int, []byte,
 
 func (db *ChainDb) GetUnspentTxData(txSha *wire.Hash) (uint64, int, int, error) {
 	// TODO: lock?
-	height, txOffset, txLen, _, err := db.getUnspentTxData(txSha)
+	height, txOffset, txLen, _, err := db.getTxData(txSha)
 	if err != nil {
 		return 0, 0, 0, err
 	} else {
@@ -368,7 +368,7 @@ func (db *ChainDb) FetchUnSpentStaking(txShaList []*wire.Hash) []*database.TxRep
 func (db *ChainDb) fetchTxDataBySha(txSha *wire.Hash) (rawTx *wire.MsgTx, rawBlockSha *wire.Hash, rawHeight uint64, rawTxSpent []byte, err error) {
 	var txOff, txLen int
 
-	rawHeight, txOff, txLen, rawTxSpent, err = db.getUnspentTxData(txSha)
+	rawHeight, txOff, txLen, rawTxSpent, err = db.getTxData(txSha)
 	if err != nil {
 		if err == storage.ErrNotFound {
 			err = database.ErrTxShaMissing
@@ -605,7 +605,7 @@ func (db *ChainDb) setClearSpentData(txSha *wire.Hash, idx uint32, isSpent bool)
 	if txUo, ok = db.txUpdateMap[*txSha]; !ok {
 		// not cached, load from db
 		var txU txUpdateEntry
-		blockHeight, txOffset, txLen, spentData, err := db.getUnspentTxData(txSha)
+		blockHeight, txOffset, txLen, spentData, err := db.getTxData(txSha)
 		if err != nil {
 			// setting a fully spent tx is an error.
 			if err != storage.ErrNotFound || isSpent {

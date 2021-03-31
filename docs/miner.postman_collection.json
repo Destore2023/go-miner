@@ -39,7 +39,7 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": "http://{{miner-url}}/v1/blocks/hash/0",
+				"url": "http://{{miner-url}}/v1/blocks/hash/1",
 				"description": "query block hash"
 			},
 			"response": []
@@ -49,7 +49,7 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": "http://{{miner-url}}/v1/blocks/height/0"
+				"url": "http://{{miner-url}}/v1/blocks/height/974"
 			},
 			"response": []
 		},
@@ -83,9 +83,18 @@
 		{
 			"name": "tx-GetStakingTxPoolAwardRecord",
 			"request": {
-				"method": "GET",
+				"method": "POST",
 				"header": [],
-				"url": "http://{{miner-url}}/v1/transactions/staking/award/record"
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"timestamp\":1616482779\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://{{miner-url}}/v1/transactions/staking/reward/record"
 			},
 			"response": []
 		},
@@ -114,7 +123,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"allocations\": [\r\n        {\r\n            \"directory\": \"D:\\\\mass\\\\proof\",\r\n            \"capacity\": 204800\r\n        }\r\n    ],\r\n    \"payout_addresses\": [\r\n        \"sk1qqggu42p34335mwrutv88t7fqh6sp5eqlawglmx457dhn0w7ks2nzsm0rq7q\"\r\n    ],\r\n    \"passphrase\": \"123456\"\r\n}",
+					"raw": "{\r\n    \"allocations\": [\r\n        {\r\n            \"directory\": \"d:\\\\mass\\\\Proof\",\r\n            \"capacity\": 327680\r\n        }\r\n    ],\r\n    \"payout_addresses\": [\r\n        \"sk1qqxkjrjy4s9hm8f8y6vcg37uv98cwrj4ul9pam5ewdx500t0qe7lyqacl7pl\"\r\n    ],\r\n    \"passphrase\": \"123456\",\r\n    \"cointype\":0\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -133,14 +142,14 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"payout_addresses\": [\r\n        \"sk1qqxkjrjy4s9hm8f8y6vcg37uv98cwrj4ul9pam5ewdx500t0qe7lyqacl7pl\"\r\n    ],\r\n    \"capacity\": 10240,\r\n    \"passphrase\": \"123456\"\r\n}",
+					"raw": "{\r\n    \"payout_addresses\": [\r\n        \"sk1qqxkjrjy4s9hm8f8y6vcg37uv98cwrj4ul9pam5ewdx500t0qe7lyqacl7pl\"\r\n    ],\r\n    \"capacity\": 30480,\r\n    \"passphrase\": \"123456\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
 						}
 					}
 				},
-				"url": "http://127.0.0.1:9686/v1/spaces",
+				"url": "http://{{miner-url}}/v1/spaces",
 				"description": "setting spaces"
 			},
 			"response": []
@@ -233,7 +242,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"wallet_dir\":\"C:\\\\Users\\\\cui\\\\Downloads\\\\miner.mass\\\\miner\",\r\n    \"passphrase\":\"pub1234\",\r\n    \"wallet_passphrase\":\"priv1234\",\r\n    \"export_path\":\"d:\\\\\"\r\n}",
+					"raw": "{\r\n    \"wallet_dir\":\"C:\\\\Users\\\\cui\\\\Downloads\\\\miner.mass\",\r\n    \"passphrase\":\"pub1234\",\r\n    \"wallet_passphrase\":\"priv1234\",\r\n    \"export_path\":\"d:\\\\\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -287,7 +296,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"import_keystore_dir\":\"D:\\\\mass\\\\Miner\\\\resources\\\\bin\",\r\n    \"import_pubpass\":\"aLLQFevQj4\",\r\n    \"import_privpass\":\"123456\",\r\n    \"current_privpass\":\"123456\"\r\n}",
+					"raw": "{\r\n    \"import_keystore_dir\":\"C:\\\\Users\\\\skt\\\\AppData\\\\Local\\\\Programs\\\\MASS Miner\\\\resources\\\\bin\\\\miner\",\r\n    \"import_pubpass\":\"aLLQFevQj4\",\r\n    \"import_privpass\":\"123456\",\r\n    \"current_privpass\":\"123456\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
