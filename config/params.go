@@ -49,8 +49,6 @@ func Register(params *Params) error {
 	// A valid Bech32 encoded segwit address always has as prefix the
 	// human-readable part for the given net followed by '1'.
 	bech32SegwitPrefixes[params.Bech32HRPSegwit+"1"] = struct{}{}
-	// staking pool
-	bech32SegwitPrefixes["pool1"] = struct{}{}
 	return nil
 }
 

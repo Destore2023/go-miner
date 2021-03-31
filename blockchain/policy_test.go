@@ -189,7 +189,7 @@ func TestCheckParsePkScript(t *testing.T) {
 				Value:    1000,
 			})
 			tx := chainutil.NewTx(msgtx)
-			err = checkParsePkScript(tx, nil, true)
+			err = checkParsePkScript(tx, nil)
 			if (test.isStandard && err != nil) ||
 				(!test.isStandard && err == nil) {
 				t.Fatalf("TestCheckParsePkScript test '%s' failed",
@@ -283,7 +283,7 @@ func TestCheckParsePkScript2(t *testing.T) {
 				Value:    int64(test.stakingValue),
 			})
 			tx := chainutil.NewTx(msgtx)
-			err = checkParsePkScript(tx, nil, true)
+			err = checkParsePkScript(tx, nil)
 			assert.Equal(t, err, test.err)
 			if (test.isStandard && err != nil) ||
 				(!test.isStandard && err == nil) {
@@ -450,7 +450,7 @@ func TestCheckParsePkScript3(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			tx := chainutil.NewTx(test.tx)
-			err = checkParsePkScript(tx, test.txStore, true)
+			err = checkParsePkScript(tx, test.txStore)
 			assert.Equal(t, err, test.err)
 			if (test.isStandard && err != nil) ||
 				(!test.isStandard && err == nil) {

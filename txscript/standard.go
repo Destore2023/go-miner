@@ -478,7 +478,7 @@ func ExtractPkScriptAddrs(pkScript []byte, chainParams *config.Params) (ScriptCl
 		}
 	case PoolingScriptHashTy:
 		requiredSigs = 1
-		addr, err := chainutil.NewAddressPoolScriptHash(pops[1].data, chainParams)
+		addr, err := chainutil.NewAddressPoolingScriptHash(pops[1].data, chainParams)
 		if err == nil {
 			addrs = append(addrs, addr)
 		}
