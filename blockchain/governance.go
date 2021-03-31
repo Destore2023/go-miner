@@ -2,18 +2,20 @@ package blockchain
 
 import (
 	"fmt"
+	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/database"
 	"github.com/Sukhavati-Labs/go-miner/wire"
+	"math"
 	"sync"
 )
 
 type GovernAddressClass uint32
 
 const (
-	GovernSupperAddress  GovernAddressClass = iota // 0
-	GovernVersionAddress                           // 1
-	GovernSenateAddress                            // 2
-
+	GovernSupperAddress    GovernAddressClass = iota // 0
+	GovernVersionAddress                             // 1
+	GovernSenateAddress                              // 2
+	GovernUndefinedAddress = GovernSupperAddress + math.MaxUint32
 )
 
 type GovernProposal interface {
@@ -81,6 +83,48 @@ type ChainGovern struct {
 
 func (g *ChainGovern) IsGovern(data []byte) bool {
 	return true
+}
+
+func (g *ChainGovern) SyncGovernConfig(block *chainutil.Block, txStore TxStore) error {
+	g.Lock()
+	defer g.Unlock()
+	transactions := block.Transactions()
+	for _, tx := range transactions {
+		if IsCoinBaseTx(tx.MsgTx()) {
+			continue
+		}
+		class := GovernUndefinedAddress
+		for _, txIn := range tx.TxIn() {
+			preData, ok := txStore[txIn.PreviousOutPoint.Hash]
+			if !ok {
+				continue
+			}
+			publicKeyInfo := preData.Tx.GetPkScriptInfo(int(txIn.PreviousOutPoint.Index))
+			class, ok = g.governAddresses[publicKeyInfo.ScriptHash]
+			if !ok {
+				break
+			}
+		}
+		if class == GovernUndefinedAddress {
+			continue
+		}
+
+		for i, _ := range tx.TxOut() {
+			info := tx.GetPkScriptInfo(i)
+			curClass, ok := g.governAddresses[info.ScriptHash]
+			if !ok {
+				continue
+			}
+			if curClass != class {
+				continue
+			}
+		}
+		err := g.UpgradeConfig(class, tx.MsgTx().Payload)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (g *ChainGovern) UpgradeConfig(class GovernAddressClass, payload []byte) error {

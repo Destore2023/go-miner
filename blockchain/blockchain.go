@@ -53,7 +53,7 @@ type Blockchain struct {
 	proposalPool   *ProposalPool         // pool of proposals
 	addrIndexer    *AddrIndexer          // address indexer
 	dmd            *DoubleMiningDetector // double mining detector
-	govern         *ChainGovern
+	chainGovern    *ChainGovern
 	processBlockCh chan *processBlockMsg
 	listeners      map[Listener]struct{}
 
@@ -91,7 +91,7 @@ func NewBlockchain(db database.DB, dbPath string, server Server) (*Blockchain, e
 	if chain.addrIndexer, err = NewAddrIndexer(db, server); err != nil {
 		return nil, err
 	}
-	if chain.govern, err = NewChainGovern(db, server); err != nil {
+	if chain.chainGovern, err = NewChainGovern(db, server); err != nil {
 		return nil, err
 	}
 	genesisHash, err := db.FetchBlockShaByHeight(0)

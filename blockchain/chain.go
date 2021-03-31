@@ -287,6 +287,9 @@ func (chain *Blockchain) connectBlock(node *BlockNode, block *chainutil.Block) (
 	if err = chain.addrIndexer.SyncAttachBlock(block, txInputStore); err != nil {
 		return err
 	}
+	if err = chain.chainGovern.SyncGovernConfig(block, txInputStore); err != nil {
+		return err
+	}
 	if err = chain.db.Commit(*node.Hash); err != nil {
 		return err
 	}
