@@ -558,7 +558,7 @@ func NewAddressStakingScriptHash(witnessProg []byte, net *config.Params) (*Addre
 	return newAddressWitnessScriptHash(net.Bech32HRPSegwit, 1, witnessProg)
 }
 
-//
+//NewAddressPoolingScriptHash
 func NewAddressPoolingScriptHash(witnessProg []byte, net *config.Params) (*AddressWitnessScriptHash, error) {
 	return newAddressWitnessScriptHash(net.Bech32HRPSegwit, 0, witnessProg)
 }
@@ -677,17 +677,6 @@ func IsWitnessStakingAddress(ad interface{}) bool {
 		return addr.WitnessVersion() == 0 && addr.WitnessExtendVersion() == 1
 	}
 	return false
-}
-
-func IsWitnessPoolAddress(ad interface{}) bool {
-	if ad == nil {
-		return false
-	}
-	switch addr := ad.(type) {
-	case AddressWitnessScriptHash:
-		return addr.WitnessVersion() == 0 && addr.WitnessExtendVersion() == 1
-	}
-	return true
 }
 
 func IsAddressWitnessScriptHash(ad interface{}) bool {

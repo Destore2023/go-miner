@@ -173,7 +173,7 @@ var (
 
 	ErrFrozenPeriod = errors.New("invalid frozen period")
 
-	ErrPoolType = errors.New("invalid pool type")
+	ErrPoolingType = errors.New("invalid pooling tx type")
 
 	ErrScriptTooBig = errors.New("script size is too large")
 

@@ -102,19 +102,25 @@ func (g *ChainGovern) SyncGovernConfig(block *chainutil.Block, txStore TxStore) 
 		if IsCoinBaseTx(tx.MsgTx()) {
 			continue
 		}
-		class := GovernUndefinedAddress
+		paylod := tx.MsgTx().Payload
+		if len(paylod) == 0 {
+			continue
+		}
+		addressClass := GovernUndefinedAddress
 		for _, txIn := range tx.TxIn() {
 			preData, ok := txStore[txIn.PreviousOutPoint.Hash]
 			if !ok {
 				continue
 			}
 			publicKeyInfo := preData.Tx.GetPkScriptInfo(int(txIn.PreviousOutPoint.Index))
-			class, ok = g.governAddresses[publicKeyInfo.ScriptHash]
+			class, ok := g.governAddresses[publicKeyInfo.ScriptHash]
 			if !ok {
 				break
+			} else {
+				addressClass = class
 			}
 		}
-		if class == GovernUndefinedAddress {
+		if addressClass == GovernUndefinedAddress {
 			continue
 		}
 
@@ -124,11 +130,11 @@ func (g *ChainGovern) SyncGovernConfig(block *chainutil.Block, txStore TxStore) 
 			if !ok {
 				continue
 			}
-			if curClass != class {
+			if curClass != addressClass {
 				continue
 			}
 		}
-		err := g.UpgradeConfig(class, tx.MsgTx().Payload)
+		err := g.UpgradeConfig(addressClass, tx.MsgTx().Payload)
 		if err != nil {
 			return err
 		}

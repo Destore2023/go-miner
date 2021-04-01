@@ -352,7 +352,7 @@ func payToPoolingAddrScript(scriptHash []byte, poolType uint16) ([]byte, error) 
 		return nil, ErrWitnessExtProgramLength
 	}
 	if !wire.IsValidPoolType(poolType) {
-		return nil, ErrPoolType
+		return nil, ErrPoolingType
 	}
 	buf := make([]byte, 2)
 	binary.LittleEndian.PutUint16(buf, poolType)
@@ -372,7 +372,7 @@ func PayToStakingAddrScript(addr chainutil.Address, frozenPeriod uint64) ([]byte
 
 // PayToPoolingAddrScript creates a new script to pay a transaction
 func PayToPoolingAddrScript(addr chainutil.Address, poolType uint16) ([]byte, error) {
-	if !chainutil.IsWitnessPoolAddress(addr) {
+	if !chainutil.IsWitnessV0Address(addr) {
 		return nil, ErrUnsupportedAddress
 	}
 	return payToPoolingAddrScript(addr.ScriptAddress(), poolType)
