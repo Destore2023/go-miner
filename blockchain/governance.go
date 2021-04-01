@@ -1,9 +1,11 @@
 package blockchain
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/database"
+	"github.com/Sukhavati-Labs/go-miner/version"
 	"github.com/Sukhavati-Labs/go-miner/wire"
 	"math"
 	"sync"
@@ -28,13 +30,20 @@ type GovernProposal interface {
 
 // GovernVersionProposal
 type GovernVersionProposal struct {
-	height uint64
+	id      uint32          `json:"id"`
+	height  uint64          `json:"height"`
+	version version.Version `json:"version"`
 }
 
 func (gv *GovernVersionProposal) GetGovernAddressClass() GovernAddressClass {
 	return GovernVersionAddress
 }
 func (gv *GovernVersionProposal) UpgradeConfig(payload []byte) error {
+	d := GovernVersionProposal{}
+	err := json.Unmarshal(payload, d)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 func (gv *GovernVersionProposal) GetHeight() uint64 {
@@ -144,25 +153,3 @@ func NewChainGovern(db database.DB, server Server) (*ChainGovern, error) {
 	}
 	return ai, nil
 }
-
-//func (g *Govern) updateCompatibleVersion(ver *version.Version) {
-//	g.compatibleVer = ver.Clone()
-//}
-//
-//func (g *Govern) UpdateCompatibleVersion(ver *version.Version) {
-//	g.Lock()
-//	defer g.Unlock()
-//	g.updateCompatibleVersion(ver)
-//}
-//
-//func (g *Govern) IsCompatibleVersion(ver *version.Version) bool {
-//	g.Lock()
-//	defer g.Unlock()
-//	if g.compatibleVer == nil {
-//		return true
-//	}
-//	if g.compatibleVer.Cmp(ver) > 0 {
-//		return false
-//	}
-//	return true
-//}
