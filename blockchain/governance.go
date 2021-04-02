@@ -102,8 +102,8 @@ func (g *ChainGovern) SyncGovernConfig(block *chainutil.Block, txStore TxStore) 
 		if IsCoinBaseTx(tx.MsgTx()) {
 			continue
 		}
-		paylod := tx.MsgTx().Payload
-		if len(paylod) == 0 {
+		payload := tx.MsgTx().Payload
+		if len(payload) == 0 {
 			continue
 		}
 		addressClass := GovernUndefinedAddress
@@ -151,11 +151,12 @@ func (g *ChainGovern) UpgradeConfig(class GovernAddressClass, payload []byte) er
 }
 
 func NewChainGovern(db database.DB, server Server) (*ChainGovern, error) {
-	ai := &ChainGovern{
+	cg := &ChainGovern{
 		db:              db,
 		server:          server,
 		proposalPool:    make(map[GovernAddressClass]GovernProposal),
 		governAddresses: make(map[wire.Hash]GovernAddressClass),
 	}
-	return ai, nil
+	cg.proposalPool[GovernVersionAddress] = &GovernVersionProposal{}
+	return cg, nil
 }

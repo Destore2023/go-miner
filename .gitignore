@@ -18,6 +18,7 @@
 # vendor/
 node_modules
 docs/node_modules
+docs/.temp
 .idea
 logs
 chain
