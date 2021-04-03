@@ -55,7 +55,7 @@ const (
 	// 5.838% --> 94.162%   --> 94162/100000
 	CoinbaseSubsidyAttenuation            = 94162
 	CoinbaseSubsidyAttenuationDenominator = 100000
-	StakingPoolAddressScriptHash          = "10000000000000000000000000000000"
+	StakingPoolAddressScriptHash          = "00000000000000000000000000000001"
 	governAddress                         = "sk1qqpthgpk7yqjmenj6fe3klp9d98ay02e5sc4k8avk8985zty3spvdqdfdy3y"
 	StakingPoolType                       = uint16(1)
 	// default binding frozen period
