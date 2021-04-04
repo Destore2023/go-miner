@@ -306,14 +306,14 @@
         ]
       }
     },
-    "/v1/governance/config/{config_type}": {
-      "get": {
-        "operationId": "ApiService_GetGovernanceConfig",
+    "/v1/govern/config/history": {
+      "post": {
+        "operationId": "ApiService_GetGovernConfigHistory",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/rpcprotobufGetGovernanceConfigResponse"
+              "$ref": "#/definitions/rpcprotobufGetGovernConfigHistoryResponse"
             }
           },
           "404": {
@@ -332,11 +332,50 @@
         },
         "parameters": [
           {
-            "name": "config_type",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetGovernConfigHistoryRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
+    "/v1/govern/config/{id}": {
+      "get": {
+        "operationId": "ApiService_GetGovernConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetGovernConfigResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
             "in": "path",
             "required": true,
             "type": "integer",
-            "format": "int32"
+            "format": "int64"
           }
         ],
         "tags": [
@@ -2199,22 +2238,51 @@
         }
       }
     },
-    "rpcprotobufGetGovernanceConfigResponse": {
+    "rpcprotobufGetGovernConfigHistoryRequest": {
       "type": "object",
       "properties": {
-        "tx_id": {
-          "type": "string"
-        },
-        "height": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "config_type": {
+        "id": {
           "type": "integer",
           "format": "int32"
         },
-        "senate_nodes_config": {
-          "$ref": "#/definitions/rpcprotobufGovernanceSenateConfig"
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "rpcprotobufGetGovernConfigHistoryResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "senate_nodes_configs": {
+          "$ref": "#/definitions/rpcprotobufGovernSenateConfig"
+        }
+      }
+    },
+    "rpcprotobufGetGovernConfigResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tx_id": {
+          "type": "string"
+        },
+        "activate_height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "block_height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "config": {
+          "$ref": "#/definitions/rpcprotobufGovernConfig"
         }
       }
     },
@@ -2552,26 +2620,71 @@
         }
       }
     },
-    "rpcprotobufGovernanceSenateConfig": {
+    "rpcprotobufGovernConfig": {
+      "type": "object",
+      "properties": {
+        "govern_supper_config": {
+          "$ref": "#/definitions/rpcprotobufGovernSupperConfig"
+        },
+        "govern_senate_config": {
+          "$ref": "#/definitions/rpcprotobufGovernSenateConfig"
+        },
+        "govern_version_config": {
+          "$ref": "#/definitions/rpcprotobufGovernVersionConfig"
+        }
+      }
+    },
+    "rpcprotobufGovernSenateConfig": {
       "type": "object",
       "properties": {
         "nodes": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/rpcprotobufGovernanceSenateNode"
+            "$ref": "#/definitions/rpcprotobufGovernSenateNode"
           }
         }
       }
     },
-    "rpcprotobufGovernanceSenateNode": {
+    "rpcprotobufGovernSenateNode": {
       "type": "object",
       "properties": {
         "address": {
           "type": "string"
         },
-        "equities": {
+        "weight": {
           "type": "string",
           "format": "uint64"
+        }
+      }
+    },
+    "rpcprotobufGovernSupperAddressInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "address": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcprotobufGovernSupperConfig": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufGovernSupperAddressInfo"
+          }
+        }
+      }
+    },
+    "rpcprotobufGovernVersionConfig": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
         }
       }
     },

@@ -24,14 +24,16 @@ type GovernProposal interface {
 	GetGovernAddressClass() GovernAddressClass
 	UpgradeConfig(payload []byte) error
 	GetHeight() uint64
+	Decode(data []byte) (uint64, error)
 	Bytes() []byte
 	CallFunc() (bool, error)
 }
 
 // GovernVersionProposal
 type GovernVersionProposal struct {
-	id      uint32          `json:"id"`
-	height  uint64          `json:"height"`
+	id     uint32 `json:"id"`
+	height uint64 `json:"height"`
+
 	version version.Version `json:"version"`
 }
 
@@ -90,10 +92,6 @@ type ChainGovern struct {
 	governAddresses map[wire.Hash]GovernAddressClass
 }
 
-func (g *ChainGovern) IsGovern(data []byte) bool {
-	return true
-}
-
 func (g *ChainGovern) SyncGovernConfig(block *chainutil.Block, txStore TxStore) error {
 	g.Lock()
 	defer g.Unlock()
@@ -138,6 +136,7 @@ func (g *ChainGovern) SyncGovernConfig(block *chainutil.Block, txStore TxStore) 
 		if err != nil {
 			return err
 		}
+		//g.db.InsertGovernConfig(addressClass,)
 	}
 	return nil
 }
@@ -157,6 +156,7 @@ func NewChainGovern(db database.DB, server Server) (*ChainGovern, error) {
 		proposalPool:    make(map[GovernAddressClass]GovernProposal),
 		governAddresses: make(map[wire.Hash]GovernAddressClass),
 	}
-	cg.proposalPool[GovernVersionAddress] = &GovernVersionProposal{}
+	//cg.proposalPool[GovernVersionAddress] = &GovernVersionProposal{}
+	//cg.proposalPool[GovernSenateAddress] = &GovernSenateProposal{}
 	return cg, nil
 }

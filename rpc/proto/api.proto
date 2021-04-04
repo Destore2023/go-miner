@@ -269,11 +269,17 @@ service ApiService {
       body:"*"
     };
   }
-  rpc GetGovernanceConfig (GetGovernanceConfigRequest) returns (GetGovernanceConfigResponse) {
+  rpc GetGovernConfig (GetGovernConfigRequest) returns (GetGovernConfigResponse) {
     option (google.api.http) = {
-      get: "/v1/governance/config/{config_type}"
+      get: "/v1/govern/config/{id}"
     };
   }
+  rpc GetGovernConfigHistory(GetGovernConfigHistoryRequest) returns (GetGovernConfigHistoryResponse){
+    option (google.api.http) = {
+      post: "/v1/govern/config/history"
+      body: "*"
+    };
+  };
 }
 
 // ========= wallet ====================
@@ -901,25 +907,57 @@ message ChangePublicPassResponse {
   bool success = 1;
 }
 
-message GetGovernanceConfigRequest {
-  int32 config_type = 1;
+message GetGovernConfigRequest {
+  uint32 id = 1;
 }
 
-message GovernanceSenateNode {
-  string address = 1;
-  uint64 equities = 2;
+message GetGovernConfigHistoryRequest {
+  int32    id = 1;
+  int32 limit = 2;
 }
 
-message GovernanceSenateConfig {
-  repeated GovernanceSenateNode nodes = 1;
-}
-
-message GetGovernanceConfigResponse {
-  string tx_id      = 1;
-  uint64 height     = 2;
-  int32 config_type = 3;
-  oneof config {
-      GovernanceSenateConfig senate_nodes_config = 4;
+message GetGovernConfigHistoryResponse {
+  int32 id = 1;
+  oneof history {
+    GovernSenateConfig senate_nodes_configs = 2;
   }
+}
+
+message GovernSenateNode {
+  string address = 1;
+  uint64 weight = 2;
+}
+
+message GovernSenateConfig {
+  repeated GovernSenateNode nodes = 1;
+}
+
+message GovernVersionConfig {
+  string version = 1;
+}
+
+message GovernSupperAddressInfo {
+  uint32      id = 1;
+  string address = 2;
+}
+
+message GovernSupperConfig {
+  repeated GovernSupperAddressInfo address = 1;
+}
+
+message GovernConfig {
+  oneof config {
+    GovernSupperConfig  govern_supper_config  = 1;
+    GovernSenateConfig  govern_senate_config  = 2;
+    GovernVersionConfig govern_version_config = 3;
+  }
+}
+
+message GetGovernConfigResponse {
+  uint32    id           = 1;
+  string tx_id           = 2;
+  uint64 activate_height = 3;
+  uint64 block_height    = 4;
+  GovernConfig config    = 5;
 }
 

@@ -1687,9 +1687,9 @@ It is to change public pass of the wallet.
 }
 ```
 
-#### GetGovernanceConfig
+#### GetGovernConfig
 
-    GET /v1/governance/config/{config_type}
+    GET /v1/govern/config/{config_type}
 
 It is to change public pass of the wallet.
 

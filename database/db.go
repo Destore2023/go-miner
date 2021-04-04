@@ -136,10 +136,8 @@ type DB interface {
 
 	// FetchStakingAwardedRecordByTime
 	FetchStakingAwardedRecordByTime(queryTime uint64) ([]StakingAwardedRecord, error)
-	// FetchEnabledGovernanceConfig
-	FetchEnabledGovernanceConfig(configType int) (GovernanceConfig, error)
-	// FetchGovernanceConfig
-	FetchGovernanceConfig(configType int, status byte) ([]GovernanceConfig, error)
+	// InsertGovernConfig
+	InsertGovernConfig(id uint32, height, activeHeight uint64, txSha *wire.Hash, data []byte) error
 	// FetchStakingRank returns staking rank at any height. This
 	// function may be slow.
 	FetchStakingRank(height uint64, onlyOnList bool) ([]Rank, error)

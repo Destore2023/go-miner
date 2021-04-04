@@ -163,7 +163,7 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 				}
 			}
 		}
-		isGovernance := false
+		//isGovernance := false
 		isStakingPool := false
 		isStakingPoolAward := false
 		// tx in
@@ -175,7 +175,7 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 			if ok {
 				pubKeyClass := txscript.GetScriptClass(txReply.Tx.TxOut[txIn.PreviousOutPoint.Index].PkScript)
 				if pubKeyClass == txscript.WitnessV0ScriptHashTy {
-					isGovernance = true
+					//isGovernance = true
 				} else if pubKeyClass == txscript.PoolingScriptHashTy {
 					isStakingPool = true
 				}
@@ -192,7 +192,7 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 			case byte(txscript.StakingScriptHashTy):
 				{
 					logging.CPrint(logging.DEBUG, "Insert StakingTx", logging.LogFormat{
-						"txid":   tx.Hash(),
+						"txId":   tx.Hash(),
 						"vout":   i,
 						"height": block.Height(),
 						"frozen": pubKeyInfo.FrozenPeriod,
@@ -200,21 +200,6 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 					err = db.insertStakingTx(tx.Hash(), uint32(i), pubKeyInfo.FrozenPeriod, block.Height(), pubKeyInfo.ScriptHash, txOut.Value)
 					if err != nil {
 						return err
-					}
-				}
-			case byte(txscript.GovernanceScriptHashTy):
-				{
-					// only tx vin is governance
-					logging.CPrint(logging.DEBUG, "Insert GovernanceTx", logging.LogFormat{
-						"txid":   tx.Hash(),
-						"vout":   i,
-						"height": block.Height(),
-					})
-					if isGovernance {
-						config, err := database.DecodeGovernanceConfig(tx.MsgTx().Payload)
-						if err == nil {
-							db.insertGovernanceConfig(0, &config, true)
-						}
 					}
 				}
 			}
@@ -469,11 +454,21 @@ func (db *ChainDb) processBlockBatch() error {
 		}
 	}
 
+	for mapKey, config := range db.governConfigMap {
+		key := makeGovernConfigMapKeyToKey(mapKey)
+		if config.delete {
+			batch.Delete(key)
+		} else {
+			batch.Put(key, config.data)
+		}
+	}
+
 	db.txUpdateMap = map[wire.Hash]*txUpdateEntry{}
 	db.txSpentUpdateMap = make(map[wire.Hash]*spentTxUpdate)
 	db.stakingTxMap = map[stakingTxMapKey]*stakingTx{}
 	db.expiredStakingTxMap = map[stakingTxMapKey]*stakingTx{}
 	db.stakingAwardedRecordMap = map[stakingAwardedRecordMapKey]*stakingAwardedRecord{}
+	db.governConfigMap = map[governConfigMapKey]*governConfig{}
 	return nil
 }
 func (db *ChainDb) InitByGenesisBlock(block *chainutil.Block) error {

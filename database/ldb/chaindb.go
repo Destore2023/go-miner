@@ -48,7 +48,7 @@ type ChainDb struct {
 	stakingTxMap            map[stakingTxMapKey]*stakingTx
 	expiredStakingTxMap     map[stakingTxMapKey]*stakingTx
 	stakingAwardedRecordMap map[stakingAwardedRecordMapKey]*stakingAwardedRecord
-	governanceConfigMap     map[int]*database.GovernanceConfig
+	governConfigMap         map[governConfigMapKey]*governConfig
 }
 
 func init() {
@@ -98,6 +98,7 @@ func NewChainDb(dbpath string, dbStorage storage.Storage) (*ChainDb, error) {
 		stakingTxMap:            make(map[stakingTxMapKey]*stakingTx),
 		expiredStakingTxMap:     make(map[stakingTxMapKey]*stakingTx),
 		stakingAwardedRecordMap: make(map[stakingAwardedRecordMapKey]*stakingAwardedRecord),
+		governConfigMap:         make(map[governConfigMapKey]*governConfig),
 	}
 
 	blockMeta, err := cdb.getBlockStorageMeta()
@@ -162,7 +163,6 @@ func (db *ChainDb) close() error {
 // Sync verifies that the database is coherent on disk,
 // and no outstanding transactions are in flight.
 func (db *ChainDb) Sync() error {
-
 	// while specified by the API, does nothing
 	// however does grab lock to verify it does not return until other operations are complete.
 	return nil
