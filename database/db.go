@@ -279,6 +279,8 @@ type BindingTxReply struct {
 	Index      uint32
 }
 
+type SenateEquities []SenateEquity
+
 type StakingTxOutAtHeight map[uint64]map[wire.OutPoint]StakingTxInfo
 
 type StakingAwardRecordAtTime map[uint64]map[wire.Hash]StakingAwardedRecord

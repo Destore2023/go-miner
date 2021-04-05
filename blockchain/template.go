@@ -416,7 +416,7 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.Bin
 						"height": nextBlockHeight})
 				return err
 			}
-			senateReward, err := senateNode.Value().MulInt(int64(equity.Equity))
+			senateReward, err := senateNode.Value().MulInt(int64(equity.Weight))
 			if err != nil {
 				logging.CPrint(logging.ERROR, "reCreateCoinbaseTx senateNode reward senateReward MulInt",
 					logging.LogFormat{
@@ -880,7 +880,7 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 		}
 		return
 	}
-	governanceConfig, err := chain.db.FetchEnabledGovernanceConfig(database.GovernanceSenate)
+	governConfig, err := chain.chainGovern.FetchEnabledGovernConfig(GovernSenateAddress, nextBlockHeight)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "newBlockTemplate  FetchEnabledGovernanceConfig",
 			logging.LogFormat{
@@ -891,7 +891,7 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 		}
 		return
 	}
-	nodesConfig, ok := (governanceConfig).(database.GovernanceSenateNodesConfig)
+	nodesConfig, ok := (*governConfig).(GovernSenateConfig)
 	if !ok {
 		logging.CPrint(logging.ERROR, "newBlockTemplate  get GovernanceSenateNodesConfig",
 			logging.LogFormat{

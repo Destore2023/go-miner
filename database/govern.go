@@ -4,18 +4,8 @@ import (
 	"crypto/sha256"
 )
 
-const (
-	// senate note config
-	GovernSenate  = 1
-	GovernSupper  = 2
-	GovernVersion = 3
-)
-
-const ConfigEnabled = byte(1)
-const ConfigDisabled = byte(0)
-
 type SenateEquity struct {
-	Equity     uint64            // sum 10000
+	Weight     uint64            // weight
 	ScriptHash [sha256.Size]byte // The income address script of the equity
 }
 
@@ -60,5 +50,3 @@ type SenateEquity struct {
 //}
 //
 //func (config GovernSenateNodesConfig) GetBlockHeight() uint64 {
-//	return 0
-//}

@@ -1,24 +1,32 @@
 package blockchain
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/database"
 	"github.com/Sukhavati-Labs/go-miner/version"
 	"github.com/Sukhavati-Labs/go-miner/wire"
-	"math"
 	"sync"
 )
 
 type GovernAddressClass uint32
 
 const (
-	GovernSupperAddress    GovernAddressClass = iota // 0
-	GovernVersionAddress                             // 1
-	GovernSenateAddress                              // 2
-	GovernUndefinedAddress = GovernSupperAddress + math.MaxUint32
+	GovernUndefinedAddress GovernAddressClass = iota // 0
+	GovernSupperAddress                              // 1
+	GovernVersionAddress                             // 2
+	GovernSenateAddress                              // 3
 )
+
+type GovernConfig interface {
+	GetId() GovernAddressClass
+	GetBlockHeight() uint64
+	GetActiveHeight() uint64
+	IsShadow() bool
+	GetTxId() *wire.Hash
+}
 
 type GovernProposal interface {
 	GetGovernAddressClass() GovernAddressClass
@@ -65,7 +73,7 @@ type GovernSenateProposal struct {
 }
 
 // GovernSenateAddress
-func (gsv *GovernSenateProposal) GetGovernAddressClass() GovernAddressClass {
+func (gsv *GovernSenateProposal) GetId() GovernAddressClass {
 	return GovernSenateAddress
 }
 
@@ -90,6 +98,10 @@ type ChainGovern struct {
 	server          Server
 	proposalPool    map[GovernAddressClass]GovernProposal
 	governAddresses map[wire.Hash]GovernAddressClass
+}
+
+func (g *ChainGovern) FetchEnabledGovernConfig(class GovernAddressClass, height uint64) (*GovernConfig, error) {
+	return nil, nil
 }
 
 func (g *ChainGovern) SyncGovernConfig(block *chainutil.Block, txStore TxStore) error {
@@ -159,4 +171,51 @@ func NewChainGovern(db database.DB, server Server) (*ChainGovern, error) {
 	//cg.proposalPool[GovernVersionAddress] = &GovernVersionProposal{}
 	//cg.proposalPool[GovernSenateAddress] = &GovernSenateProposal{}
 	return cg, nil
+}
+
+type GovernSenateConfig struct {
+	blockHeight  uint64
+	activeHeight uint64
+	shadow       bool
+	txId         *wire.Hash
+	senates      []*database.SenateEquity
+}
+
+func DecodeGovernConfig(class GovernAddressClass, blockHeight uint64, data []byte) (GovernConfig, error) {
+	if len(data) <= 9 {
+		return nil, fmt.Errorf("error data length")
+	}
+	activeHeight := binary.LittleEndian.Uint64(data[1:9])
+	switch class {
+	case GovernSenateAddress:
+
+		return &GovernSenateConfig{
+			blockHeight:  blockHeight,
+			activeHeight: activeHeight,
+		}, nil
+	default:
+		{
+			return nil, fmt.Errorf("unsupported config class")
+		}
+	}
+}
+
+func (sc *GovernSenateConfig) GetId() GovernAddressClass {
+	return GovernSenateAddress
+}
+
+func (sc *GovernSenateConfig) GetBlockHeight() uint64 {
+	return sc.blockHeight
+}
+
+func (sc *GovernSenateConfig) GetActiveHeight() uint64 {
+	return sc.activeHeight
+}
+
+func (sc *GovernSenateConfig) IsShadow() bool {
+	return sc.shadow
+}
+
+func (sc *GovernSenateConfig) GetTxId() *wire.Hash {
+	return sc.txId
 }
