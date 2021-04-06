@@ -178,7 +178,7 @@ type GovernSenateConfig struct {
 	activeHeight uint64
 	shadow       bool
 	txId         *wire.Hash
-	senates      []*database.SenateEquity
+	senates      database.SenateEquities
 }
 
 func DecodeGovernConfig(class GovernAddressClass, blockHeight uint64, data []byte) (GovernConfig, error) {

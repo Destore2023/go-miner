@@ -46,8 +46,6 @@ const (
 	minHighPriority = consensus.MinHighPriority
 
 	PriorityProposalSize = wire.MaxBlockPayload / 20
-	// extend payload
-	PayloadExtendJsonType = byte(128)
 )
 
 var (
@@ -295,7 +293,7 @@ func createDistributeTx(coinbase *wire.MsgTx, nextBlockHeight uint64) error {
 //  |                              |   miner Genesis out               |
 //  +------------------------------------------------------------------+
 func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.BindingTxReply, nextBlockHeight uint64,
-	bitLength int, rewardAddresses []database.Rank, senateEquities database.SenateEquities, totalFee chainutil.Amount, pubkey *pocec.PublicKey) (err error) {
+	bitLength int, rewardAddresses []database.Rank, senateEquities database.SenateEquities, totalFee chainutil.Amount) (err error) {
 	minerTxOut, err := GetMinerRewardTxOutFromCoinbase(coinbase)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "reCreateCoinbaseTx get miner tx out ", logging.LogFormat{"error": err, "height": nextBlockHeight})
@@ -404,39 +402,56 @@ func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.Bin
 	}
 
 	logging.CPrint(logging.INFO, "show the count of stakingTx", logging.LogFormat{"count": len(rewardAddresses)})
-
+	if senateNode.IsZero() {
+		err := fmt.Errorf("reCreateCoinbaseTx senateNode reward is 0")
+		logging.CPrint(logging.ERROR, "reCreateCoinbaseTx senateNode reward is 0",
+			logging.LogFormat{
+				"error":  err,
+				"height": nextBlockHeight})
+		return err
+	}
+	if len(senateEquities) == 0 {
+		err := fmt.Errorf("reCreateCoinbaseTx senateEquities is empty")
+		logging.CPrint(logging.ERROR, "reCreateCoinbaseTx senateEquities is empty",
+			logging.LogFormat{
+				"error":  err,
+				"height": nextBlockHeight})
+		return err
+	}
 	// senateNode
-	if !senateNode.IsZero() && len(senateEquities) > 0 {
-		for _, equity := range senateEquities {
-			pkScriptSenateNode, err := txscript.PayToWitnessScriptHashScript(equity.ScriptHash[:])
-			if err != nil {
-				logging.CPrint(logging.ERROR, "reCreateCoinbaseTx senateNode reward pkScriptSenateNode",
-					logging.LogFormat{
-						"error":  err,
-						"height": nextBlockHeight})
-				return err
-			}
-			senateReward, err := senateNode.Value().MulInt(int64(equity.Weight))
-			if err != nil {
-				logging.CPrint(logging.ERROR, "reCreateCoinbaseTx senateNode reward senateReward MulInt",
-					logging.LogFormat{
-						"error":  err,
-						"height": nextBlockHeight})
-				return err
-			}
-			senateReward, err = senateReward.DivInt(10000)
-			if err != nil {
-				logging.CPrint(logging.ERROR, "reCreateCoinbaseTx senateNode reward senateReward DivInt",
-					logging.LogFormat{
-						"error":  err,
-						"height": nextBlockHeight})
-				return err
-			}
-			coinbase.AddTxOut(&wire.TxOut{
-				Value:    senateReward.IntValue(),
-				PkScript: pkScriptSenateNode,
-			})
+	var totalSenateValue uint64 = 0
+	for _, equity := range senateEquities {
+		totalSenateValue = equity.Weight + totalSenateValue
+	}
+	for _, equity := range senateEquities {
+		pkScriptSenateNode, err := txscript.PayToWitnessScriptHashScript(equity.ScriptHash[:])
+		if err != nil {
+			logging.CPrint(logging.ERROR, "reCreateCoinbaseTx senateNode reward pkScriptSenateNode",
+				logging.LogFormat{
+					"error":  err,
+					"height": nextBlockHeight})
+			return err
 		}
+		senateReward, err := senateNode.Value().MulInt(int64(equity.Weight))
+		if err != nil {
+			logging.CPrint(logging.ERROR, "reCreateCoinbaseTx senateNode reward senateReward MulInt",
+				logging.LogFormat{
+					"error":  err,
+					"height": nextBlockHeight})
+			return err
+		}
+		senateReward, err = senateReward.DivInt(int64(totalSenateValue))
+		if err != nil {
+			logging.CPrint(logging.ERROR, "reCreateCoinbaseTx senateNode reward senateReward DivInt",
+				logging.LogFormat{
+					"error":  err,
+					"height": nextBlockHeight})
+			return err
+		}
+		coinbase.AddTxOut(&wire.TxOut{
+			Value:    senateReward.IntValue(),
+			PkScript: pkScriptSenateNode,
+		})
 	}
 	miner, err = miner.Add(totalFee)
 	if err != nil {
@@ -891,7 +906,7 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 		}
 		return
 	}
-	nodesConfig, ok := (*governConfig).(GovernSenateConfig)
+	nodesConfig, ok := (*governConfig).(*GovernSenateConfig)
 	if !ok {
 		logging.CPrint(logging.ERROR, "newBlockTemplate  get GovernanceSenateNodesConfig",
 			logging.LogFormat{
@@ -924,7 +939,7 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 			return nil, err
 		}
 
-		err = reCreateCoinbaseTx(coinbaseTx.MsgTx(), BindingTxListReply, nextBlockHeight, bitLength, rewardAddresses, nodesConfig.SenateEquities, totalFee, pubkey)
+		err = reCreateCoinbaseTx(coinbaseTx.MsgTx(), BindingTxListReply, nextBlockHeight, bitLength, rewardAddresses, nodesConfig.senates, totalFee)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "newBlockTemplate  getCoinbaseTx  reCreateCoinbaseTx",
 				logging.LogFormat{
