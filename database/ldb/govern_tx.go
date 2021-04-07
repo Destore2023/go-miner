@@ -59,6 +59,10 @@ func (db *ChainDb) InsertGovernConfig(id uint32, height, activeHeight uint64, tx
 	return db.insertGovernConfig(id, height, activeHeight, txSha, data)
 }
 
+func (db *ChainDb) fetchGovernConfig(class uint32, height uint64, includeShadow bool) error {
+	panic("implement me")
+}
+
 func (db *ChainDb) insertGovernConfig(id uint32, height, activeHeight uint64, txSha *wire.Hash, data []byte) error {
 	key := governConfigMapKey{
 		id:          id,
@@ -92,38 +96,3 @@ func (db *ChainDb) FetchGovernanceConfig(id uint32, includeShadow bool) (*govern
 	//}
 	return nil, nil
 }
-
-//func (db *ChainDb) FetchGovernanceConfig(configType int, status byte) ([]database.GovernanceConfig, error) {
-//	governanceConfigs := make([]database.GovernanceConfig, 0)
-//	iter := db.localStorage.NewIterator(storage.BytesPrefix(recordGovernanceTx))
-//	defer iter.Release()
-//	for iter.Next() {
-//		key := iter.Key()
-//		if len(key) < stakingAwardedSearchKeyLength {
-//			continue
-//		}
-//		currentType := binary.LittleEndian.Uint32(key[len(recordGovernanceTx) : len(recordGovernanceTx)+4])
-//		if currentType != uint32(configType) {
-//			continue
-//		}
-//		value := iter.Value()
-//		if value[0] != status {
-//			continue
-//		}
-//		txId := new(wire.Hash)
-//		copy((*txId)[:], key[len(recordGovernanceTx)+4:governanceKeyLength])
-//		reply, err := db.FetchTxBySha(txId)
-//		if err != nil {
-//			return nil, err
-//		}
-//		if len(reply) == 0 {
-//			continue
-//		}
-//
-//	}
-//	if err := iter.Error(); err != nil {
-//		return nil, err
-//	}
-//
-//	return governanceConfigs, nil
-//}

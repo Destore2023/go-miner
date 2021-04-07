@@ -287,7 +287,7 @@ func (chain *Blockchain) connectBlock(node *BlockNode, block *chainutil.Block) (
 	if err = chain.addrIndexer.SyncAttachBlock(block, txInputStore); err != nil {
 		return err
 	}
-	if err = chain.chainGovern.SyncGovernConfig(block, txInputStore); err != nil {
+	if err = chain.chainGovern.SyncAttachBlock(block, txInputStore); err != nil {
 		return err
 	}
 	if err = chain.db.Commit(*node.Hash); err != nil {
@@ -346,6 +346,9 @@ func (chain *Blockchain) disconnectBlock(node *BlockNode, block *chainutil.Block
 		return err
 	}
 	if err := chain.addrIndexer.SyncDetachBlock(block); err != nil {
+		return err
+	}
+	if err := chain.chainGovern.SyncDetachBlock(block); err != nil {
 		return err
 	}
 	if err := chain.db.Commit(*node.Hash); err != nil {

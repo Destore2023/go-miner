@@ -17,9 +17,10 @@ import (
 
 const (
 	// params for ldb batch
-	blockBatch     = 0
-	addrIndexBatch = 1
-	dbBatchCount   = 2
+	blockBatch       = 0
+	addrIndexBatch   = 1
+	chainGovernBatch = 2
+	dbBatchCount     = 2
 
 	blockStorageMetaDataLength = 40
 )

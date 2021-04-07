@@ -204,6 +204,8 @@ type DB interface {
 
 	IndexPubKeyBLHeight(rebuild bool) error
 
+	//fetchGovernConfig(class uint32,height uint64,includeShadow bool) error
+
 	GetPubkeyBLHeightRecord(*pocec.PublicKey) ([]*BLHeight, error)
 }
 
