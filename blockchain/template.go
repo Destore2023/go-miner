@@ -537,7 +537,6 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 	poolTotal := safetype.NewUint128()
 	poolMaturityValue := safetype.NewUint128()
 	poolReward := chainutil.ZeroAmount()
-	poolBalance := safetype.NewUint128()
 	var err error
 	for _, reply := range unspentPoolTxs {
 		blocksSincePrev := nextBlockHeight - reply.Height
@@ -617,6 +616,7 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 			return nil, err
 		}
 	}
+	poolBalance := safetype.NewUint128FromUint(poolReward.UintValue())
 	// calc reward  index start with 0
 	var numOfStakingRewardSent uint32 = 0
 	for i := 0; i < len(rewardAddresses); i++ {
@@ -658,7 +658,7 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 			Value:    nodeReward.IntValue(),
 			PkScript: pkScriptSuperNode,
 		})
-		poolBalance, err = poolMaturityValue.SubUint(uint64(nodeReward.IntValue()))
+		poolBalance, err = poolBalance.SubUint(nodeReward.UintValue())
 		if err != nil {
 			logging.CPrint(logging.ERROR, "createStakingPoolRewardTx  poolBalance",
 				logging.LogFormat{
