@@ -2,45 +2,81 @@ package rpc
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
+	"fmt"
+	"github.com/Sukhavati-Labs/go-miner/blockchain"
 
 	pb "github.com/Sukhavati-Labs/go-miner/rpc/proto"
 )
 
 func (s *Server) GetGovernConfig(ctx context.Context, in *pb.GetGovernConfigRequest) (*pb.GetGovernConfigResponse, error) {
 	id := in.Id
-	response := pb.GetGovernConfigResponse{
-		Id: id,
+
+	config, err := s.chain.FetchEnabledGovernConfig(id)
+	if err != nil {
+		return nil, err
 	}
-	switch id {
-	//case database.GovernSenate:
-	//	conf, err := s.db.FetchEnabledGovernanceConfig(id)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	nodesConfig, ok := conf.(database.GovernSenateNodesConfig)
-	//	if !ok || len(nodesConfig.SenateEquities) == 0 {
-	//		return nil, errors.New("error config type")
-	//	}
-	//	response.ActivateHeight = 0
-	//	response.BlockHeight = 0
-	//	nodes := make([]*pb.GovernSenateNode, len(nodesConfig.SenateEquities))
-	//	for i, equity := range nodesConfig.SenateEquities {
-	//		address, err := chainutil.NewAddressWitnessScriptHash(equity.ScriptHash[:], &config.ChainParams)
-	//		if err != nil {
-	//			return nil, err
-	//		}
-	//		nodes[i] = &pb.GovernSenateNode{
-	//			Address:  address.EncodeAddress(),
-	//			Weight: equity.Equity,
-	//		}
-	//	}
-	//	senateNodesConfig := pb.GovernConfig{
-	//		Config: &pb.GovernSenateConfig{
-	//			Nodes: nodes,
-	//		}
-	//	}
-	//	response.Config = &senateNodesConfig
+	response := pb.GetGovernConfigResponse{
+		Id:             uint32((*config).GetMeta().GetId()),
+		BlockHeight:    (*config).GetMeta().GetBlockHeight(),
+		ActivateHeight: (*config).GetMeta().GetActiveHeight(),
+		TxId:           (*config).GetMeta().GetTxId().String(),
+	}
+	switch blockchain.GovernAddressClass(id) {
+	case blockchain.GovernSupperAddress:
+		{
+			supperConfig, ok := (*config).(*blockchain.GovernSupperConfig)
+			if !ok {
+				return nil, fmt.Errorf("error GovernSupperConfig")
+			}
+			addresses := make([]*pb.GovernSupperAddressInfo, 0)
+			for addr, id := range supperConfig.GetAddresses() {
+				addresses = append(addresses, &pb.GovernSupperAddressInfo{
+					Id:      id,
+					Address: addr,
+				})
+			}
+			response.Config = &pb.GovernConfig{
+				Config: &pb.GovernConfig_GovernSupperConfig{
+					GovernSupperConfig: &pb.GovernSupperConfig{
+						Address: addresses,
+					},
+				},
+			}
+		}
+	case blockchain.GovernVersionAddress:
+		{
+			versionConfig, ok := (*config).(*blockchain.GovernVersionConfig)
+			if !ok {
+				return nil, fmt.Errorf("error GovernVersionConfig")
+			}
+			response.Config = &pb.GovernConfig{
+				Config: &pb.GovernConfig_GovernVersionConfig{
+					GovernVersionConfig: &pb.GovernVersionConfig{
+						Version: versionConfig.GetVersion().String(),
+					},
+				},
+			}
+		}
+	case blockchain.GovernSenateAddress:
+		{
+			senateConfig, ok := (*config).(*blockchain.GovernSenateConfig)
+			if !ok {
+				return nil, fmt.Errorf("error GovernSenateConfig")
+			}
+			cs := make([]*pb.GovernSenateNode, 0)
+			for _, node := range senateConfig.GetNodes() {
+				cs = append(cs, &pb.GovernSenateNode{Weight: node.Weight, Address: hex.EncodeToString(node.ScriptHash[:])})
+			}
+			response.Config = &pb.GovernConfig{
+				Config: &pb.GovernConfig_GovernSenateConfig{
+					GovernSenateConfig: &pb.GovernSenateConfig{
+						Nodes: cs,
+					},
+				},
+			}
+		}
 	default:
 		return nil, errors.New("Unknown configuration type ")
 	}

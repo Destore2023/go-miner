@@ -1689,7 +1689,7 @@ It is to change public pass of the wallet.
 
 #### GetGovernConfig
 
-    GET /v1/govern/config/{config_type}
+    GET /v1/govern/config/current/{id}
 
 It is to change public pass of the wallet.
 

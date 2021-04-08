@@ -2,7 +2,6 @@ package blockchain
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/database"
@@ -22,12 +21,7 @@ const (
 )
 
 type GovernConfig interface {
-	GetId() GovernAddressClass
-	GetBlockHeight() uint64
-	GetActiveHeight() uint64
-	IsShadow() bool
-	SetShadow()
-	GetTxId() *wire.Hash
+	GetMeta() *GovernConfigMeta
 	GetData() []byte
 }
 
@@ -43,49 +37,6 @@ type GovernProposal struct {
 	future  *GovernConfig
 }
 
-// GovernVersionProposal
-type GovernVersionProposal struct {
-	id      uint32          `json:"id"`
-	height  uint64          `json:"height"`
-	version version.Version `json:"version"`
-}
-
-func (gv *GovernVersionProposal) GetGovernAddressClass() GovernAddressClass {
-	return GovernVersionAddress
-}
-func (gv *GovernVersionProposal) UpgradeConfig(payload []byte) error {
-	d := GovernVersionProposal{}
-	err := json.Unmarshal(payload, d)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-type GovernSenateProposal struct {
-	height uint64
-}
-
-// GovernSenateAddress
-func (gsv *GovernSenateProposal) GetId() GovernAddressClass {
-	return GovernSenateAddress
-}
-
-func (gsv *GovernSenateProposal) UpgradeConfig(payload []byte) error {
-	return nil
-}
-func (gsv *GovernSenateProposal) GetHeight() uint64 {
-	return gsv.height
-}
-
-func (gsv *GovernSenateProposal) Bytes() []byte {
-	return nil
-}
-
-func (gsv *GovernSenateProposal) CallFunc() (bool, error) {
-	return true, nil
-}
-
 type ChainGovern struct {
 	sync.RWMutex
 	db              database.DB
@@ -96,19 +47,61 @@ type ChainGovern struct {
 
 func (g *ChainGovern) fetchGovernConfig(class GovernAddressClass, height uint64, includeShadow bool) ([]GovernConfig, error) {
 	configs := make([]GovernConfig, 0)
-	senates := make(database.SenateEquities, 0)
-	senates = append(senates, database.SenateEquity{
-		ScriptHash: [32]byte{250, 37, 244, 50, 232, 85, 83, 140, 181, 41, 129, 200, 157, 203, 88, 103, 6, 151, 63, 155, 4, 83, 70, 33, 11, 141, 37, 110, 185, 252, 183, 103},
-		Weight:     1,
-	})
-	configs = append(configs, &GovernSenateConfig{
-		blockHeight:  0,
-		activeHeight: 0,
-		txId:         zeroHash,
-		shadow:       false,
-		senates:      senates,
-	})
+	switch class {
+	case GovernSenateAddress:
+		{
+
+			senates := make(database.SenateEquities, 0)
+			senates = append(senates, database.SenateEquity{
+				ScriptHash: [32]byte{250, 37, 244, 50, 232, 85, 83, 140, 181, 41, 129, 200, 157, 203, 88, 103, 6, 151, 63, 155, 4, 83, 70, 33, 11, 141, 37, 110, 185, 252, 183, 103},
+				Weight:     1,
+			})
+			configs = append(configs, &GovernSenateConfig{
+				meta: GovernConfigMeta{
+					blockHeight:  0,
+					activeHeight: 0,
+					txId:         zeroHash,
+					shadow:       false,
+					id:           GovernSenateAddress,
+				},
+				senates: senates,
+			})
+		}
+	case GovernVersionAddress:
+		{
+			configs = append(configs, &GovernVersionConfig{
+				meta: GovernConfigMeta{
+					blockHeight:  0,
+					activeHeight: 0,
+					txId:         zeroHash,
+					shadow:       false,
+					id:           GovernVersionAddress,
+				},
+				version: *version.GetVersion(),
+			})
+		}
+	case GovernSupperAddress:
+		{
+			configs = append(configs, &GovernSupperConfig{
+				meta: GovernConfigMeta{
+					blockHeight:  0,
+					activeHeight: 0,
+					txId:         zeroHash,
+					shadow:       false,
+					id:           GovernSupperAddress,
+				},
+				addresses: make(map[string]uint32),
+			})
+		}
+	default:
+		return nil, fmt.Errorf("can't find config")
+	}
 	return configs, nil
+}
+
+// FetchEnabledGovernConfig
+func (chain *Blockchain) FetchEnabledGovernConfig(class uint32) (*GovernConfig, error) {
+	return chain.chainGovern.FetchEnabledGovernConfig(GovernAddressClass(class), chain.BestBlockHeight())
 }
 
 // FetchEnabledGovernConfig fetch next block height enable config
@@ -139,7 +132,7 @@ func (g *ChainGovern) FetchEnabledGovernConfig(class GovernAddressClass, height 
 	if proposal.future == nil {
 		return proposal.current, nil
 	}
-	if (*proposal.future).GetActiveHeight() >= height {
+	if (*proposal.future).GetMeta().activeHeight >= height {
 		proposal.current = proposal.future
 		proposal.future = nil
 	}
@@ -249,12 +242,12 @@ func (g *ChainGovern) UpdateConfig(class GovernAddressClass, height uint64, txSh
 		return err
 	}
 	if prop.future != nil {
-		config := *prop.future
-		config.SetShadow()
+		//config := *prop.future
+		//config.SetShadow()
 		//g.db.InsertGovernConfig(uint32(config.GetId()),config.GetBlockHeight(),config.GetTxId(),config.GetData())
 		prop.future = &newConfig
 	}
-	if (*prop.future).GetActiveHeight() >= height {
+	if (*prop.future).GetMeta().GetActiveHeight() >= height {
 		prop.current = prop.future
 		prop.future = nil
 	}
@@ -268,19 +261,92 @@ func NewChainGovern(db database.DB, server Server) (*ChainGovern, error) {
 		proposalPool:    make(map[GovernAddressClass]GovernProposal),
 		governAddresses: make(map[wire.Hash]GovernAddressClass),
 	}
-	//cg.proposalPool[GovernVersionAddress] = &GovernVersionProposal{}
-	cg.proposalPool[GovernSenateAddress] = GovernProposal{
-		Id: GovernSenateAddress,
-	}
+	cg.proposalPool[GovernSupperAddress] = GovernProposal{Id: GovernSupperAddress}
+	cg.proposalPool[GovernVersionAddress] = GovernProposal{Id: GovernVersionAddress}
+	cg.proposalPool[GovernSenateAddress] = GovernProposal{Id: GovernSenateAddress}
 	return cg, nil
 }
 
-type GovernSenateConfig struct {
+type GovernConfigMeta struct {
 	blockHeight  uint64
 	activeHeight uint64
 	shadow       bool
 	txId         *wire.Hash
-	senates      database.SenateEquities
+	id           GovernAddressClass
+}
+
+func (m *GovernConfigMeta) GetId() GovernAddressClass {
+	return m.id
+}
+
+func (m *GovernConfigMeta) GetBlockHeight() uint64 {
+	return m.blockHeight
+}
+
+func (m *GovernConfigMeta) GetActiveHeight() uint64 {
+	return m.activeHeight
+}
+
+func (m *GovernConfigMeta) IsShadow() bool {
+	return m.shadow
+}
+
+func (m *GovernConfigMeta) GetTxId() *wire.Hash {
+	return m.txId
+}
+func (m *GovernConfigMeta) SetShadow() {
+	m.shadow = true
+}
+
+type GovernSenateConfig struct {
+	meta    GovernConfigMeta
+	senates database.SenateEquities
+}
+
+func (gs *GovernSenateConfig) GetMeta() *GovernConfigMeta {
+	return &gs.meta
+}
+
+func (gs *GovernSenateConfig) GetData() []byte {
+	return nil
+}
+
+func (gs *GovernSenateConfig) GetNodes() database.SenateEquities {
+	return gs.senates
+}
+
+type GovernVersionConfig struct {
+	meta    GovernConfigMeta
+	version version.Version
+}
+
+func (gv *GovernVersionConfig) GetMeta() *GovernConfigMeta {
+	return &gv.meta
+}
+
+func (gv *GovernVersionConfig) GetData() []byte {
+	return nil
+}
+
+func (gv *GovernVersionConfig) GetVersion() *version.Version {
+	return &gv.version
+}
+
+type GovernSupperConfig struct {
+	meta      GovernConfigMeta
+	addresses map[string]uint32
+}
+
+func (gsc *GovernSupperConfig) GetMeta() *GovernConfigMeta {
+	return &gsc.meta
+}
+
+func (gsc *GovernSupperConfig) GetData() []byte {
+	return nil
+}
+
+func (gsc *GovernSupperConfig) GetAddresses() map[string]uint32 {
+	return gsc.addresses
 }
 
 func DecodeGovernConfig(class GovernAddressClass, blockHeight uint64, txSha *wire.Hash, data []byte) (GovernConfig, error) {
@@ -292,41 +358,15 @@ func DecodeGovernConfig(class GovernAddressClass, blockHeight uint64, txSha *wir
 	switch class {
 	case GovernSenateAddress:
 		return &GovernSenateConfig{
-			blockHeight:  blockHeight,
-			activeHeight: activeHeight,
-			shadow:       shadow,
+			meta: GovernConfigMeta{
+				blockHeight:  blockHeight,
+				activeHeight: activeHeight,
+				shadow:       shadow,
+			},
 		}, nil
 	default:
 		{
 			return nil, fmt.Errorf("unsupported config class")
 		}
 	}
-}
-
-func (sc *GovernSenateConfig) GetId() GovernAddressClass {
-	return GovernSenateAddress
-}
-
-func (sc *GovernSenateConfig) GetBlockHeight() uint64 {
-	return sc.blockHeight
-}
-
-func (sc *GovernSenateConfig) GetActiveHeight() uint64 {
-	return sc.activeHeight
-}
-
-func (sc *GovernSenateConfig) IsShadow() bool {
-	return sc.shadow
-}
-
-func (sc *GovernSenateConfig) GetTxId() *wire.Hash {
-	return sc.txId
-}
-
-func (sc *GovernSenateConfig) GetData() []byte {
-	return nil
-}
-
-func (sc *GovernSenateConfig) SetShadow() {
-	sc.shadow = true
 }

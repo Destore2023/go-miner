@@ -271,7 +271,7 @@ service ApiService {
   }
   rpc GetGovernConfig (GetGovernConfigRequest) returns (GetGovernConfigResponse) {
     option (google.api.http) = {
-      get: "/v1/govern/config/{id}"
+      get: "/v1/govern/config/current/{id}"
     };
   }
   rpc GetGovernConfigHistory(GetGovernConfigHistoryRequest) returns (GetGovernConfigHistoryResponse){

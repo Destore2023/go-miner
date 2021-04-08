@@ -306,6 +306,44 @@
         ]
       }
     },
+    "/v1/govern/config/current/{id}": {
+      "get": {
+        "operationId": "ApiService_GetGovernConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcprotobufGetGovernConfigResponse"
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ApiService"
+        ]
+      }
+    },
     "/v1/govern/config/history": {
       "post": {
         "operationId": "ApiService_GetGovernConfigHistory",
@@ -338,44 +376,6 @@
             "schema": {
               "$ref": "#/definitions/rpcprotobufGetGovernConfigHistoryRequest"
             }
-          }
-        ],
-        "tags": [
-          "ApiService"
-        ]
-      }
-    },
-    "/v1/govern/config/{id}": {
-      "get": {
-        "operationId": "ApiService_GetGovernConfig",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/rpcprotobufGetGovernConfigResponse"
-            }
-          },
-          "404": {
-            "description": "Not found.",
-            "schema": {
-              "type": "string",
-              "format": "string"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
           }
         ],
         "tags": [

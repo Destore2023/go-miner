@@ -113,21 +113,9 @@ func NewBlockchain(db database.DB, dbPath string, server Server) (*Blockchain, e
 		return nil, err
 	}
 
-	if err := chain.generateInitialGovernanceConfig(); err != nil {
-		return nil, err
-	}
-
 	go chain.blockProcessor()
 
 	return chain, nil
-}
-
-func (chain *Blockchain) generateInitialGovernanceConfig() error {
-	//_, err := chain.db.FetchGovernanceConfig(database.GovernanceSenate)
-	//if err != nil {
-	//	return err
-	//}
-	return nil
 }
 
 func (chain *Blockchain) generateInitialIndex() error {
