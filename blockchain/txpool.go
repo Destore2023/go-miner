@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"container/list"
+	"encoding/hex"
 	"math"
 	"sync"
 	"time"
@@ -728,6 +729,15 @@ func (tp *TxPool) maybeAcceptTransaction(tx *chainutil.Tx, isNew, rateLimit bool
 		}
 	}
 
+	err = tp.chain.chainGovern.CheckTransactionGovernPayload(tx, txStore)
+	if err != nil {
+		logging.CPrint(logging.DEBUG, "CheckTransactionGovernPayload", logging.LogFormat{
+			"txSha":   tx.Hash(),
+			"error":   err,
+			"payload": hex.EncodeToString(tx.MsgTx().Payload),
+		})
+		return nil, err
+	}
 	// Verify crypto signatures for each input and reject the transaction if
 	// any don't verify.
 	err = ValidateTransactionScripts(tx, txStore,

@@ -10,9 +10,20 @@ import (
 	pb "github.com/Sukhavati-Labs/go-miner/rpc/proto"
 )
 
+func isValidGovernId(id uint32) bool {
+	t := blockchain.GovernAddressClass(id)
+	if t >= blockchain.GovernSupperAddress && t <= blockchain.GovernSenateAddress {
+		return true
+	}
+	return false
+}
+
 func (s *Server) GetGovernConfig(ctx context.Context, in *pb.GetGovernConfigRequest) (*pb.GetGovernConfigResponse, error) {
 	id := in.Id
 
+	if !isValidGovernId(id) {
+		return nil, fmt.Errorf("error govern type")
+	}
 	config, err := s.chain.FetchEnabledGovernConfig(id)
 	if err != nil {
 		return nil, err
@@ -84,5 +95,9 @@ func (s *Server) GetGovernConfig(ctx context.Context, in *pb.GetGovernConfigRequ
 }
 
 func (s *Server) GetGovernConfigHistory(ctx context.Context, in *pb.GetGovernConfigHistoryRequest) (*pb.GetGovernConfigHistoryResponse, error) {
+	if !isValidGovernId(in.Id) {
+		return nil, fmt.Errorf("error govern type")
+	}
+
 	return nil, nil
 }

@@ -23,6 +23,7 @@ const (
 type GovernConfig interface {
 	GetMeta() *GovernConfigMeta
 	GetData() []byte
+	SetBytes(data []byte) error
 }
 
 // GovernProposal
@@ -99,7 +100,7 @@ func (g *ChainGovern) fetchGovernConfig(class GovernAddressClass, height uint64,
 	return configs, nil
 }
 
-// FetchEnabledGovernConfig
+// FetchEnabledGovernConfig fetch current enable config
 func (chain *Blockchain) FetchEnabledGovernConfig(class uint32) (*GovernConfig, error) {
 	return chain.chainGovern.FetchEnabledGovernConfig(GovernAddressClass(class), chain.BestBlockHeight())
 }
@@ -142,6 +143,62 @@ func (g *ChainGovern) FetchEnabledGovernConfig(class GovernAddressClass, height 
 	return nil, fmt.Errorf("can't find config")
 }
 
+// isGovernTransaction return GovernAddressClass height txSha payload
+func (g *ChainGovern) isGovernTransaction(tx *chainutil.Tx, txStore TxStore) (GovernAddressClass, bool) {
+	if tx == nil {
+		return GovernUndefinedAddress, false
+	}
+	payload := tx.MsgTx().Payload
+	if len(payload) == 0 {
+		return GovernUndefinedAddress, false
+	}
+	addressClass := GovernUndefinedAddress
+	for i, _ := range tx.TxOut() {
+		info := tx.GetPkScriptInfo(i)
+		scriptClass := txscript.ScriptClass(info.Class)
+		if scriptClass != txscript.WitnessV0ScriptHashTy {
+			break
+		}
+		curClass, ok := g.governAddresses[info.ScriptHash]
+		if !ok {
+			continue
+		}
+		if curClass == GovernUndefinedAddress {
+			continue
+		}
+		addressClass = curClass
+	}
+	if addressClass == GovernUndefinedAddress {
+		return GovernUndefinedAddress, false
+	}
+	for _, txIn := range tx.TxIn() {
+		preData, ok := txStore[txIn.PreviousOutPoint.Hash]
+		if !ok {
+			continue
+		}
+		publicKeyInfo := preData.Tx.GetPkScriptInfo(int(txIn.PreviousOutPoint.Index))
+		class, ok := g.governAddresses[publicKeyInfo.ScriptHash]
+		if !ok {
+			break
+		} else if addressClass == class {
+			return addressClass, true
+		}
+	}
+	return GovernUndefinedAddress, false
+}
+
+func (g *ChainGovern) CheckTransactionGovernPayload(tx *chainutil.Tx, txStore TxStore) error {
+	addressClass, ok := g.isGovernTransaction(tx, txStore)
+	if !ok {
+		return nil
+	}
+	_, err := DecodeGovernConfig(addressClass, 0, tx.Hash(), tx.MsgTx().Payload)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (g *ChainGovern) SyncAttachBlock(block *chainutil.Block, txStore TxStore) error {
 	g.Lock()
 	defer g.Unlock()
@@ -150,46 +207,11 @@ func (g *ChainGovern) SyncAttachBlock(block *chainutil.Block, txStore TxStore) e
 		if IsCoinBaseTx(tx.MsgTx()) {
 			continue
 		}
-		payload := tx.MsgTx().Payload
-		if len(payload) == 0 {
+		addressClass, ok := g.isGovernTransaction(tx, txStore)
+		if !ok {
 			continue
 		}
-		addressClass := GovernUndefinedAddress
-		for i, _ := range tx.TxOut() {
-			info := tx.GetPkScriptInfo(i)
-			scriptClass := txscript.ScriptClass(info.Class)
-			if scriptClass != txscript.WitnessV0ScriptHashTy {
-				break
-			}
-			curClass, ok := g.governAddresses[info.ScriptHash]
-			if !ok {
-				continue
-			}
-			if curClass == GovernUndefinedAddress {
-				continue
-			}
-			addressClass = curClass
-		}
-		if addressClass == GovernUndefinedAddress {
-			continue
-		}
-		for _, txIn := range tx.TxIn() {
-			preData, ok := txStore[txIn.PreviousOutPoint.Hash]
-			if !ok {
-				continue
-			}
-			publicKeyInfo := preData.Tx.GetPkScriptInfo(int(txIn.PreviousOutPoint.Index))
-			class, ok := g.governAddresses[publicKeyInfo.ScriptHash]
-			if !ok {
-				break
-			} else {
-				addressClass = class
-			}
-		}
-		if addressClass == GovernUndefinedAddress {
-			continue
-		}
-		err := g.UpdateConfig(addressClass, block.Height(), tx.Hash(), tx.MsgTx().Payload)
+		err := g.updateConfig(addressClass, block.Height(), tx.Hash(), tx.MsgTx().Payload)
 		if err != nil {
 			return err
 		}
@@ -204,35 +226,19 @@ func (g *ChainGovern) SyncDetachBlock(block *chainutil.Block) error {
 		if IsCoinBaseTx(tx.MsgTx()) {
 			continue
 		}
-		payload := tx.MsgTx().Payload
-		if len(payload) == 0 {
-			continue
-		}
-		addressClass := GovernUndefinedAddress
-		for i, _ := range tx.TxOut() {
-			info := tx.GetPkScriptInfo(i)
-			scriptClass := txscript.ScriptClass(info.Class)
-			if scriptClass != txscript.WitnessV0ScriptHashTy {
-				continue
-			}
-			curClass, ok := g.governAddresses[info.ScriptHash]
-			if !ok {
-				continue
-			}
-			if GovernUndefinedAddress == curClass {
-				continue
-			}
-			addressClass = curClass
-		}
-		if GovernUndefinedAddress == addressClass {
-			continue
-		}
+		//addressClass, ok := g.isGovernTransaction(tx, txStore)
+		//rawTx, _, _, _, err := g.db.fetchTxDataBySha(tx.Hash())
+		//if !ok {
+		//	continue
+		//}
+		//err := g.updateConfig(addressClass, block.Height(), tx.Hash(), tx.MsgTx().Payload)
+		//if err != nil {
+		//	return err
+		//}
 	}
 	return nil
 }
-func (g *ChainGovern) UpdateConfig(class GovernAddressClass, height uint64, txSha *wire.Hash, payload []byte) error {
-	g.Lock()
-	defer g.Unlock()
+func (g *ChainGovern) updateConfig(class GovernAddressClass, height uint64, txSha *wire.Hash, payload []byte) error {
 	prop, ok := g.proposalPool[class]
 	if !ok {
 		return fmt.Errorf("govern can't find this class")
@@ -242,9 +248,9 @@ func (g *ChainGovern) UpdateConfig(class GovernAddressClass, height uint64, txSh
 		return err
 	}
 	if prop.future != nil {
-		//config := *prop.future
-		//config.SetShadow()
-		//g.db.InsertGovernConfig(uint32(config.GetId()),config.GetBlockHeight(),config.GetTxId(),config.GetData())
+		config := *prop.future
+		config.GetMeta().SetShadow()
+		g.db.InsertGovernConfig(uint32(config.GetMeta().GetId()), config.GetMeta().GetBlockHeight(), config.GetMeta().GetTxId(), config.GetData())
 		prop.future = &newConfig
 	}
 	if (*prop.future).GetMeta().GetActiveHeight() >= height {
@@ -308,6 +314,13 @@ func (gs *GovernSenateConfig) GetMeta() *GovernConfigMeta {
 }
 
 func (gs *GovernSenateConfig) GetData() []byte {
+	l := len(gs.senates)
+	l = 9 + 40*l
+	return nil
+}
+
+func (gs *GovernSenateConfig) SetBytes(data []byte) error {
+
 	return nil
 }
 
@@ -332,6 +345,10 @@ func (gv *GovernVersionConfig) GetVersion() *version.Version {
 	return &gv.version
 }
 
+func (gv *GovernVersionConfig) SetBytes(data []byte) error {
+	return nil
+}
+
 type GovernSupperConfig struct {
 	meta      GovernConfigMeta
 	addresses map[string]uint32
@@ -342,11 +359,17 @@ func (gsc *GovernSupperConfig) GetMeta() *GovernConfigMeta {
 }
 
 func (gsc *GovernSupperConfig) GetData() []byte {
+
 	return nil
 }
 
 func (gsc *GovernSupperConfig) GetAddresses() map[string]uint32 {
 	return gsc.addresses
+}
+
+func (gsc *GovernSupperConfig) SetBytes(data []byte) error {
+
+	return nil
 }
 
 func DecodeGovernConfig(class GovernAddressClass, blockHeight uint64, txSha *wire.Hash, data []byte) (GovernConfig, error) {
@@ -362,6 +385,28 @@ func DecodeGovernConfig(class GovernAddressClass, blockHeight uint64, txSha *wir
 				blockHeight:  blockHeight,
 				activeHeight: activeHeight,
 				shadow:       shadow,
+				txId:         txSha,
+				id:           GovernSenateAddress,
+			},
+		}, nil
+	case GovernVersionAddress:
+		return &GovernVersionConfig{
+			meta: GovernConfigMeta{
+				blockHeight:  blockHeight,
+				activeHeight: activeHeight,
+				shadow:       shadow,
+				txId:         txSha,
+				id:           GovernVersionAddress,
+			},
+		}, nil
+	case GovernSupperAddress:
+		return &GovernSupperConfig{
+			meta: GovernConfigMeta{
+				blockHeight:  blockHeight,
+				activeHeight: activeHeight,
+				shadow:       shadow,
+				txId:         txSha,
+				id:           GovernSupperAddress,
 			},
 		}, nil
 	default:

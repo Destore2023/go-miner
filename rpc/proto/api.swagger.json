@@ -2243,11 +2243,11 @@
       "properties": {
         "id": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         },
         "limit": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         }
       }
     },
@@ -2256,10 +2256,13 @@
       "properties": {
         "id": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         },
-        "senate_nodes_configs": {
-          "$ref": "#/definitions/rpcprotobufGovernSenateConfig"
+        "configs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcprotobufGovernConfig"
+          }
         }
       }
     },
