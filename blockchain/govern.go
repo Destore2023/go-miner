@@ -249,8 +249,11 @@ func (g *ChainGovern) updateConfig(class GovernAddressClass, height uint64, txSh
 	}
 	if prop.future != nil {
 		config := *prop.future
-		config.GetMeta().SetShadow()
-		g.db.InsertGovernConfig(uint32(config.GetMeta().GetId()), config.GetMeta().GetBlockHeight(), config.GetMeta().GetTxId(), config.GetData())
+		id := uint32(config.GetMeta().GetId())
+		blockHeight := config.GetMeta().GetBlockHeight()
+		activeHeight := config.GetMeta().GetActiveHeight()
+		txSha := config.GetMeta().GetTxId()
+		g.db.InsertGovernConfig(id, blockHeight, activeHeight, true, txSha, config.GetData())
 		prop.future = &newConfig
 	}
 	if (*prop.future).GetMeta().GetActiveHeight() >= height {

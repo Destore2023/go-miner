@@ -64,10 +64,10 @@ func makeGovernConfigSearchKey(id uint32, height uint64) []byte {
 	return key
 }
 
-func (db *ChainDb) InsertGovernConfig(id uint32, height, activeHeight uint64, txSha *wire.Hash, data []byte) error {
+func (db *ChainDb) InsertGovernConfig(id uint32, height, activeHeight uint64, shadow bool, txSha *wire.Hash, data []byte) error {
 	db.dbLock.Lock()
 	defer db.dbLock.Unlock()
-	return db.insertGovernConfig(id, height, activeHeight, txSha, data)
+	return db.insertGovernConfig(id, height, activeHeight, shadow, txSha, data)
 }
 
 func (db *ChainDb) fetchGovernConfig(class uint32, height uint64, includeShadow bool) ([]*database.GovernConfig, error) {
@@ -104,7 +104,7 @@ func (db *ChainDb) fetchGovernConfig(class uint32, height uint64, includeShadow 
 	return configs, nil
 }
 
-func (db *ChainDb) insertGovernConfig(id uint32, height, activeHeight uint64, txSha *wire.Hash, data []byte) error {
+func (db *ChainDb) insertGovernConfig(id uint32, height, activeHeight uint64, shadow bool, txSha *wire.Hash, data []byte) error {
 	key := governConfigMapKey{
 		id:          id,
 		blockHeight: height,
@@ -112,6 +112,7 @@ func (db *ChainDb) insertGovernConfig(id uint32, height, activeHeight uint64, tx
 	}
 	db.governConfigMap[key] = &governConfig{
 		id:           id,
+		shadow:       shadow,
 		blockHeight:  height,
 		activeHeight: activeHeight,
 		txSha:        txSha,
