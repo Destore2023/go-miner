@@ -45,7 +45,7 @@ func (s *Server) GetGovernConfig(ctx context.Context, in *pb.GetGovernConfigRequ
 			for addr, id := range supperConfig.GetAddresses() {
 				addresses = append(addresses, &pb.GovernSupperAddressInfo{
 					Id:      id,
-					Address: addr,
+					Address: hex.EncodeToString(addr[:]),
 				})
 			}
 			response.Config = &pb.GovernConfig{
