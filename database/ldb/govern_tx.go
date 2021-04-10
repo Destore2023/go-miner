@@ -86,6 +86,9 @@ func (db *ChainDb) fetchGovernConfig(class uint32, height uint64, includeShadow 
 			continue
 		}
 		activeHeight := binary.LittleEndian.Uint64(value[1:9])
+		if activeHeight < height {
+			continue
+		}
 		data := value[9:]
 		blockHeight := binary.LittleEndian.Uint64(key[recordGovernTxLen+4 : recordGovernTxLen+12])
 		txSha, err := wire.NewHash(key[recordGovernTxLen+12:])

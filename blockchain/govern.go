@@ -1,6 +1,7 @@
 package blockchain
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
@@ -22,7 +23,7 @@ const (
 
 type GovernConfig interface {
 	GetMeta() *GovernConfigMeta
-	GetData() []byte
+	GetData() ([]byte, error)
 	SetBytes(data []byte) error
 }
 
@@ -91,7 +92,7 @@ func (g *ChainGovern) fetchGovernConfig(class GovernAddressClass, height uint64,
 					shadow:       false,
 					id:           GovernSupperAddress,
 				},
-				addresses: make(map[string]uint32),
+				addresses: make(map[wire.Hash]uint32),
 			})
 		}
 	default:
@@ -253,7 +254,11 @@ func (g *ChainGovern) updateConfig(class GovernAddressClass, height uint64, txSh
 		blockHeight := config.GetMeta().GetBlockHeight()
 		activeHeight := config.GetMeta().GetActiveHeight()
 		txId := config.GetMeta().GetTxId()
-		err = g.db.InsertGovernConfig(id, blockHeight, activeHeight, true, txId, config.GetData())
+		data, err := config.GetData()
+		if err != nil {
+			return err
+		}
+		err = g.db.InsertGovernConfig(id, blockHeight, activeHeight, true, txId, data)
 		if err != nil {
 			return err
 		}
@@ -263,7 +268,11 @@ func (g *ChainGovern) updateConfig(class GovernAddressClass, height uint64, txSh
 	blockHeight := newConfig.GetMeta().GetBlockHeight()
 	activeHeight := newConfig.GetMeta().GetActiveHeight()
 	txId := newConfig.GetMeta().GetTxId()
-	err = g.db.InsertGovernConfig(id, blockHeight, activeHeight, false, txId, newConfig.GetData())
+	data, err := newConfig.GetData()
+	if err != nil {
+		return err
+	}
+	err = g.db.InsertGovernConfig(id, blockHeight, activeHeight, false, txId, data)
 	if err != nil {
 		return err
 	}
@@ -314,8 +323,29 @@ func (m *GovernConfigMeta) IsShadow() bool {
 func (m *GovernConfigMeta) GetTxId() *wire.Hash {
 	return m.txId
 }
-func (m *GovernConfigMeta) SetShadow() {
-	m.shadow = true
+
+func (m *GovernConfigMeta) GetMetaBytes() []byte {
+	key := make([]byte, 9)
+	if m.shadow {
+		key[0] = 0x01
+	} else {
+		key[0] = 0x00
+	}
+	binary.LittleEndian.PutUint64(key[1:9], m.activeHeight)
+	return key
+}
+
+func (m *GovernConfigMeta) SetMetaBytes(header []byte) error {
+	if len(header) < 9 {
+		return fmt.Errorf("SetMetaBytes Invalid data length ")
+	}
+	if header[0] == 0x00 {
+		m.shadow = false
+	} else {
+		m.shadow = true
+	}
+	m.activeHeight = binary.LittleEndian.Uint64(header[1:9])
+	return nil
 }
 
 type GovernSenateConfig struct {
@@ -327,14 +357,39 @@ func (gs *GovernSenateConfig) GetMeta() *GovernConfigMeta {
 	return &gs.meta
 }
 
-func (gs *GovernSenateConfig) GetData() []byte {
-	l := len(gs.senates)
-	l = 9 + 40*l
-	return nil
+func (gs *GovernSenateConfig) GetData() ([]byte, error) {
+	header := gs.meta.GetMetaBytes()
+	buffer := bytes.NewBuffer(header)
+	for _, eq := range gs.senates {
+		value := make([]byte, 40)
+		binary.LittleEndian.PutUint64(value[0:8], eq.Weight)
+		copy(value[9:40], eq.ScriptHash[:])
+		_, err := buffer.Write(value)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return buffer.Bytes(), nil
 }
 
 func (gs *GovernSenateConfig) SetBytes(data []byte) error {
-
+	l := len(data)
+	n := (l - 9) % 40
+	if l < 9 || n != 0 {
+		return fmt.Errorf("GovernSenateConfig SetBytes Invalid data length ")
+	}
+	shadow := data[0] == 0x00
+	activeHeight := binary.LittleEndian.Uint64(data[1:9])
+	gs.meta.shadow = shadow
+	gs.meta.activeHeight = activeHeight
+	for i := 0; i < n; i++ {
+		start := i * 40
+		weight := binary.LittleEndian.Uint64(data[start+9 : start+17])
+		scriptHash := data[start+17 : start+49]
+		equity := database.SenateEquity{Weight: weight}
+		copy(equity.ScriptHash[:], scriptHash)
+		gs.senates = append(gs.senates, equity)
+	}
 	return nil
 }
 
@@ -351,8 +406,10 @@ func (gv *GovernVersionConfig) GetMeta() *GovernConfigMeta {
 	return &gv.meta
 }
 
-func (gv *GovernVersionConfig) GetData() []byte {
-	return nil
+func (gv *GovernVersionConfig) GetData() ([]byte, error) {
+	header := gv.meta.GetMetaBytes()
+	buffer := bytes.NewBuffer(header)
+	return buffer.Bytes(), nil
 }
 
 func (gv *GovernVersionConfig) GetVersion() *version.Version {
@@ -365,19 +422,20 @@ func (gv *GovernVersionConfig) SetBytes(data []byte) error {
 
 type GovernSupperConfig struct {
 	meta      GovernConfigMeta
-	addresses map[string]uint32
+	addresses map[wire.Hash]uint32
 }
 
 func (gsc *GovernSupperConfig) GetMeta() *GovernConfigMeta {
 	return &gsc.meta
 }
 
-func (gsc *GovernSupperConfig) GetData() []byte {
-
-	return nil
+func (gsc *GovernSupperConfig) GetData() ([]byte, error) {
+	header := gsc.meta.GetMetaBytes()
+	buffer := bytes.NewBuffer(header)
+	return buffer.Bytes(), nil
 }
 
-func (gsc *GovernSupperConfig) GetAddresses() map[string]uint32 {
+func (gsc *GovernSupperConfig) GetAddresses() map[wire.Hash]uint32 {
 	return gsc.addresses
 }
 
