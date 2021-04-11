@@ -912,8 +912,8 @@ message GetGovernConfigRequest {
 }
 
 message GetGovernConfigHistoryRequest {
-  uint32    id = 1;
-  uint32 limit = 2;
+  uint32                id = 1;
+  bool      include_shadow = 2;
 }
 
 message GetGovernConfigHistoryResponse {

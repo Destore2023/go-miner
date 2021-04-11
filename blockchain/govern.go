@@ -101,6 +101,10 @@ func (g *ChainGovern) fetchGovernConfig(class GovernAddressClass, height uint64,
 	return configs, nil
 }
 
+func (chain *Blockchain) FetchGovernConfig(class uint32, includeShadow bool) ([]*GovernConfig, error) {
+	return nil, nil
+}
+
 // FetchEnabledGovernConfig fetch current enable config
 func (chain *Blockchain) FetchEnabledGovernConfig(class uint32) (*GovernConfig, error) {
 	return chain.chainGovern.FetchEnabledGovernConfig(GovernAddressClass(class), chain.BestBlockHeight())

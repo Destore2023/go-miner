@@ -15,6 +15,7 @@ import (
 
 	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
 	"google.golang.org/grpc"
@@ -22,7 +23,6 @@ import (
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // Suppress "imported and not used" errors
@@ -35,7 +35,7 @@ var _ = descriptor.ForMessage
 var _ = metadata.Join
 
 func request_ApiService_GetBestBlock_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetBestBlock(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -44,7 +44,7 @@ func request_ApiService_GetBestBlock_0(ctx context.Context, marshaler runtime.Ma
 }
 
 func local_request_ApiService_GetBestBlock_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetBestBlock(ctx, &protoReq)
@@ -539,7 +539,7 @@ func local_request_ApiService_GetCoinbase_0(ctx context.Context, marshaler runti
 }
 
 func request_ApiService_GetTxPool_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetTxPool(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -548,7 +548,7 @@ func request_ApiService_GetTxPool_0(ctx context.Context, marshaler runtime.Marsh
 }
 
 func local_request_ApiService_GetTxPool_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetTxPool(ctx, &protoReq)
@@ -557,7 +557,7 @@ func local_request_ApiService_GetTxPool_0(ctx context.Context, marshaler runtime
 }
 
 func request_ApiService_GetTxPoolVerbose0_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetTxPoolVerbose0(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -566,7 +566,7 @@ func request_ApiService_GetTxPoolVerbose0_0(ctx context.Context, marshaler runti
 }
 
 func local_request_ApiService_GetTxPoolVerbose0_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetTxPoolVerbose0(ctx, &protoReq)
@@ -575,7 +575,7 @@ func local_request_ApiService_GetTxPoolVerbose0_0(ctx context.Context, marshaler
 }
 
 func request_ApiService_GetTxPoolVerbose1_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetTxPoolVerbose1(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -584,7 +584,7 @@ func request_ApiService_GetTxPoolVerbose1_0(ctx context.Context, marshaler runti
 }
 
 func local_request_ApiService_GetTxPoolVerbose1_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetTxPoolVerbose1(ctx, &protoReq)
@@ -593,7 +593,7 @@ func local_request_ApiService_GetTxPoolVerbose1_0(ctx context.Context, marshaler
 }
 
 func request_ApiService_GetStakingTxPoolInfo_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetStakingTxPoolInfo(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -602,7 +602,7 @@ func request_ApiService_GetStakingTxPoolInfo_0(ctx context.Context, marshaler ru
 }
 
 func local_request_ApiService_GetStakingTxPoolInfo_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetStakingTxPoolInfo(ctx, &protoReq)
@@ -699,7 +699,7 @@ func local_request_ApiService_GetRawTransaction_0(ctx context.Context, marshaler
 }
 
 func request_ApiService_GetCapacitySpaces_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetCapacitySpaces(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -708,7 +708,7 @@ func request_ApiService_GetCapacitySpaces_0(ctx context.Context, marshaler runti
 }
 
 func local_request_ApiService_GetCapacitySpaces_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetCapacitySpaces(ctx, &protoReq)
@@ -751,7 +751,7 @@ func local_request_ApiService_ConfigureCapacity_0(ctx context.Context, marshaler
 }
 
 func request_ApiService_GetCapacitySpacesByDirs_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetCapacitySpacesByDirs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -760,7 +760,7 @@ func request_ApiService_GetCapacitySpacesByDirs_0(ctx context.Context, marshaler
 }
 
 func local_request_ApiService_GetCapacitySpacesByDirs_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetCapacitySpacesByDirs(ctx, &protoReq)
@@ -857,7 +857,7 @@ func local_request_ApiService_GetCapacitySpace_0(ctx context.Context, marshaler 
 }
 
 func request_ApiService_PlotCapacitySpaces_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -874,7 +874,7 @@ func request_ApiService_PlotCapacitySpaces_0(ctx context.Context, marshaler runt
 }
 
 func local_request_ApiService_PlotCapacitySpaces_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -961,7 +961,7 @@ func local_request_ApiService_PlotCapacitySpace_0(ctx context.Context, marshaler
 }
 
 func request_ApiService_MineCapacitySpaces_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -978,7 +978,7 @@ func request_ApiService_MineCapacitySpaces_0(ctx context.Context, marshaler runt
 }
 
 func local_request_ApiService_MineCapacitySpaces_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1065,7 +1065,7 @@ func local_request_ApiService_MineCapacitySpace_0(ctx context.Context, marshaler
 }
 
 func request_ApiService_StopCapacitySpaces_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1082,7 +1082,7 @@ func request_ApiService_StopCapacitySpaces_0(ctx context.Context, marshaler runt
 }
 
 func local_request_ApiService_StopCapacitySpaces_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1169,7 +1169,7 @@ func local_request_ApiService_StopCapacitySpace_0(ctx context.Context, marshaler
 }
 
 func request_ApiService_GetClientStatus_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetClientStatus(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -1178,7 +1178,7 @@ func request_ApiService_GetClientStatus_0(ctx context.Context, marshaler runtime
 }
 
 func local_request_ApiService_GetClientStatus_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetClientStatus(ctx, &protoReq)
@@ -1187,7 +1187,7 @@ func local_request_ApiService_GetClientStatus_0(ctx context.Context, marshaler r
 }
 
 func request_ApiService_QuitClient_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1204,7 +1204,7 @@ func request_ApiService_QuitClient_0(ctx context.Context, marshaler runtime.Mars
 }
 
 func local_request_ApiService_QuitClient_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1357,7 +1357,7 @@ func local_request_ApiService_ImportKeystoreByDir_0(ctx context.Context, marshal
 }
 
 func request_ApiService_GetKeystore_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetKeystore(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -1366,7 +1366,7 @@ func request_ApiService_GetKeystore_0(ctx context.Context, marshaler runtime.Mar
 }
 
 func local_request_ApiService_GetKeystore_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetKeystore(ctx, &protoReq)
@@ -1443,7 +1443,7 @@ func local_request_ApiService_UnlockWallet_0(ctx context.Context, marshaler runt
 }
 
 func request_ApiService_LockWallet_0(ctx context.Context, marshaler runtime.Marshaler, client ApiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1460,7 +1460,7 @@ func request_ApiService_LockWallet_0(ctx context.Context, marshaler runtime.Mars
 }
 
 func local_request_ApiService_LockWallet_0(ctx context.Context, marshaler runtime.Marshaler, server ApiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
