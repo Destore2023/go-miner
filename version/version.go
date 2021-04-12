@@ -20,6 +20,25 @@ type Version struct {
 	versionString string
 }
 
+func NewVersion(majorVersion uint32, minorVersion uint32, patchVersion uint32) *Version {
+	return &Version{
+		majorVersion: majorVersion,
+		minorVersion: minorVersion,
+		patchVersion: patchVersion,
+	}
+}
+func (v Version) GetMajorVersion() uint32 {
+	return v.majorVersion
+}
+
+func (v Version) GetMinorVersion() uint32 {
+	return v.minorVersion
+}
+
+func (v Version) GetPatchVersion() uint32 {
+	return v.patchVersion
+}
+
 func (v Version) IsEqual(other *Version) bool {
 	if v.majorVersion == other.majorVersion && v.minorVersion == other.minorVersion && v.patchVersion == other.patchVersion {
 		return true

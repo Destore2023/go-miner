@@ -374,8 +374,8 @@ func (gs *GovernSenateConfig) GetData() ([]byte, error) {
 
 func (gs *GovernSenateConfig) SetBytes(data []byte) error {
 	l := len(data)
-	n := (l - 9) % 40
-	if l < 9 || n != 0 {
+	n := (l - 9) / 40
+	if l < 9 || (l-9)%40 != 0 {
 		return fmt.Errorf("GovernSenateConfig SetBytes Invalid data length ")
 	}
 	shadow := data[0] == 0x00
@@ -409,6 +409,13 @@ func (gv *GovernVersionConfig) GetMeta() *GovernConfigMeta {
 func (gv *GovernVersionConfig) GetData() ([]byte, error) {
 	header := gv.meta.GetMetaBytes()
 	buffer := bytes.NewBuffer(header)
+	value := make([]byte, 4)
+	binary.LittleEndian.PutUint32(value, gv.version.GetMajorVersion())
+	buffer.Write(value)
+	binary.LittleEndian.PutUint32(value, gv.version.GetMinorVersion())
+	buffer.Write(value)
+	binary.LittleEndian.PutUint32(value, gv.version.GetPatchVersion())
+	buffer.Write(value)
 	return buffer.Bytes(), nil
 }
 
@@ -417,6 +424,19 @@ func (gv *GovernVersionConfig) GetVersion() *version.Version {
 }
 
 func (gv *GovernVersionConfig) SetBytes(data []byte) error {
+	l := len(data)
+	if l != 21 {
+		return fmt.Errorf("GovernVersionConfig SetBytes Invalid data length ")
+	}
+	shadow := data[0] == 0x00
+	activeHeight := binary.LittleEndian.Uint64(data[1:9])
+	gv.meta.shadow = shadow
+	gv.meta.activeHeight = activeHeight
+	majorVersion := binary.LittleEndian.Uint32(data[9:13])
+	minorVersion := binary.LittleEndian.Uint32(data[13:17])
+	patchVersion := binary.LittleEndian.Uint32(data[17:21])
+	newVersion := version.NewVersion(majorVersion, minorVersion, patchVersion)
+	gv.version = *newVersion
 	return nil
 }
 
@@ -432,6 +452,12 @@ func (gsc *GovernSupperConfig) GetMeta() *GovernConfigMeta {
 func (gsc *GovernSupperConfig) GetData() ([]byte, error) {
 	header := gsc.meta.GetMetaBytes()
 	buffer := bytes.NewBuffer(header)
+	for hash, id := range gsc.addresses {
+		value := make([]byte, 36)
+		copy(value[0:32], hash[:])
+		binary.LittleEndian.PutUint32(value[32:36], id)
+		buffer.Write(value)
+	}
 	return buffer.Bytes(), nil
 }
 
@@ -440,7 +466,24 @@ func (gsc *GovernSupperConfig) GetAddresses() map[wire.Hash]uint32 {
 }
 
 func (gsc *GovernSupperConfig) SetBytes(data []byte) error {
-
+	l := len(data)
+	n := (l - 9) / 36
+	if l < 9 || (l-9)%36 != 0 {
+		return fmt.Errorf("GovernSupperConfig SetBytes Invalid data length ")
+	}
+	shadow := data[0] == 0x00
+	activeHeight := binary.LittleEndian.Uint64(data[1:9])
+	gsc.meta.shadow = shadow
+	gsc.meta.activeHeight = activeHeight
+	for i := 0; i < n; i++ {
+		start := i * 36
+		newHash, err := wire.NewHash(data[start : start+32])
+		if err != nil {
+			return err
+		}
+		id := binary.LittleEndian.Uint32(data[start+32 : start+36])
+		gsc.addresses[*newHash] = id
+	}
 	return nil
 }
 
