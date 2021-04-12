@@ -1,6 +1,10 @@
 package version
 
-import "fmt"
+import (
+	"fmt"
+	"regexp"
+	"strconv"
+)
 
 const (
 	majorVersion uint32 = 0
@@ -9,8 +13,9 @@ const (
 )
 
 var (
-	gitCommit string
-	ver       *Version
+	gitCommit  string
+	ver        *Version
+	versionExp = regexp.MustCompile(`([0-9]+)\.([0-9]+)\.([0-9]+)`)
 )
 
 type Version struct {
@@ -27,6 +32,36 @@ func NewVersion(majorVersion uint32, minorVersion uint32, patchVersion uint32) *
 		patchVersion: patchVersion,
 	}
 }
+
+func NewVersionFromString(verStr string) (*Version, error) {
+	versionMatch := versionExp.FindAllStringSubmatch(verStr, -1)
+	if len(versionMatch) < 1 || len(versionMatch[0]) != 4 {
+		return nil, fmt.Errorf("NewVersionFromString Incorrect version information")
+	}
+	iMajorVersion, err := strconv.Atoi(versionMatch[0][1])
+	if err != nil {
+		return nil, err
+	}
+	if iMajorVersion < 0 {
+		return nil, fmt.Errorf("NewVersionFromString the majorVersion cannot be negative ")
+	}
+	iMinorVersion, err := strconv.Atoi(versionMatch[0][2])
+	if err != nil {
+		return nil, err
+	}
+	if iMinorVersion < 0 {
+		return nil, fmt.Errorf("NewVersionFromString the minorVersion cannot be negative ")
+	}
+	iPatchVersion, err := strconv.Atoi(versionMatch[0][3])
+	if err != nil {
+		return nil, err
+	}
+	if iPatchVersion < 0 {
+		return nil, fmt.Errorf("NewVersionFromString the minorVersion cannot be negative ")
+	}
+	return NewVersion(uint32(iMajorVersion), uint32(iMinorVersion), uint32(iPatchVersion)), nil
+}
+
 func (v Version) GetMajorVersion() uint32 {
 	return v.majorVersion
 }
