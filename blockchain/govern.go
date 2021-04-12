@@ -3,6 +3,8 @@ package blockchain
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/database"
@@ -491,43 +493,107 @@ func (gsc *GovernSupperConfig) SetBytes(data []byte) error {
 	return nil
 }
 
-func DecodeGovernConfig(class GovernAddressClass, blockHeight uint64, txSha *wire.Hash, data []byte) (GovernConfig, error) {
-	if len(data) <= 9 {
+type GovernVersionJson struct {
+	activeHeight uint64 `json:"active_height"`
+	version      string `json:"version"`
+}
+
+type GovernSupperAddressJson struct {
+	activeHeight uint64            `json:"active_height"`
+	addresses    map[string]uint32 `json:"addresses"`
+}
+
+type GovernSenateJson struct {
+	activeHeight uint64            `json:"active_height"`
+	senates      map[string]uint64 `json:"senates"`
+}
+
+// DecodeGovernConfig Decode configuration information from the transaction's payload
+func DecodeGovernConfig(class GovernAddressClass, blockHeight uint64, txSha *wire.Hash, payload []byte) (GovernConfig, error) {
+	if len(payload) == 0 {
 		return nil, fmt.Errorf("error data length")
 	}
-	activeHeight := binary.LittleEndian.Uint64(data[1:9])
-	shadow := data[0] == 0x0
 	switch class {
 	case GovernSenateAddress:
-		return &GovernSenateConfig{
+		senateJson := GovernSenateJson{}
+		err := json.Unmarshal(payload, senateJson)
+		if err != nil {
+			return nil, err
+		}
+		config := GovernSenateConfig{
 			meta: GovernConfigMeta{
 				blockHeight:  blockHeight,
-				activeHeight: activeHeight,
-				shadow:       shadow,
+				activeHeight: senateJson.activeHeight,
+				shadow:       false,
 				txId:         txSha,
 				id:           GovernSenateAddress,
 			},
-		}, nil
+			senates: make(database.SenateEquities, 0),
+		}
+		for scriptHashString, weight := range senateJson.senates {
+			scriptHashBytes, err := hex.DecodeString(scriptHashString)
+			if err != nil {
+				return nil, err
+			}
+			scriptHash, err := wire.NewHash(scriptHashBytes)
+			if err != nil {
+				return nil, err
+			}
+			config.senates = append(config.senates, database.SenateEquity{
+				Weight:     weight,
+				ScriptHash: *scriptHash,
+			})
+		}
+		return &config, nil
 	case GovernVersionAddress:
-		return &GovernVersionConfig{
+		versionJson := GovernVersionJson{}
+		err := json.Unmarshal(payload, versionJson)
+		if err != nil {
+			return nil, err
+		}
+		newVersion, err := version.NewVersionFromString(versionJson.version)
+		if err != nil {
+			return nil, err
+		}
+		config := GovernVersionConfig{
 			meta: GovernConfigMeta{
 				blockHeight:  blockHeight,
-				activeHeight: activeHeight,
-				shadow:       shadow,
+				activeHeight: versionJson.activeHeight,
+				shadow:       false,
 				txId:         txSha,
-				id:           GovernVersionAddress,
+				id:           GovernSenateAddress,
 			},
-		}, nil
+			version: *newVersion,
+		}
+		return &config, nil
 	case GovernSupperAddress:
-		return &GovernSupperConfig{
+		supperAddressJson := GovernSupperAddressJson{}
+		err := json.Unmarshal(payload, supperAddressJson)
+		if err != nil {
+			return nil, err
+		}
+		config := GovernSupperConfig{
 			meta: GovernConfigMeta{
 				blockHeight:  blockHeight,
-				activeHeight: activeHeight,
-				shadow:       shadow,
+				activeHeight: supperAddressJson.activeHeight,
+				shadow:       false,
 				txId:         txSha,
 				id:           GovernSupperAddress,
 			},
-		}, nil
+			addresses: make(map[wire.Hash]uint32),
+		}
+		for scriptHashString, id := range supperAddressJson.addresses {
+			scriptHashBytes, err := hex.DecodeString(scriptHashString)
+			if err != nil {
+				return nil, err
+			}
+			scriptHash, err := wire.NewHash(scriptHashBytes)
+			if err != nil {
+				return nil, err
+			}
+			config.addresses[*scriptHash] = id
+		}
+		return &config, nil
 	default:
 		{
 			return nil, fmt.Errorf("unsupported config class")
