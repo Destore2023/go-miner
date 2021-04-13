@@ -37,8 +37,8 @@ type GovernConfig interface {
 // +--------+     +--------+     +--------+
 type GovernProposal struct {
 	Id      GovernAddressClass
-	current *GovernConfig
-	future  *GovernConfig
+	current GovernConfig
+	future  GovernConfig
 }
 
 type ChainGovern struct {
@@ -103,18 +103,55 @@ func (g *ChainGovern) fetchGovernConfig(class GovernAddressClass, height uint64,
 	return configs, nil
 }
 
-func (chain *Blockchain) FetchGovernConfig(class uint32, includeShadow bool) ([]*GovernConfig, error) {
-	return nil, nil
+func (chain *Blockchain) FetchGovernConfig(class uint32, includeShadow bool) ([]GovernConfig, error) {
+	configs, err := chain.db.FetchGovernConfigData(class, 0, includeShadow)
+	if err != nil {
+		return nil, err
+	}
+	governConfigs := make([]GovernConfig, 0)
+	for _, conf := range configs {
+		meta := GovernConfigMeta{
+			id:           GovernAddressClass(conf.Id),
+			activeHeight: 0,
+			blockHeight:  conf.BlockHeight,
+			shadow:       false,
+			txId:         conf.TxSha,
+		}
+		switch GovernAddressClass(conf.Id) {
+		case GovernSenateAddress:
+			config := GovernSenateConfig{
+				meta: meta,
+			}
+			config.SetBytes(conf.Data)
+			governConfigs = append(governConfigs, &config)
+		case GovernSupperAddress:
+			config := GovernSupperConfig{
+				meta: meta,
+			}
+			config.SetBytes(conf.Data)
+			governConfigs = append(governConfigs, &config)
+		case GovernVersionAddress:
+			config := GovernVersionConfig{
+				meta: meta,
+			}
+			config.SetBytes(conf.Data)
+			governConfigs = append(governConfigs, &config)
+		default:
+			return nil, fmt.Errorf("Unknown govern type ")
+		}
+
+	}
+	return governConfigs, nil
 }
 
 // FetchEnabledGovernConfig fetch current enable config
-func (chain *Blockchain) FetchEnabledGovernConfig(class uint32) (*GovernConfig, error) {
+func (chain *Blockchain) FetchEnabledGovernConfig(class uint32) (GovernConfig, error) {
 	return chain.chainGovern.FetchEnabledGovernConfig(GovernAddressClass(class), chain.BestBlockHeight())
 }
 
 // FetchEnabledGovernConfig fetch next block height enable config
 // Only one version is enabled at a time
-func (g *ChainGovern) FetchEnabledGovernConfig(class GovernAddressClass, height uint64) (*GovernConfig, error) {
+func (g *ChainGovern) FetchEnabledGovernConfig(class GovernAddressClass, height uint64) (GovernConfig, error) {
 	g.Lock()
 	defer g.Unlock()
 	proposal, ok := g.proposalPool[class]
@@ -131,16 +168,16 @@ func (g *ChainGovern) FetchEnabledGovernConfig(class GovernAddressClass, height 
 			return nil, fmt.Errorf("configs is empty! ")
 		}
 		if l == 1 {
-			proposal.current = &configs[0]
+			proposal.current = configs[0]
 		} else {
-			proposal.current = &configs[0]
-			proposal.future = &configs[l-1]
+			proposal.current = configs[0]
+			proposal.future = configs[l-1]
 		}
 	}
 	if proposal.future == nil {
 		return proposal.current, nil
 	}
-	if (*proposal.future).GetMeta().activeHeight >= height {
+	if proposal.future.GetMeta().activeHeight >= height {
 		proposal.current = proposal.future
 		proposal.future = nil
 	}
@@ -255,7 +292,7 @@ func (g *ChainGovern) updateConfig(class GovernAddressClass, height uint64, txSh
 		return err
 	}
 	if prop.future != nil {
-		config := *prop.future
+		config := prop.future
 		id := uint32(config.GetMeta().GetId())
 		blockHeight := config.GetMeta().GetBlockHeight()
 		activeHeight := config.GetMeta().GetActiveHeight()
@@ -268,7 +305,7 @@ func (g *ChainGovern) updateConfig(class GovernAddressClass, height uint64, txSh
 		if err != nil {
 			return err
 		}
-		prop.future = &newConfig
+		prop.future = newConfig
 	}
 	id := uint32(newConfig.GetMeta().GetId())
 	blockHeight := newConfig.GetMeta().GetBlockHeight()
@@ -282,7 +319,7 @@ func (g *ChainGovern) updateConfig(class GovernAddressClass, height uint64, txSh
 	if err != nil {
 		return err
 	}
-	if (*prop.future).GetMeta().GetActiveHeight() >= height {
+	if prop.future.GetMeta().GetActiveHeight() >= height {
 		prop.current = prop.future
 		prop.future = nil
 	}

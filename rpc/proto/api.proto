@@ -640,15 +640,15 @@ message GetTxPoolVerbose0Response {
 }
 
 message GetTxPoolVerbose1Response {
-  uint32 tx_count = 1;
+  uint32 tx_count     = 1;
   uint32 orphan_count = 2;
-  uint64 tx_plain_size = 3;
+  uint64 tx_plain_size  = 3;
   uint64 tx_packet_size = 4;
-  uint64 orphan_plain_size = 5;
+  uint64 orphan_plain_size  = 5;
   uint64 orphan_packet_size = 6;
-  repeated string txs = 7;
+  repeated string txs     = 7;
   repeated string orphans = 8;
-  repeated GetTxDescVerbose1Response tx_descs = 9;
+  repeated GetTxDescVerbose1Response tx_descs   = 9;
   repeated GetOrphanTxDescResponse orphan_descs = 10;
 }
 
@@ -719,10 +719,10 @@ message ConfigureSpaceKeeperByDirsRequest {
     string directory = 1;
     uint64  capacity = 2;
   }
-  repeated Allocation allocations = 1;
+  repeated Allocation allocations  = 1;
   repeated string payout_addresses = 2;
-  string passphrase = 3;
-  uint32   cointype = 4;
+  string passphrase  = 3;
+  uint32   cointype  = 4;
   int32 auto_create  = 5; // >0 autoCreate =0 default  <0 no
 }
 

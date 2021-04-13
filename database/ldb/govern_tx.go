@@ -70,10 +70,10 @@ func (db *ChainDb) InsertGovernConfig(id uint32, height, activeHeight uint64, sh
 	return db.insertGovernConfig(id, height, activeHeight, shadow, txSha, data)
 }
 
-func (db *ChainDb) fetchGovernConfig(class uint32, height uint64, includeShadow bool) ([]*database.GovernConfig, error) {
+func (db *ChainDb) fetchGovernConfigData(class uint32, height uint64, includeShadow bool) ([]*database.GovernConfigData, error) {
 	keyPrefix := makeGovernConfigSearchKey(class, height)
 	iter := db.localStorage.NewIterator(storage.BytesPrefix(keyPrefix))
-	configs := make([]*database.GovernConfig, 0)
+	configs := make([]*database.GovernConfigData, 0)
 	defer iter.Release()
 	for iter.Next() {
 		key := iter.Key()
@@ -95,7 +95,7 @@ func (db *ChainDb) fetchGovernConfig(class uint32, height uint64, includeShadow 
 		if err != nil {
 			return nil, err
 		}
-		configs = append(configs, &database.GovernConfig{
+		configs = append(configs, &database.GovernConfigData{
 			Id:           class,
 			BlockHeight:  blockHeight,
 			ActiveHeight: activeHeight,
@@ -125,9 +125,9 @@ func (db *ChainDb) insertGovernConfig(id uint32, height, activeHeight uint64, sh
 	return nil
 }
 
-// FetchGovernConfig fetch all config
-func (db *ChainDb) FetchGovernConfig(id uint32, height uint64, includeShadow bool) ([]*database.GovernConfig, error) {
+// FetchGovernConfigData fetch all config
+func (db *ChainDb) FetchGovernConfigData(id uint32, height uint64, includeShadow bool) ([]*database.GovernConfigData, error) {
 	db.dbLock.Lock()
 	defer db.dbLock.Unlock()
-	return db.fetchGovernConfig(id, height, includeShadow)
+	return db.fetchGovernConfigData(id, height, includeShadow)
 }

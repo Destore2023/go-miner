@@ -204,7 +204,7 @@ type DB interface {
 
 	IndexPubKeyBLHeight(rebuild bool) error
 
-	FetchGovernConfig(class uint32, height uint64, includeShadow bool) ([]*GovernConfig, error)
+	FetchGovernConfigData(class uint32, height uint64, includeShadow bool) ([]*GovernConfigData, error)
 
 	GetPubkeyBLHeightRecord(*pocec.PublicKey) ([]*BLHeight, error)
 }
@@ -231,7 +231,7 @@ type UtxoReply struct {
 	Value    chainutil.Amount
 }
 
-// Staking Awarded Record
+// StakingAwardedRecord Staking Awarded Record
 type StakingAwardedRecord struct {
 	AwardedTime uint64    // award timestamp
 	TxId        wire.Hash // award tx sha
@@ -243,8 +243,7 @@ type StakingRewardInfo struct {
 	RewardAddresses []Rank
 }
 
-//
-// only Tx Out info
+// TxOutReply only Tx Out info
 type TxOutReply struct {
 	TxSha    *wire.Hash // Tx id
 	BlockSha *wire.Hash // block sha
@@ -265,7 +264,7 @@ type AddrIndexOutPoint struct {
 	Index uint32
 }
 
-// BindingTx --> BTx
+// BindingTxSpent BindingTx --> BTx
 type BindingTxSpent struct {
 	SpentTxLoc     *wire.TxLoc
 	BTxBlockHeight uint64
@@ -283,7 +282,7 @@ type BindingTxReply struct {
 
 type SenateEquities []SenateEquity
 
-type GovernConfig struct {
+type GovernConfigData struct {
 	Id           uint32     // 4 bytes
 	BlockHeight  uint64     // 8 bytes
 	TxSha        *wire.Hash // 32 bytes
@@ -295,7 +294,7 @@ type StakingTxOutAtHeight map[uint64]map[wire.OutPoint]StakingTxInfo
 
 type StakingAwardRecordAtTime map[uint64]map[wire.Hash]StakingAwardedRecord
 
-// Returns false if already exists
+// Put StakingTxOutAtHeight Returns false if already exists
 func (sh StakingTxOutAtHeight) Put(op wire.OutPoint, stk StakingTxInfo) (success bool) {
 	m, ok := sh[stk.BlockHeight]
 	if !ok {

@@ -906,7 +906,7 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 		}
 		return
 	}
-	nodesConfig, ok := (*governConfig).(*GovernSenateConfig)
+	nodesConfig, ok := governConfig.(*GovernSenateConfig)
 	if !ok {
 		logging.CPrint(logging.ERROR, "newBlockTemplate  get GovernanceSenateNodesConfig",
 			logging.LogFormat{

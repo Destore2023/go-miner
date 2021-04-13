@@ -18,12 +18,12 @@ func isValidGovernId(id uint32) bool {
 	return false
 }
 
-func getGovernConfig(config *blockchain.GovernConfig) (*pb.GovernConfig, error) {
-	id := (*config).GetMeta().GetId()
+func getGovernConfig(config blockchain.GovernConfig) (*pb.GovernConfig, error) {
+	id := config.GetMeta().GetId()
 	switch id {
 	case blockchain.GovernSupperAddress:
 		{
-			supperConfig, ok := (*config).(*blockchain.GovernSupperConfig)
+			supperConfig, ok := config.(*blockchain.GovernSupperConfig)
 			if !ok {
 				return nil, fmt.Errorf("error GovernSupperConfig")
 			}
@@ -45,7 +45,7 @@ func getGovernConfig(config *blockchain.GovernConfig) (*pb.GovernConfig, error) 
 		}
 	case blockchain.GovernVersionAddress:
 		{
-			versionConfig, ok := (*config).(*blockchain.GovernVersionConfig)
+			versionConfig, ok := config.(*blockchain.GovernVersionConfig)
 			if !ok {
 				return nil, fmt.Errorf("error GovernVersionConfig")
 			}
@@ -60,7 +60,7 @@ func getGovernConfig(config *blockchain.GovernConfig) (*pb.GovernConfig, error) 
 		}
 	case blockchain.GovernSenateAddress:
 		{
-			senateConfig, ok := (*config).(*blockchain.GovernSenateConfig)
+			senateConfig, ok := config.(*blockchain.GovernSenateConfig)
 			if !ok {
 				return nil, fmt.Errorf("error GovernSenateConfig")
 			}
@@ -92,10 +92,10 @@ func (s *Server) GetGovernConfig(ctx context.Context, in *pb.GetGovernConfigRequ
 		return nil, err
 	}
 	response := pb.GetGovernConfigResponse{
-		Id:             uint32((*config).GetMeta().GetId()),
-		BlockHeight:    (*config).GetMeta().GetBlockHeight(),
-		ActivateHeight: (*config).GetMeta().GetActiveHeight(),
-		TxId:           (*config).GetMeta().GetTxId().String(),
+		Id:             uint32(config.GetMeta().GetId()),
+		BlockHeight:    config.GetMeta().GetBlockHeight(),
+		ActivateHeight: config.GetMeta().GetActiveHeight(),
+		TxId:           config.GetMeta().GetTxId().String(),
 	}
 	governConfig, err := getGovernConfig(config)
 	if err != nil {
