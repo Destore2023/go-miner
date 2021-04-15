@@ -34,7 +34,10 @@
 
 ```bash
 # libprotoc
-libprotoc 3.6.1
+libprotoc 3.14.0
+# https://github.com/protocolbuffers/protobuf/releases
+# MacOS : brew install protobuf
+# Windows: scoop install protobuf
 
 # go get github.com/golang/protobuf@v1.4.3
 protoc-gen-go
