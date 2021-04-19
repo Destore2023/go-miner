@@ -17,11 +17,11 @@ import (
 // address version is resulted from:
 //			(witness verison) << 2 | (witness extension version)
 const (
-	// witness v0 address = 0x00 << 2 | 0x00
+	// AddressClassWitnessV0 witness v0 address = 0x00 << 2 | 0x00
 	// StandardVersion              = 0x0000
 	AddressClassWitnessV0 uint16 = 0x0000
 
-	// witness staking address = 0x00 << 2 | 0x01
+	// AddressClassWitnessStaking witness staking address = 0x00 << 2 | 0x01
 	// StakingTxVersion                  = 0x0001
 	AddressClassWitnessStaking uint16 = 0x0001
 )
