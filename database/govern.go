@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 )
 
-type SenateEquity struct {
+type SenateWeight struct {
 	Weight     uint64            // weight
 	ScriptHash [sha256.Size]byte // The income address script of the equity
 }

@@ -293,7 +293,7 @@ func createDistributeTx(coinbase *wire.MsgTx, nextBlockHeight uint64) error {
 //  |                              |   miner Genesis out               |
 //  +------------------------------------------------------------------+
 func reCreateCoinbaseTx(coinbase *wire.MsgTx, bindingTxListReply []*database.BindingTxReply, nextBlockHeight uint64,
-	bitLength int, rewardAddresses []database.Rank, senateEquities database.SenateEquities, totalFee chainutil.Amount) (err error) {
+	bitLength int, rewardAddresses []database.Rank, senateEquities []*database.SenateWeight, totalFee chainutil.Amount) (err error) {
 	minerTxOut, err := GetMinerRewardTxOutFromCoinbase(coinbase)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "reCreateCoinbaseTx get miner tx out ", logging.LogFormat{"error": err, "height": nextBlockHeight})
@@ -895,7 +895,7 @@ func newBlockTemplate(chain *Blockchain, payoutAddress chainutil.Address, templa
 		}
 		return
 	}
-	governConfig, err := chain.chainGovern.FetchEnabledGovernConfig(GovernSenateAddress, nextBlockHeight)
+	governConfig, err := chain.chainGovern.FetchEnabledGovernConfig(GovernSenateClass, nextBlockHeight)
 	if err != nil {
 		logging.CPrint(logging.ERROR, "newBlockTemplate  FetchEnabledGovernanceConfig",
 			logging.LogFormat{

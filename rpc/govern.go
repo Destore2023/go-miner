@@ -10,18 +10,17 @@ import (
 	pb "github.com/Sukhavati-Labs/go-miner/rpc/proto"
 )
 
-func isValidGovernId(id uint32) bool {
-	t := blockchain.GovernAddressClass(id)
-	if t >= blockchain.GovernSupperAddress && t <= blockchain.GovernSenateAddress {
+func isValidGovernId(id uint16) bool {
+	if id >= blockchain.GovernSupperClass && id <= blockchain.GovernSenateClass {
 		return true
 	}
 	return false
 }
 
 func getGovernConfig(config blockchain.GovernConfig) (*pb.GovernConfig, error) {
-	id := config.GetMeta().GetId()
+	id := config.GovernClass()
 	switch id {
-	case blockchain.GovernSupperAddress:
+	case blockchain.GovernSupperClass:
 		{
 			supperConfig, ok := config.(*blockchain.GovernSupperConfig)
 			if !ok {
@@ -30,7 +29,7 @@ func getGovernConfig(config blockchain.GovernConfig) (*pb.GovernConfig, error) {
 			addresses := make([]*pb.GovernSupperAddressInfo, 0)
 			for addr, id := range supperConfig.GetAddresses() {
 				addresses = append(addresses, &pb.GovernSupperAddressInfo{
-					Id:      id,
+					Id:      uint32(id),
 					Address: hex.EncodeToString(addr[:]),
 				})
 			}
@@ -43,7 +42,7 @@ func getGovernConfig(config blockchain.GovernConfig) (*pb.GovernConfig, error) {
 			}
 			return resp, nil
 		}
-	case blockchain.GovernVersionAddress:
+	case blockchain.GovernVersionClass:
 		{
 			versionConfig, ok := config.(*blockchain.GovernVersionConfig)
 			if !ok {
@@ -58,7 +57,7 @@ func getGovernConfig(config blockchain.GovernConfig) (*pb.GovernConfig, error) {
 			}
 			return resp, nil
 		}
-	case blockchain.GovernSenateAddress:
+	case blockchain.GovernSenateClass:
 		{
 			senateConfig, ok := config.(*blockchain.GovernSenateConfig)
 			if !ok {
@@ -84,18 +83,18 @@ func getGovernConfig(config blockchain.GovernConfig) (*pb.GovernConfig, error) {
 func (s *Server) GetGovernConfig(ctx context.Context, in *pb.GetGovernConfigRequest) (*pb.GetGovernConfigResponse, error) {
 	id := in.Id
 
-	if !isValidGovernId(id) {
+	if !isValidGovernId(uint16(id)) {
 		return nil, fmt.Errorf("error govern type")
 	}
-	config, err := s.chain.FetchEnabledGovernConfig(id)
+	config, err := s.chain.FetchEnabledGovernConfig(uint16(id))
 	if err != nil {
 		return nil, err
 	}
 	response := pb.GetGovernConfigResponse{
-		Id:             uint32(config.GetMeta().GetId()),
-		BlockHeight:    config.GetMeta().GetBlockHeight(),
-		ActivateHeight: config.GetMeta().GetActiveHeight(),
-		TxId:           config.GetMeta().GetTxId().String(),
+		Id:             uint32(config.GovernClass()),
+		BlockHeight:    config.BlockHeight(),
+		ActivateHeight: config.ActiveHeight(),
+		TxId:           config.TxSha().String(),
 	}
 	governConfig, err := getGovernConfig(config)
 	if err != nil {
@@ -106,7 +105,7 @@ func (s *Server) GetGovernConfig(ctx context.Context, in *pb.GetGovernConfigRequ
 }
 
 func (s *Server) GetGovernConfigHistory(ctx context.Context, in *pb.GetGovernConfigHistoryRequest) (*pb.GetGovernConfigHistoryResponse, error) {
-	if !isValidGovernId(in.Id) {
+	if !isValidGovernId(uint16(in.Id)) {
 		return nil, fmt.Errorf("error govern type")
 	}
 	configs, err := s.chain.FetchGovernConfig(in.Id, in.IncludeShadow)

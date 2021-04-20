@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	// New challenge is calculated based on 10 blocks before.
+	// ChallengeInterval New challenge is calculated based on 10 blocks before.
 	ChallengeInterval = 10
 	MaxReferredBlocks = ChallengeInterval * 2
 )
 
-// calcNextChallenge calculates the required challenge for the block
+// CalcNextChallenge calcNextChallenge calculates the required challenge for the block
 // after the passed previous block node based on the challenge adjustment rules.
 // This function differs from the exported CalcNextChallenge in that,
 // the exported version uses the current best chain as the previous block node

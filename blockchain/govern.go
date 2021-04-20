@@ -14,19 +14,57 @@ import (
 	"sync"
 )
 
-type GovernAddressClass uint32
-
+//  govern config
+//  Govern Config Class
+//  zero as undeclared identifier
 const (
-	GovernUndefinedAddress GovernAddressClass = iota // 0
-	GovernSupperAddress                              // 1
-	GovernVersionAddress                             // 2
-	GovernSenateAddress                              // 3
+	// GovernSupperClass Update other govern address
+	GovernSupperClass uint16 = 0x0001 // 1
+	// GovernVersionClass Minimum version requirement
+	GovernVersionClass uint16 = 0x0002 // 2
+	// GovernSenateClass Update senate node information
+	GovernSenateClass uint16 = 0x0003 // 3
 )
 
+// UnsupportedGovernClassError describes an error where a govern config
+// decoded has an unsupported class.
+type UnsupportedGovernClassError uint16
+
+func (e UnsupportedGovernClassError) Error() string {
+	return fmt.Sprintf("unsupported govern class: %d", e)
+}
+
+// EmptyGovernConfigError
+// The EmptyGovernConfigError error is thrown when the govern configuration cannot be found
+type EmptyGovernConfigError uint16
+
+func (e EmptyGovernConfigError) Error() string {
+	return fmt.Sprintf("empty govern config! class :%d", e)
+}
+
+// InvalidGovernConfigFormatError Invalid data format
+type InvalidGovernConfigFormatError uint16
+
+func (e InvalidGovernConfigFormatError) Error() string {
+	return fmt.Sprintf("Invalid Govern class: %d config data format ", e)
+}
+
 type GovernConfig interface {
-	GetMeta() *GovernConfigMeta
-	GetData() ([]byte, error)
-	SetBytes(data []byte) error
+	// GovernClass return govern class
+	GovernClass() uint16
+	// BlockHeight return block height
+	BlockHeight() uint64
+	// ActiveHeight return active height , active height >= block height
+	ActiveHeight() uint64
+	// IsShadow shadow
+	IsShadow() bool
+	// TxSha return tx sha
+	TxSha() *wire.Hash
+	// String return string format
+	String() string
+	// ConfigData return config in database format
+	// include: only special config
+	ConfigData() []byte
 }
 
 // GovernProposal
@@ -36,7 +74,7 @@ type GovernConfig interface {
 // | config | --> | config | --->| config |
 // +--------+     +--------+     +--------+
 type GovernProposal struct {
-	Id      GovernAddressClass
+	Id      uint16
 	current GovernConfig
 	future  GovernConfig
 }
@@ -45,118 +83,32 @@ type ChainGovern struct {
 	sync.RWMutex
 	db              database.DB
 	server          Server
-	proposalPool    map[GovernAddressClass]GovernProposal
-	governAddresses map[wire.Hash]GovernAddressClass
+	proposalPool    map[uint16]GovernProposal
+	governAddresses map[wire.Hash]uint16
 }
 
-func (g *ChainGovern) fetchGovernConfig(class GovernAddressClass, height uint64, includeShadow bool) ([]GovernConfig, error) {
+func (g *ChainGovern) fetchGovernConfig(class uint16, height uint64, includeShadow bool) ([]GovernConfig, error) {
 	configs := make([]GovernConfig, 0)
-	switch class {
-	case GovernSenateAddress:
-		{
-
-			senates := make(database.SenateEquities, 0)
-			senates = append(senates, database.SenateEquity{
-				ScriptHash: [32]byte{250, 37, 244, 50, 232, 85, 83, 140, 181, 41, 129, 200, 157, 203, 88, 103, 6, 151, 63, 155, 4, 83, 70, 33, 11, 141, 37, 110, 185, 252, 183, 103},
-				Weight:     1,
-			})
-			configs = append(configs, &GovernSenateConfig{
-				meta: GovernConfigMeta{
-					blockHeight:  0,
-					activeHeight: 0,
-					txId:         zeroHash,
-					shadow:       false,
-					id:           GovernSenateAddress,
-				},
-				senates: senates,
-			})
-		}
-	case GovernVersionAddress:
-		{
-			configs = append(configs, &GovernVersionConfig{
-				meta: GovernConfigMeta{
-					blockHeight:  0,
-					activeHeight: 0,
-					txId:         zeroHash,
-					shadow:       false,
-					id:           GovernVersionAddress,
-				},
-				version: *version.GetVersion(),
-			})
-		}
-	case GovernSupperAddress:
-		{
-			configs = append(configs, &GovernSupperConfig{
-				meta: GovernConfigMeta{
-					blockHeight:  0,
-					activeHeight: 0,
-					txId:         zeroHash,
-					shadow:       false,
-					id:           GovernSupperAddress,
-				},
-				addresses: make(map[wire.Hash]uint32),
-			})
-		}
-	default:
-		return nil, fmt.Errorf("can't find config")
-	}
 	return configs, nil
 }
 
 func (chain *Blockchain) FetchGovernConfig(class uint32, includeShadow bool) ([]GovernConfig, error) {
-	configs, err := chain.db.FetchGovernConfigData(class, 0, includeShadow)
-	if err != nil {
-		return nil, err
-	}
-	governConfigs := make([]GovernConfig, 0)
-	for _, conf := range configs {
-		meta := GovernConfigMeta{
-			id:           GovernAddressClass(conf.Id),
-			activeHeight: 0,
-			blockHeight:  conf.BlockHeight,
-			shadow:       false,
-			txId:         conf.TxSha,
-		}
-		switch GovernAddressClass(conf.Id) {
-		case GovernSenateAddress:
-			config := GovernSenateConfig{
-				meta: meta,
-			}
-			config.SetBytes(conf.Data)
-			governConfigs = append(governConfigs, &config)
-		case GovernSupperAddress:
-			config := GovernSupperConfig{
-				meta: meta,
-			}
-			config.SetBytes(conf.Data)
-			governConfigs = append(governConfigs, &config)
-		case GovernVersionAddress:
-			config := GovernVersionConfig{
-				meta: meta,
-			}
-			config.SetBytes(conf.Data)
-			governConfigs = append(governConfigs, &config)
-		default:
-			return nil, fmt.Errorf("Unknown govern type ")
-		}
-
-	}
-	return governConfigs, nil
+	return nil, nil
 }
 
 // FetchEnabledGovernConfig fetch current enable config
-func (chain *Blockchain) FetchEnabledGovernConfig(class uint32) (GovernConfig, error) {
-	return chain.chainGovern.FetchEnabledGovernConfig(GovernAddressClass(class), chain.BestBlockHeight())
+func (chain *Blockchain) FetchEnabledGovernConfig(class uint16) (GovernConfig, error) {
+	return chain.chainGovern.FetchEnabledGovernConfig(class, chain.BestBlockHeight())
 }
 
 // FetchEnabledGovernConfig fetch next block height enable config
 // Only one version is enabled at a time
-func (g *ChainGovern) FetchEnabledGovernConfig(class GovernAddressClass, height uint64) (GovernConfig, error) {
+func (g *ChainGovern) FetchEnabledGovernConfig(class uint16, height uint64) (GovernConfig, error) {
 	g.Lock()
 	defer g.Unlock()
 	proposal, ok := g.proposalPool[class]
 	if !ok {
-		return nil, fmt.Errorf("can't find govern address class")
+		return nil, UnsupportedGovernClassError(class)
 	}
 	if proposal.current == nil {
 		configs, err := g.fetchGovernConfig(class, height, false)
@@ -165,7 +117,7 @@ func (g *ChainGovern) FetchEnabledGovernConfig(class GovernAddressClass, height 
 		}
 		l := len(configs)
 		if l == 0 {
-			return nil, fmt.Errorf("configs is empty! ")
+			return nil, EmptyGovernConfigError(class)
 		}
 		if l == 1 {
 			proposal.current = configs[0]
@@ -177,58 +129,60 @@ func (g *ChainGovern) FetchEnabledGovernConfig(class GovernAddressClass, height 
 	if proposal.future == nil {
 		return proposal.current, nil
 	}
-	if proposal.future.GetMeta().activeHeight >= height {
+	if proposal.future.ActiveHeight() >= height {
 		proposal.current = proposal.future
 		proposal.future = nil
 	}
 	if proposal.current != nil {
 		return proposal.current, nil
 	}
-	return nil, fmt.Errorf("can't find config")
+	return nil, EmptyGovernConfigError(class)
 }
 
 // isGovernTransaction return GovernAddressClass height txSha payload
-func (g *ChainGovern) isGovernTransaction(tx *chainutil.Tx, txStore TxStore) (GovernAddressClass, bool) {
+func (g *ChainGovern) isGovernTransaction(tx *chainutil.Tx, txStore TxStore) (uint16, bool) {
 	if tx == nil {
-		return GovernUndefinedAddress, false
+		return 0, false
 	}
 	payload := tx.MsgTx().Payload
 	if len(payload) == 0 {
-		return GovernUndefinedAddress, false
+		return 0, false
 	}
-	addressClass := GovernUndefinedAddress
+	var addressClass uint16
 	for i, _ := range tx.TxOut() {
 		info := tx.GetPkScriptInfo(i)
 		scriptClass := txscript.ScriptClass(info.Class)
+		// TODO only multi sign type
 		if scriptClass != txscript.WitnessV0ScriptHashTy {
-			break
+			return 0, false
 		}
 		curClass, ok := g.governAddresses[info.ScriptHash]
 		if !ok {
-			continue
+			return 0, false
 		}
-		if curClass == GovernUndefinedAddress {
-			continue
+		if curClass == 0 {
+			return 0, false
 		}
 		addressClass = curClass
 	}
-	if addressClass == GovernUndefinedAddress {
-		return GovernUndefinedAddress, false
+	if addressClass == 0 {
+		return 0, false
 	}
 	for _, txIn := range tx.TxIn() {
 		preData, ok := txStore[txIn.PreviousOutPoint.Hash]
 		if !ok {
-			continue
+			return 0, false
 		}
 		publicKeyInfo := preData.Tx.GetPkScriptInfo(int(txIn.PreviousOutPoint.Index))
 		class, ok := g.governAddresses[publicKeyInfo.ScriptHash]
 		if !ok {
-			break
-		} else if addressClass == class {
+			return 0, false
+		}
+		if addressClass == class {
 			return addressClass, true
 		}
 	}
-	return GovernUndefinedAddress, false
+	return 0, false
 }
 
 func (g *ChainGovern) CheckTransactionGovernPayload(tx *chainutil.Tx, txStore TxStore) error {
@@ -282,44 +236,27 @@ func (g *ChainGovern) SyncDetachBlock(block *chainutil.Block) error {
 	}
 	return nil
 }
-func (g *ChainGovern) updateConfig(class GovernAddressClass, height uint64, txSha *wire.Hash, payload []byte) error {
+func (g *ChainGovern) updateConfig(class uint16, height uint64, txSha *wire.Hash, payload []byte) error {
 	prop, ok := g.proposalPool[class]
 	if !ok {
-		return fmt.Errorf("govern can't find this class")
+		return UnsupportedGovernClassError(class)
 	}
 	newConfig, err := DecodeGovernConfig(class, height, txSha, payload)
 	if err != nil {
 		return err
 	}
 	if prop.future != nil {
-		config := prop.future
-		id := uint32(config.GetMeta().GetId())
-		blockHeight := config.GetMeta().GetBlockHeight()
-		activeHeight := config.GetMeta().GetActiveHeight()
-		txId := config.GetMeta().GetTxId()
-		data, err := config.GetData()
+		err = g.db.InsertGovernConfig(prop.current.GovernClass(), prop.current.BlockHeight(), prop.current.ActiveHeight(), true, prop.current.TxSha(), prop.current.ConfigData())
 		if err != nil {
 			return err
 		}
-		err = g.db.InsertGovernConfig(id, blockHeight, activeHeight, true, txId, data)
-		if err != nil {
-			return err
-		}
-		prop.future = newConfig
 	}
-	id := uint32(newConfig.GetMeta().GetId())
-	blockHeight := newConfig.GetMeta().GetBlockHeight()
-	activeHeight := newConfig.GetMeta().GetActiveHeight()
-	txId := newConfig.GetMeta().GetTxId()
-	data, err := newConfig.GetData()
+	prop.future = newConfig
+	err = g.db.InsertGovernConfig(newConfig.GovernClass(), newConfig.BlockHeight(), newConfig.ActiveHeight(), false, newConfig.TxSha(), newConfig.ConfigData())
 	if err != nil {
 		return err
 	}
-	err = g.db.InsertGovernConfig(id, blockHeight, activeHeight, false, txId, data)
-	if err != nil {
-		return err
-	}
-	if prop.future.GetMeta().GetActiveHeight() >= height {
+	if height >= prop.future.ActiveHeight() {
 		prop.current = prop.future
 		prop.future = nil
 	}
@@ -330,128 +267,101 @@ func NewChainGovern(db database.DB, server Server) (*ChainGovern, error) {
 	cg := &ChainGovern{
 		db:              db,
 		server:          server,
-		proposalPool:    make(map[GovernAddressClass]GovernProposal),
-		governAddresses: make(map[wire.Hash]GovernAddressClass),
+		proposalPool:    make(map[uint16]GovernProposal),
+		governAddresses: make(map[wire.Hash]uint16),
 	}
-	cg.proposalPool[GovernSupperAddress] = GovernProposal{Id: GovernSupperAddress}
-	cg.proposalPool[GovernVersionAddress] = GovernProposal{Id: GovernVersionAddress}
-	cg.proposalPool[GovernSenateAddress] = GovernProposal{Id: GovernSenateAddress}
+	cg.proposalPool[GovernSupperClass] = GovernProposal{Id: GovernSupperClass}
+	cg.proposalPool[GovernVersionClass] = GovernProposal{Id: GovernVersionClass}
+	cg.proposalPool[GovernSenateClass] = GovernProposal{Id: GovernSenateClass}
 	return cg, nil
 }
 
-type GovernConfigMeta struct {
-	blockHeight  uint64
-	activeHeight uint64
-	shadow       bool
-	txId         *wire.Hash
-	id           GovernAddressClass
+// Govern Config
+
+// GovernSupperConfig Supper address
+type GovernSupperConfig struct {
+	blockHeight  uint64               `json:"block_height"`
+	activeHeight uint64               `json:"active_height"`
+	shadow       bool                 `json:"shadow"`
+	txSha        *wire.Hash           `json:"tx_sha"`
+	addresses    map[wire.Hash]uint16 `json:"addresses"`
 }
 
-func (m *GovernConfigMeta) GetId() GovernAddressClass {
-	return m.id
+func (gsc *GovernSupperConfig) GovernClass() uint16 {
+	return GovernSupperClass
 }
 
-func (m *GovernConfigMeta) GetBlockHeight() uint64 {
-	return m.blockHeight
+func (gsc *GovernSupperConfig) BlockHeight() uint64 {
+	return gsc.blockHeight
 }
 
-func (m *GovernConfigMeta) GetActiveHeight() uint64 {
-	return m.activeHeight
+func (gsc *GovernSupperConfig) ActiveHeight() uint64 {
+	return gsc.activeHeight
 }
 
-func (m *GovernConfigMeta) IsShadow() bool {
-	return m.shadow
+func (gsc *GovernSupperConfig) IsShadow() bool {
+	return gsc.shadow
 }
 
-func (m *GovernConfigMeta) GetTxId() *wire.Hash {
-	return m.txId
+func (gsc *GovernSupperConfig) TxSha() *wire.Hash {
+	return gsc.txSha
 }
 
-func (m *GovernConfigMeta) GetMetaBytes() []byte {
-	key := make([]byte, 9)
-	if m.shadow {
-		key[0] = 0x01
-	} else {
-		key[0] = 0x00
+func (gsc *GovernSupperConfig) String() string {
+	return ""
+}
+
+func (gsc *GovernSupperConfig) ConfigData() []byte {
+	buffer := bytes.NewBuffer([]byte{})
+	// 32 hash --> 2 id
+	for hash, id := range gsc.addresses {
+		value := make([]byte, 34)
+		copy(value[0:32], hash[:])
+		binary.LittleEndian.PutUint16(value[32:34], id)
+		buffer.Write(value)
 	}
-	binary.LittleEndian.PutUint64(key[1:9], m.activeHeight)
-	return key
+	return buffer.Bytes()
 }
 
-func (m *GovernConfigMeta) SetMetaBytes(header []byte) error {
-	if len(header) < 9 {
-		return fmt.Errorf("SetMetaBytes Invalid data length ")
-	}
-	if header[0] == 0x00 {
-		m.shadow = false
-	} else {
-		m.shadow = true
-	}
-	m.activeHeight = binary.LittleEndian.Uint64(header[1:9])
-	return nil
+func (gsc *GovernSupperConfig) GetAddresses() map[wire.Hash]uint16 {
+	return gsc.addresses
 }
 
-type GovernSenateConfig struct {
-	meta    GovernConfigMeta
-	senates database.SenateEquities
-}
-
-func (gs *GovernSenateConfig) GetMeta() *GovernConfigMeta {
-	return &gs.meta
-}
-
-func (gs *GovernSenateConfig) GetData() ([]byte, error) {
-	header := gs.meta.GetMetaBytes()
-	buffer := bytes.NewBuffer(header)
-	for _, eq := range gs.senates {
-		value := make([]byte, 40)
-		binary.LittleEndian.PutUint64(value[0:8], eq.Weight)
-		copy(value[9:40], eq.ScriptHash[:])
-		_, err := buffer.Write(value)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return buffer.Bytes(), nil
-}
-
-func (gs *GovernSenateConfig) SetBytes(data []byte) error {
-	l := len(data)
-	n := (l - 9) / 40
-	if l < 9 || (l-9)%40 != 0 {
-		return fmt.Errorf("GovernSenateConfig SetBytes Invalid data length ")
-	}
-	shadow := data[0] == 0x00
-	activeHeight := binary.LittleEndian.Uint64(data[1:9])
-	gs.meta.shadow = shadow
-	gs.meta.activeHeight = activeHeight
-	for i := 0; i < n; i++ {
-		start := i * 40
-		weight := binary.LittleEndian.Uint64(data[start+9 : start+17])
-		scriptHash := data[start+17 : start+49]
-		equity := database.SenateEquity{Weight: weight}
-		copy(equity.ScriptHash[:], scriptHash)
-		gs.senates = append(gs.senates, equity)
-	}
-	return nil
-}
-
-func (gs *GovernSenateConfig) GetNodes() database.SenateEquities {
-	return gs.senates
-}
-
+// GovernVersionConfig Minimum version
 type GovernVersionConfig struct {
-	meta    GovernConfigMeta
-	version version.Version
+	blockHeight  uint64           `json:"block_height"`
+	activeHeight uint64           `json:"active_height"`
+	shadow       bool             `json:"shadow"`
+	txSha        *wire.Hash       `json:"tx_sha"`
+	version      *version.Version `json:"version"`
 }
 
-func (gv *GovernVersionConfig) GetMeta() *GovernConfigMeta {
-	return &gv.meta
+func (gv *GovernVersionConfig) GovernClass() uint16 {
+	return GovernVersionClass
 }
 
-func (gv *GovernVersionConfig) GetData() ([]byte, error) {
-	header := gv.meta.GetMetaBytes()
-	buffer := bytes.NewBuffer(header)
+func (gv *GovernVersionConfig) BlockHeight() uint64 {
+	return gv.blockHeight
+}
+
+func (gv *GovernVersionConfig) ActiveHeight() uint64 {
+	return gv.activeHeight
+}
+
+func (gv *GovernVersionConfig) IsShadow() bool {
+	return gv.shadow
+}
+
+func (gv *GovernVersionConfig) TxSha() *wire.Hash {
+	return gv.txSha
+}
+
+func (gv *GovernVersionConfig) String() string {
+	return ""
+}
+
+func (gv *GovernVersionConfig) ConfigData() []byte {
+	buffer := bytes.NewBuffer([]byte{})
 	value := make([]byte, 4)
 	binary.LittleEndian.PutUint32(value, gv.version.GetMajorVersion())
 	buffer.Write(value)
@@ -459,75 +369,131 @@ func (gv *GovernVersionConfig) GetData() ([]byte, error) {
 	buffer.Write(value)
 	binary.LittleEndian.PutUint32(value, gv.version.GetPatchVersion())
 	buffer.Write(value)
-	return buffer.Bytes(), nil
+	return buffer.Bytes()
 }
 
 func (gv *GovernVersionConfig) GetVersion() *version.Version {
-	return &gv.version
+	return gv.version
 }
 
-func (gv *GovernVersionConfig) SetBytes(data []byte) error {
+// GovernSenateConfig Senate Node Information
+type GovernSenateConfig struct {
+	blockHeight  uint64                   `json:"block_height"`
+	activeHeight uint64                   `json:"active_height"`
+	shadow       bool                     `json:"shadow"`
+	txSha        *wire.Hash               `json:"tx_sha"`
+	senates      []*database.SenateWeight `json:"senates"`
+}
+
+func (gs *GovernSenateConfig) GovernClass() uint16 {
+	return GovernSenateClass
+}
+
+func (gs *GovernSenateConfig) BlockHeight() uint64 {
+	return gs.blockHeight
+}
+
+func (gs *GovernSenateConfig) ActiveHeight() uint64 {
+	return gs.activeHeight
+}
+
+func (gs *GovernSenateConfig) IsShadow() bool {
+	return gs.shadow
+}
+
+func (gs *GovernSenateConfig) TxSha() *wire.Hash {
+	return gs.txSha
+}
+
+func (gs *GovernSenateConfig) String() string {
+	return ""
+}
+
+func (gs *GovernSenateConfig) ConfigData() []byte {
+	panic("implement me")
+}
+
+func (gs *GovernSenateConfig) GetNodes() []*database.SenateWeight {
+	return gs.senates
+}
+
+func DecodeGovernConfigFromData(configData *database.GovernConfigData) (GovernConfig, error) {
+	class := configData.Id
+	blockHeight := configData.BlockHeight
+	txSha := configData.TxSha
+	activeHeight := configData.ActiveHeight
+	shadow := configData.Shadow
+	data := configData.Data
 	l := len(data)
-	if l != 21 {
-		return fmt.Errorf("GovernVersionConfig SetBytes Invalid data length ")
-	}
-	shadow := data[0] == 0x00
-	activeHeight := binary.LittleEndian.Uint64(data[1:9])
-	gv.meta.shadow = shadow
-	gv.meta.activeHeight = activeHeight
-	majorVersion := binary.LittleEndian.Uint32(data[9:13])
-	minorVersion := binary.LittleEndian.Uint32(data[13:17])
-	patchVersion := binary.LittleEndian.Uint32(data[17:21])
-	newVersion := version.NewVersion(majorVersion, minorVersion, patchVersion)
-	gv.version = *newVersion
-	return nil
-}
-
-type GovernSupperConfig struct {
-	meta      GovernConfigMeta
-	addresses map[wire.Hash]uint32
-}
-
-func (gsc *GovernSupperConfig) GetMeta() *GovernConfigMeta {
-	return &gsc.meta
-}
-
-func (gsc *GovernSupperConfig) GetData() ([]byte, error) {
-	header := gsc.meta.GetMetaBytes()
-	buffer := bytes.NewBuffer(header)
-	for hash, id := range gsc.addresses {
-		value := make([]byte, 36)
-		copy(value[0:32], hash[:])
-		binary.LittleEndian.PutUint32(value[32:36], id)
-		buffer.Write(value)
-	}
-	return buffer.Bytes(), nil
-}
-
-func (gsc *GovernSupperConfig) GetAddresses() map[wire.Hash]uint32 {
-	return gsc.addresses
-}
-
-func (gsc *GovernSupperConfig) SetBytes(data []byte) error {
-	l := len(data)
-	n := (l - 9) / 36
-	if l < 9 || (l-9)%36 != 0 {
-		return fmt.Errorf("GovernSupperConfig SetBytes Invalid data length ")
-	}
-	shadow := data[0] == 0x00
-	activeHeight := binary.LittleEndian.Uint64(data[1:9])
-	gsc.meta.shadow = shadow
-	gsc.meta.activeHeight = activeHeight
-	for i := 0; i < n; i++ {
-		start := i * 36
-		newHash, err := wire.NewHash(data[start : start+32])
-		if err != nil {
-			return err
+	switch class {
+	case GovernSupperClass:
+		{
+			config := &GovernSupperConfig{
+				blockHeight:  blockHeight,
+				activeHeight: activeHeight,
+				shadow:       shadow,
+				txSha:        txSha,
+				addresses:    make(map[wire.Hash]uint16),
+			}
+			if l%34 != 0 {
+				return nil, InvalidGovernConfigFormatError(class)
+			}
+			n := l / 34
+			for i := 0; i < n; i++ {
+				start := i * 34
+				scriptHash := data[start : start+32]
+				hash, err := wire.NewHash(scriptHash)
+				if err != nil {
+					return nil, err
+				}
+				id := binary.LittleEndian.Uint16(data[start+32 : start+34])
+				config.addresses[*hash] = id
+			}
+			return config, nil
 		}
-		id := binary.LittleEndian.Uint32(data[start+32 : start+36])
-		gsc.addresses[*newHash] = id
+	case GovernVersionClass:
+		{
+			config := &GovernVersionConfig{
+				blockHeight:  blockHeight,
+				activeHeight: activeHeight,
+				shadow:       shadow,
+				txSha:        txSha,
+			}
+			if l != 12 {
+				return nil, InvalidGovernConfigFormatError(class)
+			}
+			majorVersion := binary.LittleEndian.Uint32(data[0:4])
+			minorVersion := binary.LittleEndian.Uint32(data[4:8])
+			patchVersion := binary.LittleEndian.Uint32(data[8:12])
+			config.version = version.NewVersion(majorVersion, minorVersion, patchVersion)
+			return config, nil
+		}
+	case GovernSenateClass:
+		{
+			config := &GovernSenateConfig{
+				blockHeight:  blockHeight,
+				activeHeight: activeHeight,
+				shadow:       shadow,
+				txSha:        txSha,
+				senates:      make([]*database.SenateWeight, 0),
+			}
+			if l%40 != 0 {
+				return nil, InvalidGovernConfigFormatError(class)
+			}
+			n := l / 40
+			for i := 0; i < n; i++ {
+				start := i * 40
+				weight := binary.LittleEndian.Uint64(data[start : start+8])
+				scriptHash := data[start+8 : start+40]
+				senateWeight := database.SenateWeight{Weight: weight}
+				copy(senateWeight.ScriptHash[:], scriptHash)
+				config.senates = append(config.senates, &senateWeight)
+			}
+			return config, nil
+		}
+	default:
+		return nil, UnsupportedGovernClassError(class)
 	}
-	return nil
 }
 
 type GovernVersionJson struct {
@@ -537,7 +503,7 @@ type GovernVersionJson struct {
 
 type GovernSupperAddressJson struct {
 	activeHeight uint64            `json:"active_height"`
-	addresses    map[string]uint32 `json:"addresses"`
+	addresses    map[string]uint16 `json:"addresses"`
 }
 
 type GovernSenateJson struct {
@@ -546,26 +512,23 @@ type GovernSenateJson struct {
 }
 
 // DecodeGovernConfig Decode configuration information from the transaction's payload
-func DecodeGovernConfig(class GovernAddressClass, blockHeight uint64, txSha *wire.Hash, payload []byte) (GovernConfig, error) {
+func DecodeGovernConfig(class uint16, blockHeight uint64, txSha *wire.Hash, payload []byte) (GovernConfig, error) {
 	if len(payload) == 0 {
-		return nil, fmt.Errorf("error data length")
+		return nil, fmt.Errorf("error class:%d govern payload data length ", class)
 	}
 	switch class {
-	case GovernSenateAddress:
+	case GovernSenateClass:
 		senateJson := GovernSenateJson{}
 		err := json.Unmarshal(payload, senateJson)
 		if err != nil {
 			return nil, err
 		}
 		config := GovernSenateConfig{
-			meta: GovernConfigMeta{
-				blockHeight:  blockHeight,
-				activeHeight: senateJson.activeHeight,
-				shadow:       false,
-				txId:         txSha,
-				id:           GovernSenateAddress,
-			},
-			senates: make(database.SenateEquities, 0),
+			blockHeight:  blockHeight,
+			activeHeight: senateJson.activeHeight,
+			shadow:       false,
+			txSha:        txSha,
+			senates:      make([]*database.SenateWeight, 0),
 		}
 		for scriptHashString, weight := range senateJson.senates {
 			scriptHashBytes, err := hex.DecodeString(scriptHashString)
@@ -576,13 +539,13 @@ func DecodeGovernConfig(class GovernAddressClass, blockHeight uint64, txSha *wir
 			if err != nil {
 				return nil, err
 			}
-			config.senates = append(config.senates, database.SenateEquity{
+			config.senates = append(config.senates, &database.SenateWeight{
 				Weight:     weight,
 				ScriptHash: *scriptHash,
 			})
 		}
 		return &config, nil
-	case GovernVersionAddress:
+	case GovernVersionClass:
 		versionJson := GovernVersionJson{}
 		err := json.Unmarshal(payload, versionJson)
 		if err != nil {
@@ -593,31 +556,25 @@ func DecodeGovernConfig(class GovernAddressClass, blockHeight uint64, txSha *wir
 			return nil, err
 		}
 		config := GovernVersionConfig{
-			meta: GovernConfigMeta{
-				blockHeight:  blockHeight,
-				activeHeight: versionJson.activeHeight,
-				shadow:       false,
-				txId:         txSha,
-				id:           GovernSenateAddress,
-			},
-			version: *newVersion,
+			blockHeight:  blockHeight,
+			activeHeight: versionJson.activeHeight,
+			shadow:       false,
+			txSha:        txSha,
+			version:      newVersion,
 		}
 		return &config, nil
-	case GovernSupperAddress:
+	case GovernSupperClass:
 		supperAddressJson := GovernSupperAddressJson{}
 		err := json.Unmarshal(payload, supperAddressJson)
 		if err != nil {
 			return nil, err
 		}
 		config := GovernSupperConfig{
-			meta: GovernConfigMeta{
-				blockHeight:  blockHeight,
-				activeHeight: supperAddressJson.activeHeight,
-				shadow:       false,
-				txId:         txSha,
-				id:           GovernSupperAddress,
-			},
-			addresses: make(map[wire.Hash]uint32),
+			blockHeight:  blockHeight,
+			activeHeight: supperAddressJson.activeHeight,
+			shadow:       false,
+			txSha:        txSha,
+			addresses:    make(map[wire.Hash]uint16),
 		}
 		for scriptHashString, id := range supperAddressJson.addresses {
 			scriptHashBytes, err := hex.DecodeString(scriptHashString)
