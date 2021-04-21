@@ -427,7 +427,7 @@ message TxRawResult {
   repeated string from_address = 8;
   repeated ToAddressForTx   to = 9;
   repeated InputsInTx   inputs = 10;
-  string               payload = 11;
+  bytes                payload = 11;
   uint64         confirmations = 12;
   uint32               tx_size = 13;
   string                   fee = 14;

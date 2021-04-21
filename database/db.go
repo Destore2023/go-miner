@@ -199,11 +199,12 @@ type DB interface {
 	CheckScriptHashUsed(scriptHash []byte) (bool, error)
 
 	FetchScriptHashRelatedBindingTx(scriptHash []byte, chainParams *config.Params) ([]*BindingTxReply, error)
-	// For testing purpose
+	// ExportDbEntries For testing purpose
 	ExportDbEntries() map[string][]byte
 
 	IndexPubKeyBLHeight(rebuild bool) error
 
+	// FetchGovernConfigData fetch govern config data in database format
 	FetchGovernConfigData(class uint16, height uint64, includeShadow bool) ([]*GovernConfigData, error)
 
 	GetPubkeyBLHeightRecord(*pocec.PublicKey) ([]*BLHeight, error)

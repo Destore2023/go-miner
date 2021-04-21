@@ -70,6 +70,8 @@ func (db *ChainDb) InsertGovernConfig(id uint16, height, activeHeight uint64, sh
 	return db.insertGovernConfig(id, height, activeHeight, shadow, txSha, data)
 }
 
+// fetchGovernConfigData
+// data : only spec config data
 func (db *ChainDb) fetchGovernConfigData(class uint16, height uint64, includeShadow bool) ([]*database.GovernConfigData, error) {
 	keyPrefix := makeGovernConfigSearchKey(class, height)
 	iter := db.localStorage.NewIterator(storage.BytesPrefix(keyPrefix))
@@ -81,14 +83,11 @@ func (db *ChainDb) fetchGovernConfigData(class uint16, height uint64, includeSha
 		if len(value) < 9 {
 			continue
 		}
-		shadow := value[0] != 0x00
+		shadow := value[0] != 0x0
 		if !includeShadow && shadow {
 			continue
 		}
 		activeHeight := binary.LittleEndian.Uint64(value[1:9])
-		if activeHeight < height {
-			continue
-		}
 		data := value[9:]
 		blockHeight := binary.LittleEndian.Uint64(key[recordGovernTxLen+4 : recordGovernTxLen+12])
 		txSha, err := wire.NewHash(key[recordGovernTxLen+12:])

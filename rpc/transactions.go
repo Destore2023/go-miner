@@ -589,7 +589,7 @@ func (s *Server) createTxRawResult(mtx *wire.MsgTx, blockHeader *wire.BlockHeade
 		FromAddress:   fromAddrs,
 		To:            to,
 		Inputs:        inputs,
-		Payload:       hex.EncodeToString(mtx.Payload),
+		Payload:       mtx.Payload,
 		TxSize:        uint32(mtx.PlainSize()),
 		Fee:           fee,
 		Gas:           "0",
