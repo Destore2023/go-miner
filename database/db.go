@@ -204,7 +204,7 @@ type DB interface {
 
 	IndexPubKeyBLHeight(rebuild bool) error
 
-	// FetchGovernConfigData fetch govern config data in database format
+	// FetchGovernConfigData fetch govern config data in database format, height start block height
 	FetchGovernConfigData(class uint16, height uint64, includeShadow bool) ([]*GovernConfigData, error)
 
 	GetPubkeyBLHeightRecord(*pocec.PublicKey) ([]*BLHeight, error)

@@ -26,6 +26,12 @@ const (
 	GovernSenateClass uint16 = 0x0003 // 3
 )
 
+const (
+	GovernSupperConfigValueLen  = 34
+	GovernVersionConfigValueLen = 4
+	GovernSenateConfigValueLen  = 40
+)
+
 // UnsupportedGovernClassError describes an error where a govern config
 // decoded has an unsupported class.
 type UnsupportedGovernClassError uint16
@@ -89,6 +95,17 @@ type ChainGovern struct {
 
 func (g *ChainGovern) fetchGovernConfig(class uint16, height uint64, includeShadow bool) ([]GovernConfig, error) {
 	configs := make([]GovernConfig, 0)
+	configDataList, err := g.db.FetchGovernConfigData(class, height, includeShadow)
+	if err != nil {
+		return nil, err
+	}
+	for _, configData := range configDataList {
+		governConfig, err := DecodeGovernConfigFromData(configData)
+		if err != nil {
+			return nil, err
+		}
+		configs = append(configs, governConfig)
+	}
 	return configs, nil
 }
 
@@ -315,9 +332,9 @@ func (gsc *GovernSupperConfig) ConfigData() []byte {
 	buffer := bytes.NewBuffer([]byte{})
 	// 32 hash --> 2 id
 	for hash, id := range gsc.addresses {
-		value := make([]byte, 34)
+		value := make([]byte, GovernSupperConfigValueLen)
 		copy(value[0:32], hash[:])
-		binary.LittleEndian.PutUint16(value[32:34], id)
+		binary.LittleEndian.PutUint16(value[32:GovernSupperConfigValueLen], id)
 		buffer.Write(value)
 	}
 	return buffer.Bytes()
@@ -362,7 +379,7 @@ func (gv *GovernVersionConfig) String() string {
 
 func (gv *GovernVersionConfig) ConfigData() []byte {
 	buffer := bytes.NewBuffer([]byte{})
-	value := make([]byte, 4)
+	value := make([]byte, GovernVersionConfigValueLen)
 	binary.LittleEndian.PutUint32(value, gv.version.GetMajorVersion())
 	buffer.Write(value)
 	binary.LittleEndian.PutUint32(value, gv.version.GetMinorVersion())
@@ -410,7 +427,14 @@ func (gs *GovernSenateConfig) String() string {
 }
 
 func (gs *GovernSenateConfig) ConfigData() []byte {
-	panic("implement me")
+	buffer := bytes.NewBuffer([]byte{})
+	for _, senate := range gs.senates {
+		value := make([]byte, GovernSenateConfigValueLen)
+		copy(value[0:32], senate.ScriptHash[:])
+		binary.LittleEndian.PutUint64(value[32:GovernSenateConfigValueLen], senate.Weight)
+		buffer.Write(value)
+	}
+	return buffer.Bytes()
 }
 
 func (gs *GovernSenateConfig) GetNodes() []*database.SenateWeight {
@@ -435,18 +459,18 @@ func DecodeGovernConfigFromData(configData *database.GovernConfigData) (GovernCo
 				txSha:        txSha,
 				addresses:    make(map[wire.Hash]uint16),
 			}
-			if l%34 != 0 {
+			if l%GovernSupperConfigValueLen != 0 {
 				return nil, InvalidGovernConfigFormatError(class)
 			}
-			n := l / 34
+			n := l / GovernSupperConfigValueLen
 			for i := 0; i < n; i++ {
-				start := i * 34
+				start := i * GovernSupperConfigValueLen
 				scriptHash := data[start : start+32]
 				hash, err := wire.NewHash(scriptHash)
 				if err != nil {
 					return nil, err
 				}
-				id := binary.LittleEndian.Uint16(data[start+32 : start+34])
+				id := binary.LittleEndian.Uint16(data[start+32 : start+GovernSupperConfigValueLen])
 				config.addresses[*hash] = id
 			}
 			return config, nil
@@ -459,7 +483,7 @@ func DecodeGovernConfigFromData(configData *database.GovernConfigData) (GovernCo
 				shadow:       shadow,
 				txSha:        txSha,
 			}
-			if l != 12 {
+			if l != 3*GovernVersionConfigValueLen {
 				return nil, InvalidGovernConfigFormatError(class)
 			}
 			majorVersion := binary.LittleEndian.Uint32(data[0:4])
@@ -477,14 +501,14 @@ func DecodeGovernConfigFromData(configData *database.GovernConfigData) (GovernCo
 				txSha:        txSha,
 				senates:      make([]*database.SenateWeight, 0),
 			}
-			if l%40 != 0 {
+			if l%GovernSenateConfigValueLen != 0 {
 				return nil, InvalidGovernConfigFormatError(class)
 			}
-			n := l / 40
+			n := l / GovernSenateConfigValueLen
 			for i := 0; i < n; i++ {
-				start := i * 40
-				weight := binary.LittleEndian.Uint64(data[start : start+8])
-				scriptHash := data[start+8 : start+40]
+				start := i * GovernSenateConfigValueLen
+				scriptHash := data[start : start+32]
+				weight := binary.LittleEndian.Uint64(data[start+32 : start+GovernSenateConfigValueLen])
 				senateWeight := database.SenateWeight{Weight: weight}
 				copy(senateWeight.ScriptHash[:], scriptHash)
 				config.senates = append(config.senates, &senateWeight)

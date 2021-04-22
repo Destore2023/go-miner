@@ -28,7 +28,7 @@ const (
 	//  | 1 byte  | 8 bytes       | n bytes             |
 	//  +---------+---------------+---------------------+
 	governKeyLength       = 45
-	governSearchKeyLength = 13
+	governSearchKeyLength = 5
 )
 
 type governConfig struct {
@@ -56,11 +56,11 @@ func makeGovernConfigMapKeyToKey(mapKey governConfigMapKey) []byte {
 	return key
 }
 
-func makeGovernConfigSearchKey(id uint16, height uint64) []byte {
+// makeGovernConfigSearchKey
+func makeGovernConfigSearchKey(id uint16) []byte {
 	key := make([]byte, governSearchKeyLength)
 	copy(key[0:recordGovernTxLen], recordGovernTx)
-	binary.LittleEndian.PutUint16(key[recordGovernTxLen:recordGovernTxLen+4], id)
-	binary.LittleEndian.PutUint64(key[recordGovernTxLen+4:governSearchKeyLength], height)
+	binary.LittleEndian.PutUint16(key[recordGovernTxLen:recordGovernTxLen+2], id)
 	return key
 }
 
@@ -73,12 +73,16 @@ func (db *ChainDb) InsertGovernConfig(id uint16, height, activeHeight uint64, sh
 // fetchGovernConfigData
 // data : only spec config data
 func (db *ChainDb) fetchGovernConfigData(class uint16, height uint64, includeShadow bool) ([]*database.GovernConfigData, error) {
-	keyPrefix := makeGovernConfigSearchKey(class, height)
+	keyPrefix := makeGovernConfigSearchKey(class)
 	iter := db.localStorage.NewIterator(storage.BytesPrefix(keyPrefix))
 	configs := make([]*database.GovernConfigData, 0)
 	defer iter.Release()
 	for iter.Next() {
 		key := iter.Key()
+		blockHeight := binary.LittleEndian.Uint64(key[recordGovernTxLen+2 : recordGovernTxLen+10])
+		if height < blockHeight {
+			continue
+		}
 		value := iter.Value()
 		if len(value) < 9 {
 			continue
@@ -89,7 +93,7 @@ func (db *ChainDb) fetchGovernConfigData(class uint16, height uint64, includeSha
 		}
 		activeHeight := binary.LittleEndian.Uint64(value[1:9])
 		data := value[9:]
-		blockHeight := binary.LittleEndian.Uint64(key[recordGovernTxLen+4 : recordGovernTxLen+12])
+
 		txSha, err := wire.NewHash(key[recordGovernTxLen+12:])
 		if err != nil {
 			return nil, err
