@@ -27,7 +27,12 @@ const (
 	//  +---------+---------------+---------------------+
 	//  | 1 byte  | 8 bytes       | n bytes             |
 	//  +---------+---------------+---------------------+
-	governKeyLength       = 45
+	governKeyLength = 45
+	//  +---------+--------+
+	//  | Prefix  | id     |
+	//  |---------+--------+
+	//  | 3 bytes |2 bytes |
+	//  +---------+--------+
 	governSearchKeyLength = 5
 )
 
@@ -50,9 +55,9 @@ type governConfigMapKey struct {
 func makeGovernConfigMapKeyToKey(mapKey governConfigMapKey) []byte {
 	key := make([]byte, governKeyLength)
 	copy(key[0:recordGovernTxLen], recordGovernTx)
-	binary.LittleEndian.PutUint16(key[recordGovernTxLen:recordGovernTxLen+4], mapKey.id)
-	binary.LittleEndian.PutUint64(key[recordGovernTxLen+4:recordGovernTxLen+12], mapKey.blockHeight)
-	copy(key[recordGovernTxLen+12:governKeyLength], mapKey.txSha[:])
+	binary.LittleEndian.PutUint16(key[recordGovernTxLen:recordGovernTxLen+2], mapKey.id)
+	binary.LittleEndian.PutUint64(key[recordGovernTxLen+2:recordGovernTxLen+10], mapKey.blockHeight)
+	copy(key[recordGovernTxLen+10:governKeyLength], mapKey.txSha[:])
 	return key
 }
 
