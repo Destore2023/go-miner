@@ -96,31 +96,34 @@ type ScriptClass byte
 
 // Classes of script payment known about in the blockchain.
 const (
-	NonStandardTy          ScriptClass = iota // None of the recognized forms.
-	WitnessV0ScriptHashTy                     // Pay to witness script hash.
-	StakingScriptHashTy                       // Pay to staking script hash.
-	BindingScriptHashTy                       //pay to binding script hash
-	MultiSigTy                                // Multi signature.
-	NullDataTy                                // Empty data-only (provably prunable).
-	PoolingScriptHashTy                       // 6 pool
-	GovernanceScriptHashTy                    // 7 Governance
+	NonStandardTy         ScriptClass = iota // None of the recognized forms.
+	WitnessV0ScriptHashTy                    // Pay to witness script hash.
+	StakingScriptHashTy                      // Pay to staking script hash.
+	BindingScriptHashTy                      //pay to binding script hash
+	MultiSigTy                               // Multi signature.
+	NullDataTy                               // Empty data-only (provably prunable).
+	PoolingScriptHashTy                      // pay to pooling script hash
+	AwardingScriptHashTy                     // pay to awarding script hash
+	GoverningScriptHashTy                    //  pay to  Governance
 )
 
 const (
 	WitnessV0ScriptHashDataSize    = 32 // Length of witness script hash
 	WitnessV0PoCPubKeyHashDataSize = 20 // Length of poc public key hash
 	WitnessV0FrozenPeriodDataSize  = 8  // Length of byte slice of frozen period
+	WitnessV0PoolTypeDataSize      = 1  // Length of pool type
 )
 
 // scriptClassToName houses the human-readable strings which describe each
 // script class.
 var scriptClassToName = []string{
-	NonStandardTy:          "nonstandard",
-	MultiSigTy:             "multisig",
-	NullDataTy:             "nulldata",
-	WitnessV0ScriptHashTy:  "witness_v0_scripthash",
-	StakingScriptHashTy:    "staking_scripthash",
-	BindingScriptHashTy:    "binding_scripthash",
-	PoolingScriptHashTy:    "pooling_scripthash",
-	GovernanceScriptHashTy: "governance_scripthash",
+	NonStandardTy:         "nonstandard",
+	MultiSigTy:            "multisig",
+	NullDataTy:            "nulldata",
+	WitnessV0ScriptHashTy: "witness_v0_scripthash",
+	StakingScriptHashTy:   "staking_scripthash",
+	BindingScriptHashTy:   "binding_scripthash",
+	PoolingScriptHashTy:   "pooling_scripthash",
+	AwardingScriptHashTy:  "awarding_scripthash",
+	GoverningScriptHashTy: "governing_scripthash",
 }

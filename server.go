@@ -43,7 +43,7 @@ func (s *server) Start() {
 
 	logging.CPrint(logging.TRACE, "starting server")
 
-	// srvrLog.Trace("Starting server")
+	// serverLog.Trace("Starting server")
 	logging.CPrint(logging.INFO, "starting any com")
 
 	// Start SyncManager

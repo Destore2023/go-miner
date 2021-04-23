@@ -2,12 +2,12 @@ package consensus
 
 const (
 	SukhavatiPerSkt uint64 = 100000000
-	// 1 skt, 1 day old, a tx of 250 bytes
+	// MinHighPriority 1 skt, 1 day old, a tx of 250 bytes
 	MinHighPriority          = 1e8 * 1280.0 / 250
 	MaxNewBlockChSize        = 1024
 	DefaultBlockPrioritySize = 50000 // bytes  40MB
 
-	// staking tx
+	// MaxStakingRewardNum staking tx
 	MaxStakingRewardNum                  = 100
 	defaultStakingTxRewardStart   uint64 = 24
 	defaultGovernanceTxTakeEffect uint64 = 24
@@ -37,28 +37,30 @@ const (
 	defaultBaseSubsidy            uint64 = 128 * SukhavatiPerSkt
 	defaultMinHalvedSubsidy       uint64 = 6250000
 
-	DayPeriod              uint64 = 1920
+	DayPeriod uint64 = 1920
+	// DaySeconds The number of seconds in a day
+	DaySeconds             uint64 = 86400
 	defaultMinFrozenPeriod uint64 = 61440
 	defaultMinStakingValue uint64 = 2048 * SukhavatiPerSkt
-	// after 90 days  activation ,and dev only 1
+	// StakingPoolAwardActivation after 90 days  activation ,and dev only 1
 	StakingPoolAwardActivation uint64 = 1
 	MaxValidPeriod                    = defaultMinFrozenPeriod * 24 // 1474560
-	// 40s height + 1  1day 24 * 60 * 60 = 86400s  86400s % 40s = 2160
+	// StakingPoolRewardProportionalDenominator 40s height + 1  1day 24 * 60 * 60 = 86400s  86400s % 40s = 2160
 	// release staking pool  1/200
 	StakingPoolRewardProportionalDenominator = 200
-	// staking pool merge  epoch
+	// StakingPoolMergeEpoch staking pool merge  epoch
 	StakingPoolMergeEpoch = 100
 	StakingPoolAwardStart = 2
-	// 90 day --> height
+	// StakingPoolRewardStartHeight 90 day --> height
 	StakingPoolRewardStartHeight = 194400
 	StakingPoolRewardEpoch       = 2160
-	// 5.838% --> 94.162%   --> 94162/100000
+	// CoinbaseSubsidyAttenuation 5.838% --> 94.162%   --> 94162/100000
 	CoinbaseSubsidyAttenuation            = 94162
 	CoinbaseSubsidyAttenuationDenominator = 100000
 	StakingPoolAddressScriptHash          = "00000000000000000000000000000001"
 	governAddress                         = "sk1qqpthgpk7yqjmenj6fe3klp9d98ay02e5sc4k8avk8985zty3spvdqdfdy3y"
 	StakingPoolType                       = uint16(1)
-	// default binding frozen period
+	// BindingTxFrozenPeriod default binding frozen period
 	BindingTxFrozenPeriod = 90 * DayPeriod
 )
 

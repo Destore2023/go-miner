@@ -16,18 +16,18 @@ var (
 
 const (
 	//
-	//  +---------+--------+--------+-------------+
-	//  | Prefix  | id     |height  |  txId       |
-	//  |---------+--------+--------+-------------+
-	//  | 3 bytes |2 bytes |8 bytes | 32 bytes    |
-	//  +---------+--------+--------+-------------+
+	//  +---------+--------+--------+-------------+-------------+
+	//  | Prefix  | id     |height  |  txId       |  block sha  |
+	//  |---------+--------+--------+-------------+-------------+
+	//  | 3 bytes |2 bytes |8 bytes | 32 bytes    |  32 bytes   |
+	//  +---------+--------+--------+-------------+-------------+
 	//           \|/
 	//  +---------+---------------+---------------------+
 	//  | shadow  | active height | data n bytes        |
 	//  +---------+---------------+---------------------+
 	//  | 1 byte  | 8 bytes       | n bytes             |
 	//  +---------+---------------+---------------------+
-	governKeyLength = 45
+	governKeyLength = 77
 	//  +---------+--------+
 	//  | Prefix  | id     |
 	//  |---------+--------+
@@ -40,6 +40,7 @@ type governConfig struct {
 	id           uint16     // 2 bytes
 	blockHeight  uint64     // 8 bytes
 	txSha        *wire.Hash // 32 bytes
+	blockSha     *wire.Hash // 32 bytes
 	shadow       bool       // 1 byte  0 enable | 1 shadow
 	activeHeight uint64     // 8 bytes
 	data         []byte     // var
@@ -52,12 +53,14 @@ type governConfigMapKey struct {
 	txSha       *wire.Hash // 32 bytes
 }
 
+// makeGovernConfigMapKeyToKey
 func makeGovernConfigMapKeyToKey(mapKey governConfigMapKey) []byte {
 	key := make([]byte, governKeyLength)
 	copy(key[0:recordGovernTxLen], recordGovernTx)
 	binary.LittleEndian.PutUint16(key[recordGovernTxLen:recordGovernTxLen+2], mapKey.id)
 	binary.LittleEndian.PutUint64(key[recordGovernTxLen+2:recordGovernTxLen+10], mapKey.blockHeight)
-	copy(key[recordGovernTxLen+10:governKeyLength], mapKey.txSha[:])
+	copy(key[recordGovernTxLen+10:recordGovernTxLen+42], mapKey.txSha[:])
+	copy(key[recordGovernTxLen+42:governKeyLength], mapKey.txSha[:])
 	return key
 }
 

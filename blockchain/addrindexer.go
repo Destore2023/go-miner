@@ -37,7 +37,7 @@ type shTxLoc map[[txIndexKeyLen]byte]struct{}
 
 type btxIndex map[[btxIndexKeyLen]byte]struct{}
 
-// spent tx map
+// btxSpentIndex spent tx map
 type btxSpentIndex map[[btxSpentIndexKeyLen]byte]struct{}
 
 func mustEncodeTxIndexKey(scriptHash []byte, txOffset, txLen int) []byte {
@@ -98,7 +98,7 @@ func mustDecodeGtxSpentIndexKey(key [btxSpentIndexKeyLen]byte) ([ripemd160.Size]
 	return scriptHash, int(stxTxOffset), int(stxTxLen), btxHeight, int(btxTxOffset), int(btxTxLen), btxTxOutIndex
 }
 
-// newAddrIndexer creates a new block address indexer.
+// NewAddrIndexer creates a new block address indexer.
 // Use Start to begin processing incoming index jobs.
 func NewAddrIndexer(db database.DB, server Server) (*AddrIndexer, error) {
 	_, _, err := db.FetchAddrIndexTip()

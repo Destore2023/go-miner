@@ -59,11 +59,11 @@ func init() {
 	if err != nil {
 		panic("init anyoneRedeemableScript: " + err.Error())
 	}
-	address, err := chainutil.NewAddressPoolingScriptHash([]byte(consensus.StakingPoolAddressScriptHash), &config.ChainParams)
-	if err != nil {
-		panic("init poolPubKeyScript: " + err.Error())
-	}
-	stakingPoolPubKeyScript, err = txscript.PayToPoolingAddrScript(address, consensus.StakingPoolType)
+	//address, err := chainutil.NewAddressPoolingScriptHash([]byte(consensus.StakingPoolAddressScriptHash), &config.ChainParams)
+	//if err != nil {
+	//	panic("init poolPubKeyScript: " + err.Error())
+	//}
+	stakingPoolPubKeyScript, err = txscript.PayToPoolingAddrScript(consensus.StakingPoolType)
 	if err != nil {
 		panic("init poolPubKeyScript: " + err.Error())
 	}

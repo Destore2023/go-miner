@@ -463,8 +463,9 @@ func IsValidFrozenPeriod(height uint64) bool {
 	return height >= consensus.MinFrozenPeriod && height <= SequenceLockTimeMask-1
 }
 
+// IsValidPoolType 0 < poolType < 255
 func IsValidPoolType(poolType uint16) bool {
-	if poolType == 0x0 {
+	if poolType == 0x00 || poolType == 0xFF {
 		return false
 	}
 	return true

@@ -6,6 +6,7 @@ package txscript
 
 import (
 	"bytes"
+	"encoding/binary"
 	"reflect"
 	"testing"
 )
@@ -184,8 +185,26 @@ func TestPushedData(t *testing.T) {
 // TestHasCanonicalPush ensures the canonicalPush function works as expected.
 func TestHasCanonicalPush(t *testing.T) {
 	t.Parallel()
+	builder := NewScriptBuilder()
+	buf := make([]byte, 2)
+	for i := 0; i < 255; i++ {
+		binary.LittleEndian.PutUint16(buf, 1)
+		builder.AddData(buf)
+		script, err := builder.Script()
+		if err != nil {
+			return
+		}
+		pops, err := TstParseScript(script)
+		if err != nil {
+			return
+		}
+		push := TstHasCanonicalPushes(pops[0])
+		if !push {
+			t.Errorf("sctipt test data is canonicalPush :%d is fail", i)
+		}
+	}
 	for i := 0; i < 65535; i++ {
-		builder := NewScriptBuilder()
+		builder = NewScriptBuilder()
 		builder.AddInt64(int64(i))
 		script, err := builder.Script()
 		if err != nil {

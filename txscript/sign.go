@@ -102,8 +102,7 @@ func signWitMultiSig(tx *wire.MsgTx, idx int, value int64, subScript []byte, sig
 func signwit(chainParams *config.Params, tx *wire.MsgTx, idx int, value int64,
 	subScript []byte, sigHashes *TxSigHashes, hashType SigHashType, kdb GetSignDB, sdb ScriptDB) ([]byte,
 	ScriptClass, []chainutil.Address, int, error) {
-	class, addresses, pubkey, nrequired, err := ExtractPkScriptAddrs(subScript,
-		chainParams)
+	class, addresses, pubkey, nRequired, err := ExtractPkScriptAddrs(subScript, chainParams)
 	if err != nil {
 		return nil, NonStandardTy, nil, 0, err
 	}
@@ -115,29 +114,29 @@ func signwit(chainParams *config.Params, tx *wire.MsgTx, idx int, value int64,
 		if err != nil {
 			return nil, class, nil, 0, err
 		}
-		return script, class, addresses, nrequired, nil
+		return script, class, addresses, nRequired, nil
 	case StakingScriptHashTy:
 		script, err := sdb.GetScript(addresses[0])
 		if err != nil {
 			return nil, class, nil, 0, err
 		}
-		return script, class, addresses, nrequired, nil
+		return script, class, addresses, nRequired, nil
 	case BindingScriptHashTy:
 		script, err := sdb.GetScript(addresses[0])
 		if err != nil {
 			return nil, class, nil, 0, err
 		}
-		return script, class, addresses, nrequired, nil
+		return script, class, addresses, nRequired, nil
 	case MultiSigTy:
 		script, _, err := signWitMultiSig(tx, idx, value, subScript, sigHashes, hashType,
-			pubkey, nrequired, kdb)
-		return script, class, addresses, nrequired, err
+			pubkey, nRequired, kdb)
+		return script, class, addresses, nRequired, err
 	case PoolingScriptHashTy:
 		script, err := sdb.GetScript(addresses[0])
 		if err != nil {
 			return nil, class, nil, 0, err
 		}
-		return script, class, addresses, nrequired, nil
+		return script, class, addresses, nRequired, nil
 	case NullDataTy:
 		return nil, class, nil, 0,
 			errors.New("can't sign NULLDATA transactions")

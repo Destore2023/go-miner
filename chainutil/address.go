@@ -553,12 +553,12 @@ func NewAddressWitnessScriptHash(witnessProg []byte, net *config.Params) (*Addre
 	return newAddressWitnessScriptHash(net.Bech32HRPSegwit, 0, witnessProg)
 }
 
-//NewAddressStakingScriptHash returns a new Address for loctime transaction
+//NewAddressStakingScriptHash returns a new Address for lockTime transaction
 func NewAddressStakingScriptHash(witnessProg []byte, net *config.Params) (*AddressWitnessScriptHash, error) {
 	return newAddressWitnessScriptHash(net.Bech32HRPSegwit, 1, witnessProg)
 }
 
-//NewAddressPoolingScriptHash
+//NewAddressPoolingScriptHash returns a new AddressWitnessPubKeyHash.
 func NewAddressPoolingScriptHash(witnessProg []byte, net *config.Params) (*AddressWitnessScriptHash, error) {
 	return newAddressWitnessScriptHash(net.Bech32HRPSegwit, 0, witnessProg)
 }
@@ -566,6 +566,7 @@ func NewAddressPoolingScriptHash(witnessProg []byte, net *config.Params) (*Addre
 // newAddressWitnessScriptHash is an internal helper function to create an
 // AddressWitnessScriptHash with a known human-readable part, rather than
 // looking it up through its parameters.
+// extend version: 1. lock time tx
 func newAddressWitnessScriptHash(hrp string, extendVersion byte, witnessProg []byte) (*AddressWitnessScriptHash, error) {
 	// Check for valid program length for witness version 0, which is 32
 	// for P2WSH.

@@ -3,6 +3,7 @@ package database
 import (
 	"crypto/sha256"
 	"errors"
+	"github.com/Sukhavati-Labs/go-miner/consensus"
 
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/config"
@@ -66,7 +67,7 @@ type DB interface {
 	// the function returns.
 	DeleteBlock(blockSha *wire.Hash) (err error)
 
-	// ExistsSha returns whether or not the given block hash is present in
+	// ExistsBlockSha  returns whether or not the given block hash is present in
 	// the database.
 	ExistsBlockSha(blockSha *wire.Hash) (exists bool, err error)
 
@@ -82,12 +83,12 @@ type DB interface {
 	// FetchBlockShaByHeight returns a block hash based on its height in the
 	// block chain.
 	FetchBlockShaByHeight(height uint64) (blockSha *wire.Hash, err error)
-	// FetchBlockLocByHeight
+	// FetchBlockLocByHeight fetch block location info by block height
 	FetchBlockLocByHeight(height uint64) (*BlockLoc, error)
 	// ExistsTxSha returns whether or not the given tx hash is present in
 	// the database
 	ExistsTxSha(txSha *wire.Hash) (exists bool, err error)
-	// FetchTxByLoc
+	// FetchTxByLoc fetch tx location info by block height and tx offset
 	FetchTxByLoc(blockHeight uint64, txOffset int, txLen int) (*wire.MsgTx, error)
 	// FetchTxByFileLoc returns transactions saved in file, including
 	// those revoked with chain reorganization, for file is in APPEND mode.
@@ -95,12 +96,12 @@ type DB interface {
 	// FetchTxBySha returns some data for the given transaction hash. The
 	// implementation may cache the underlying data if desired.
 	FetchTxBySha(txSha *wire.Hash) ([]*TxReply, error)
-	// GetTxData returns the block height, txOffset, txLen for the given transaction hash,
+	// GetUnspentTxData GetTxData returns the block height, txOffset, txLen for the given transaction hash,
 	// including unspent and fully spent transaction
 	GetUnspentTxData(txSha *wire.Hash) (uint64, int, int, error)
-	// IsTxOutSpent
+	// IsTxOutSpent is tx out spent
 	IsTxOutSpent(txSha *wire.Hash, index int) (bool, error)
-	// fetch unspent staking pool tx
+	// FetchTxByShaList fetch unspent staking pool tx
 	//FetchUnspentStakingPoolTx()([]*TxReply, error)
 	// FetchTxByShaList returns a TxReply given an array of transaction
 	// hashes.  The implementation may cache the underlying data if desired.
@@ -113,7 +114,7 @@ type DB interface {
 	// which can be used to detect errors.
 	FetchTxByShaList(txShaList []*wire.Hash) []*TxReply
 
-	// Returns database.ErrTxShaMissing if no transaction found
+	// FetchLastFullySpentTxBeforeHeight Returns database.ErrTxShaMissing if no transaction found
 	FetchLastFullySpentTxBeforeHeight(txSha *wire.Hash, height uint64) (tx *wire.MsgTx, blockHeight uint64, blockSha *wire.Hash, err error)
 
 	// FetchUnSpentTxByShaList returns a TxReply given an array of
@@ -126,25 +127,29 @@ type DB interface {
 	// transaction.  Each TxReply instance then contains an Err field
 	// which can be used to detect errors.
 	FetchUnSpentTxByShaList(txShaList []*wire.Hash) []*TxReply
-	// FetchUnSpentStakingPoolTxOutByHeight
+
+	// FetchUnSpentStakingPoolTxOutByHeight fetch unspent staking pool tx out by block height
 	FetchUnSpentStakingPoolTxOutByHeight(startHeight uint64, endHeight uint64) ([]*TxOutReply, error)
+
 	// FetchUnexpiredStakingRank returns only currently unexpired staking rank at
 	// target height. This function is for mining and validating block.
 	FetchUnexpiredStakingRank(height uint64, onlyOnList bool) ([]Rank, error)
-	// Fetch
 	FetchStakingStakingRewardInfo(height uint64) (*StakingRewardInfo, error)
 
-	// FetchStakingAwardedRecordByTime
+	// FetchStakingAwardedRecordByTime fetch staking award record by time
 	FetchStakingAwardedRecordByTime(queryTime uint64) ([]StakingAwardedRecord, error)
-	// InsertGovernConfig
+
+	// InsertGovernConfig insert govern config
 	InsertGovernConfig(id uint16, height, activeHeight uint64, shadow bool, txSha *wire.Hash, data []byte) error
+
 	// FetchStakingRank returns staking rank at any height. This
 	// function may be slow.
 	FetchStakingRank(height uint64, onlyOnList bool) ([]Rank, error)
 
-	// fetch a map of all staking transactions in database
+	// FetchStakingTxMap fetch a map of all staking transactions in database
 	FetchStakingTxMap() (StakingNodes, error)
 
+	// FetchExpiredStakingTxListByHeight fetch expired staking tx by block height as start height
 	FetchExpiredStakingTxListByHeight(height uint64) (StakingNodes, error)
 
 	FetchHeightRange(startHeight, endHeight uint64) ([]wire.Hash, error)
@@ -238,10 +243,17 @@ type StakingAwardedRecord struct {
 	TxId        wire.Hash // award tx sha
 }
 
+// StakingRewardInfo staking reward info
 type StakingRewardInfo struct {
 	CurrentTime     uint64
 	LastRecord      StakingAwardedRecord
 	RewardAddresses []Rank
+}
+
+// SenateWeight senate node info
+type SenateWeight struct {
+	Weight     uint64            // weight
+	ScriptHash [sha256.Size]byte // The income address script of the equity
 }
 
 // TxOutReply only Tx Out info
@@ -308,7 +320,7 @@ func (sh StakingTxOutAtHeight) Put(op wire.OutPoint, stk StakingTxInfo) (success
 }
 
 func (sar StakingAwardRecordAtTime) Put(record StakingAwardedRecord) (success bool) {
-	d := record.AwardedTime / 86400
+	d := record.AwardedTime / consensus.DaySeconds
 	m, ok := sar[d]
 	if !ok {
 		m = make(map[wire.Hash]StakingAwardedRecord)
@@ -365,7 +377,7 @@ func (nodes StakingNodes) Delete(key [sha256.Size]byte, blockHeight uint64, op w
 // either pays to or spends from the passed UTXO for the hash160.
 type BlockAddrIndex map[[AddrIndexKeySize]byte][]*AddrIndexOutPoint
 
-// BlockTxAddrIndex represents the indexing structure for txs
+// TxAddrIndex represents the indexing structure for txs
 type TxAddrIndex map[[sha256.Size]byte][]*wire.TxLoc
 
 type BindingTxAddrIndex map[[ripemd160.Size]byte][]*AddrIndexOutPoint

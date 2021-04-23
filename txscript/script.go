@@ -17,7 +17,7 @@ var (
 )
 
 // isSmallInt returns whether or not the opcode is considered a small integer,
-// which is an OP_0, or OP_1 through OP_16.
+// which is an OP_0, or OP_1 (81) through OP_16 (96).
 func isSmallInt(op *opcode) bool {
 	if op.value == OP_0 || (op.value >= OP_1 && op.value <= OP_16) {
 		return true
@@ -27,6 +27,9 @@ func isSmallInt(op *opcode) bool {
 
 // isWitnessScriptHash returns true if the passed script is a
 // pay-to-witness-script-hash transaction, false otherwise.
+// +-----------+---------------+
+// |  OP_0     | OP_DATA_32    |
+// +-----------+---------------+
 func isWitnessScriptHash(pops []parsedOpcode) bool {
 	return len(pops) == 2 &&
 		pops[0].opcode.value == OP_0 &&
@@ -36,16 +39,35 @@ func isWitnessScriptHash(pops []parsedOpcode) bool {
 // isWitnessPoolingScript return true if the passed script is a
 // pay-to-pool-script transaction, false otherwise
 // OP_DATA_2 pool type
+// +-----------+---------------+-------------+
+// |  OP_0     | OP_DATA_32    | OP_DATA_2   |
+// +-----------+---------------+-------------+
 func isWitnessPoolingScript(pops []parsedOpcode) bool {
 	return len(pops) == 3 &&
 		pops[0].opcode.value == OP_0 &&
 		pops[1].opcode.value == OP_DATA_32 && // public key
-		pops[2].opcode.value == OP_DATA_2 // type
+		pops[2].opcode.value == OP_DATA_2 // pool type 2 bytes
+}
+
+// isWitnessAwardingScript return true if the passed script is a
+// pay-to-awarding-script transaction, false otherwise
+// +-----------+---------------+-------------+------------+
+// |  OP_0     | OP_DATA_32    | OP_DATA_2   | OP_DATA_8  |
+// +-----------+---------------+-------------+------------+
+func isWitnessAwardingScript(pops []parsedOpcode) bool {
+	return len(pops) == 4 &&
+		pops[0].opcode.value == OP_0 &&
+		pops[1].opcode.value == OP_DATA_32 &&
+		pops[2].opcode.value == OP_DATA_2 && // pool type
+		pops[3].opcode.value == OP_DATA_8 // lock time
 }
 
 // isWitnessGovernanceScript return true if the passed script is a
 // pay to governance script transaction, false otherwise
 // OP_DATA_8 height type
+// +-----------+---------------+-------------+
+// |  OP_0     | OP_DATA_32    | OP_DATA_2   |
+// +-----------+---------------+-------------+
 func isWitnessGovernanceScript(pops []parsedOpcode) bool {
 	return len(pops) == 4 &&
 		pops[0].opcode.value == OP_0 &&
@@ -56,6 +78,9 @@ func isWitnessGovernanceScript(pops []parsedOpcode) bool {
 
 // isWitnessStakingScript returns true if the passed script is a
 // pay-to-lockTime-script-hash(staking) transaction, false otherwise.
+// +-----------+---------------+-------------+
+// |  OP_0     | OP_DATA_32    | OP_DATA_8   |
+// +-----------+---------------+-------------+
 func isWitnessStakingScript(pops []parsedOpcode) bool {
 	return len(pops) == 3 &&
 		pops[0].opcode.value == OP_0 &&
@@ -65,6 +90,9 @@ func isWitnessStakingScript(pops []parsedOpcode) bool {
 
 // isWitnessBindingScript returns true if the passed script is a
 // pay-to-binding-script-hash transaction, false otherwise.
+// +-----------+---------------+-------------+
+// |  OP_0     | OP_DATA_32    | OP_DATA_20  |
+// +-----------+---------------+-------------+
 func isWitnessBindingScript(pops []parsedOpcode) bool {
 	return len(pops) == 3 &&
 		pops[0].opcode.value == OP_0 &&
@@ -173,6 +201,11 @@ func ExtractWitnessProgramInfo(script []byte) (int, []byte, []parsedOpcode, erro
 	return extractWitnessProgramInfo(pops)
 }
 
+// extractWitnessProgramInfo
+// 0         1                2
+// +---------+----------------+-----------------+
+// | version | witnessProgram | witnessExtProg  |
+// +---------+----------------+-----------------+
 func extractWitnessProgramInfo(pops []parsedOpcode) (int, []byte, []parsedOpcode, error) {
 	// If at this point, the scripts doesn't resemble a witness program,
 	// then we'll exit early as there isn't a valid version or program to

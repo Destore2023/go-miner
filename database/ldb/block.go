@@ -4,6 +4,7 @@ package ldb
 import (
 	"bytes"
 	"encoding/binary"
+	"github.com/Sukhavati-Labs/go-miner/consensus"
 	"math"
 
 	"github.com/Sukhavati-Labs/go-miner/database/storage"
@@ -365,7 +366,7 @@ func (db *ChainDb) deleteBlock(blockSha *wire.Hash) (err error) {
 		}
 		if isPoolingRewardTx {
 			batch.Delete(stakingAwardedRecordToKey(stakingAwardedRecordMapKey{
-				day:  uint64(block.MsgBlock().Header.Timestamp.Unix()) / 86400,
+				day:  uint64(block.MsgBlock().Header.Timestamp.Unix()) / consensus.DaySeconds,
 				txID: txId,
 			}))
 		}
