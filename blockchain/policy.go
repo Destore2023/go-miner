@@ -253,7 +253,7 @@ func checkParsePkScript(tx *chainutil.Tx, txStore TxStore) (err error) {
 				checkedBinding = true
 			}
 		case txscript.PoolingScriptHashTy:
-		case txscript.GovernanceScriptHashTy:
+		case txscript.GoverningScriptHashTy:
 		case txscript.NonStandardTy,
 			txscript.MultiSigTy:
 			logging.CPrint(logging.ERROR, "non-standard script form",

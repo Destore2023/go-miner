@@ -329,7 +329,7 @@ func (gsc *GovernSupperConfig) String() string {
 }
 
 func (gsc *GovernSupperConfig) ConfigData() []byte {
-	buffer := bytes.NewBuffer([]byte{})
+	var buffer bytes.Buffer
 	// 32 hash --> 2 id
 	for hash, id := range gsc.addresses {
 		value := make([]byte, GovernSupperConfigValueLen)
@@ -378,7 +378,7 @@ func (gv *GovernVersionConfig) String() string {
 }
 
 func (gv *GovernVersionConfig) ConfigData() []byte {
-	buffer := bytes.NewBuffer([]byte{})
+	var buffer bytes.Buffer
 	value := make([]byte, GovernVersionConfigValueLen)
 	binary.LittleEndian.PutUint32(value, gv.version.GetMajorVersion())
 	buffer.Write(value)
@@ -427,7 +427,7 @@ func (gs *GovernSenateConfig) String() string {
 }
 
 func (gs *GovernSenateConfig) ConfigData() []byte {
-	buffer := bytes.NewBuffer([]byte{})
+	var buffer bytes.Buffer
 	for _, senate := range gs.senates {
 		value := make([]byte, GovernSenateConfigValueLen)
 		copy(value[0:32], senate.ScriptHash[:])

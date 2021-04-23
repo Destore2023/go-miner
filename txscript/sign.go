@@ -108,7 +108,6 @@ func signwit(chainParams *config.Params, tx *wire.MsgTx, idx int, value int64,
 	}
 
 	switch class {
-
 	case WitnessV0ScriptHashTy:
 		script, err := sdb.GetScript(addresses[0])
 		if err != nil {
@@ -137,6 +136,12 @@ func signwit(chainParams *config.Params, tx *wire.MsgTx, idx int, value int64,
 			return nil, class, nil, 0, err
 		}
 		return script, class, addresses, nRequired, nil
+	case AwardingScriptHashTy:
+		script, err := sdb.GetScript(addresses[0])
+		if err != nil {
+			return nil, class, nil, 0, err
+		}
+		return script, class, addresses, nRequired, nil
 	case NullDataTy:
 		return nil, class, nil, 0,
 			errors.New("can't sign NULLDATA transactions")
@@ -149,8 +154,7 @@ func signwit(chainParams *config.Params, tx *wire.MsgTx, idx int, value int64,
 }
 
 func SignTxOutputWit(chainParams *config.Params, tx *wire.MsgTx, idx int, value int64, pkScript []byte, sigHashes *TxSigHashes, hashType SigHashType, kdb GetSignDB, sdb ScriptDB) (wire.TxWitness, error) {
-	sigScript, _, _, _, err := signwit(chainParams, tx,
-		idx, value, pkScript, sigHashes, hashType, kdb, sdb)
+	sigScript, _, _, _, err := signwit(chainParams, tx, idx, value, pkScript, sigHashes, hashType, kdb, sdb)
 	if err != nil {
 		return nil, err
 	}

@@ -134,7 +134,7 @@ func IsPayToPoolingScriptHash(script []byte) bool {
 	return isWitnessPoolingScript(pops)
 }
 
-func IsPayToGovernanceScriptHash(script []byte) bool {
+func IsPayToGoverningScriptHash(script []byte) bool {
 	pops, err := parseScript(script)
 	if err != nil {
 		return false
@@ -477,7 +477,7 @@ func calcHashOutputs(tx *wire.MsgTx) wire.Hash {
 // being spent, in addition to the final transaction fee. In the case the
 // wallet if fed an invalid input amount, the real sighash will differ causing
 // the produced signature to be invalid.
-//only signHashAll is supported for now
+// only signHashAll is supported for now
 func calcWitnessSignatureHash(subScript []parsedOpcode, sigHashes *TxSigHashes,
 	hashType SigHashType, tx *wire.MsgTx, idx int, amt int64) ([]byte, error) {
 

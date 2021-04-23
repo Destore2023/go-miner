@@ -483,12 +483,17 @@ func ExtractPkScriptAddrs(pkScript []byte, chainParams *config.Params) (ScriptCl
 			addrs = append(addrs, pkAddr)
 		}
 	case PoolingScriptHashTy:
-		requiredSigs = 1
-		addr, err := chainutil.NewAddressPoolingScriptHash(pops[1].data, chainParams)
+		requiredSigs = 0
+		addr, err := chainutil.NewAddressWitnessScriptHash(pops[1].data, chainParams)
 		if err == nil {
 			addrs = append(addrs, addr)
 		}
-
+	case AwardingScriptHashTy:
+		requiredSigs = 1
+		addr, err := chainutil.NewAddressWitnessScriptHash(pops[1].data, chainParams)
+		if err != nil {
+			addrs = append(addrs, addr)
+		}
 	case MultiSigTy:
 		// A multi-signature script is of the form:
 		//  <numsigs> <pubkey> <pubkey> <pubkey>... <numpubkeys> OP_CHECKMULTISIG

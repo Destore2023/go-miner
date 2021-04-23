@@ -558,11 +558,6 @@ func NewAddressStakingScriptHash(witnessProg []byte, net *config.Params) (*Addre
 	return newAddressWitnessScriptHash(net.Bech32HRPSegwit, 1, witnessProg)
 }
 
-//NewAddressPoolingScriptHash returns a new AddressWitnessPubKeyHash.
-func NewAddressPoolingScriptHash(witnessProg []byte, net *config.Params) (*AddressWitnessScriptHash, error) {
-	return newAddressWitnessScriptHash(net.Bech32HRPSegwit, 0, witnessProg)
-}
-
 // newAddressWitnessScriptHash is an internal helper function to create an
 // AddressWitnessScriptHash with a known human-readable part, rather than
 // looking it up through its parameters.
