@@ -1,6 +1,9 @@
 package blockchain
 
 import (
+	"bytes"
+	"encoding/binary"
+	"encoding/hex"
 	"time"
 
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
@@ -209,7 +212,6 @@ func checkParsePkScript(tx *chainutil.Tx, txStore TxStore) (err error) {
 	for i, txOut := range tx.TxOut() {
 		psi := tx.GetPkScriptInfo(i)
 		txOutClass := txscript.ScriptClass(psi.Class)
-
 		switch txOutClass {
 		case txscript.StakingScriptHashTy:
 			if !wire.IsValidStakingValue(txOut.Value) {
@@ -253,6 +255,21 @@ func checkParsePkScript(tx *chainutil.Tx, txStore TxStore) (err error) {
 				checkedBinding = true
 			}
 		case txscript.PoolingScriptHashTy:
+			if !wire.IsValidPoolType(psi.SubClass) {
+				return ErrInvalidPoolType
+			}
+			scriptHash := make([]byte, 32)
+			binary.BigEndian.PutUint16(scriptHash[30:32], psi.SubClass)
+			if !bytes.Equal(scriptHash, psi.ScriptHash[:]) {
+				logging.CPrint(logging.ERROR, "PoolingScriptHashTy script hash not equal pool type",
+					logging.LogFormat{
+						"scriptHash": hex.EncodeToString(psi.ScriptHash[:]),
+						"poolType":   psi.SubClass,
+					})
+				return ErrStandardPoolingTx
+			}
+		case txscript.AwardingScriptHashTy:
+
 		case txscript.GoverningScriptHashTy:
 		case txscript.NonStandardTy,
 			txscript.MultiSigTy:

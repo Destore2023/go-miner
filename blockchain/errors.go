@@ -81,6 +81,8 @@ var (
 	ErrBindingInputMissing   = errors.New("input of binding missing")
 	ErrDuplicateStaking      = errors.New("duplicate staking")
 	ErrPoolTxNum             = errors.New("excessive pool trading")
+	ErrStandardPoolingTx     = errors.New("pooling tx script hash not equal pool type")
+	ErrInvalidPoolType       = errors.New("invalid pool type")
 
 	// TxIn
 	ErrFindReferenceInput = errors.New("unable find reference transaction ")

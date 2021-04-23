@@ -7,8 +7,8 @@ import (
 	"github.com/Sukhavati-Labs/go-miner/wire"
 )
 
-// Registered by txscript
-var WitPkScriptParseFunc func(script []byte) (class byte, frozen uint64, scriptHash [32]byte)
+// WitPkScriptParseFunc Registered by txscript
+var WitPkScriptParseFunc func(script []byte) (class byte, frozen uint64, scriptHash [32]byte, subClass uint16)
 
 // TxIndexUnknown is the value returned for a transaction index that is unknown.
 // This is typically because the transaction has not been inserted into a block
@@ -16,9 +16,10 @@ var WitPkScriptParseFunc func(script []byte) (class byte, frozen uint64, scriptH
 const TxIndexUnknown = -1
 
 type PkScriptInfo struct {
-	Class        byte // txscript.ScriptClass
-	ScriptHash   [32]byte
-	FrozenPeriod uint64 // frozen period or height
+	Class        byte     // txscript.ScriptClass
+	ScriptHash   [32]byte // script hash
+	FrozenPeriod uint64   // frozen period or height
+	SubClass     uint16   // sub class
 }
 
 type Tx struct {
@@ -26,7 +27,7 @@ type Tx struct {
 	txHash        *wire.Hash  // Cached transaction hash
 	txHashWitness *wire.Hash  // Cached transaction witness hash
 	txIndex       int         // Position within a block or TxIndexUnknown
-	pkscriptInfos map[int]*PkScriptInfo
+	pkScriptInfos map[int]*PkScriptInfo
 }
 
 // MsgTx returns the underlying wire.MsgTx for the transaction.
@@ -44,15 +45,16 @@ func (t *Tx) TxIn() []*wire.TxIn {
 }
 
 func (t *Tx) GetPkScriptInfo(i int) *PkScriptInfo {
-	psi, ok := t.pkscriptInfos[i]
+	psi, ok := t.pkScriptInfos[i]
 	if !ok {
-		class, frozen, sh := WitPkScriptParseFunc(t.MsgTx().TxOut[i].PkScript)
+		class, frozen, sh, subClass := WitPkScriptParseFunc(t.MsgTx().TxOut[i].PkScript)
 		psi = &PkScriptInfo{
 			Class:        class,
 			ScriptHash:   sh,
 			FrozenPeriod: frozen,
+			SubClass:     subClass,
 		}
-		t.pkscriptInfos[i] = psi
+		t.pkScriptInfos[i] = psi
 	}
 	return psi
 }
@@ -111,7 +113,7 @@ func NewTx(msgTx *wire.MsgTx) *Tx {
 	return &Tx{
 		msgTx:         msgTx,
 		txIndex:       TxIndexUnknown,
-		pkscriptInfos: make(map[int]*PkScriptInfo),
+		pkScriptInfos: make(map[int]*PkScriptInfo),
 	}
 }
 

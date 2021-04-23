@@ -17,7 +17,7 @@ import (
 )
 
 func init() {
-	chainutil.WitPkScriptParseFunc = func(pkScript []byte) (class byte, frozenOrHeight uint64, witHash [32]byte) {
+	chainutil.WitPkScriptParseFunc = func(pkScript []byte) (class byte, frozenOrHeight uint64, witHash [32]byte, subClass uint16) {
 		clazz, pops := GetScriptInfo(pkScript)
 		if clazz == WitnessV0ScriptHashTy ||
 			clazz == StakingScriptHashTy ||
@@ -30,7 +30,7 @@ func init() {
 				clazz = NonStandardTy
 			}
 		}
-		return byte(clazz), frozenOrHeight, witHash
+		return byte(clazz), frozenOrHeight, witHash, 0
 	}
 }
 
