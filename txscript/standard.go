@@ -23,7 +23,7 @@ func init() {
 			clazz == StakingScriptHashTy ||
 			clazz == BindingScriptHashTy ||
 			clazz == PoolingScriptHashTy ||
-			clazz == GovernanceScriptHashTy {
+			clazz == AwardingScriptHashTy {
 			var err error
 			frozenOrHeight, witHash, err = GetParsedOpcode(pops, clazz)
 			if err != nil {
@@ -110,8 +110,10 @@ func typeOfScript(pops []parsedOpcode) ScriptClass {
 		return NullDataTy
 	} else if isWitnessPoolingScript(pops) {
 		return PoolingScriptHashTy
+	} else if isWitnessAwardingScript(pops) {
+		return AwardingScriptHashTy
 	} else if isWitnessGovernanceScript(pops) {
-		return GovernanceScriptHashTy
+		return GoverningScriptHashTy
 	}
 	return NonStandardTy
 }
@@ -163,12 +165,17 @@ func GetParsedOpcode(pops []parsedOpcode, class ScriptClass) (uint64, [32]byte, 
 		}
 		height = consensus.BindingTxFrozenPeriod
 		copy(rsh[:], scriptHash[:])
-	case GovernanceScriptHashTy:
+	case GoverningScriptHashTy:
 		scriptHash := pops[1].data
 		if len(scriptHash) != WitnessV0ScriptHashDataSize {
 			return 0, rsh, ErrWitnessProgramLength
 		}
 	case PoolingScriptHashTy:
+		scriptHash := pops[1].data
+		if len(scriptHash) != WitnessV0ScriptHashDataSize {
+			return 0, rsh, ErrWitnessProgramLength
+		}
+	case AwardingScriptHashTy:
 		scriptHash := pops[1].data
 		if len(scriptHash) != WitnessV0ScriptHashDataSize {
 			return 0, rsh, ErrWitnessProgramLength
@@ -205,6 +212,8 @@ func expectedInputs(pops []parsedOpcode, class ScriptClass) int {
 		return asSmallInt(pops[0].opcode)
 	case PoolingScriptHashTy:
 		return 0
+	case AwardingScriptHashTy:
+		return 1
 	case NullDataTy:
 		fallthrough
 	default:
@@ -347,15 +356,15 @@ func payToStakingScriptHashScript(scriptHash []byte, frozenPeriod uint64) ([]byt
 	return NewScriptBuilder().AddOp(OP_0).AddData(scriptHash).AddData(buf).Script()
 }
 
-func payToPoolingAddrScript(scriptHash []byte, poolType uint16) ([]byte, error) {
-	if len(scriptHash) != WitnessV0ScriptHashDataSize {
-		return nil, ErrWitnessExtProgramLength
-	}
+func payToPoolingAddrScript(poolType uint16) ([]byte, error) {
 	if !wire.IsValidPoolType(poolType) {
 		return nil, ErrPoolingType
 	}
+	scriptHash := make([]byte, WitnessV0ScriptHashDataSize)
 	buf := make([]byte, 2)
 	binary.LittleEndian.PutUint16(buf, poolType)
+	// bigEndian as public key hash
+	binary.BigEndian.PutUint16(scriptHash[WitnessV0ScriptHashDataSize-2:WitnessV0ScriptHashDataSize], poolType)
 	return NewScriptBuilder().AddOp(OP_0).AddData(scriptHash).addData(buf).Script()
 }
 
@@ -371,11 +380,8 @@ func PayToStakingAddrScript(addr chainutil.Address, frozenPeriod uint64) ([]byte
 }
 
 // PayToPoolingAddrScript creates a new script to pay a transaction
-func PayToPoolingAddrScript(addr chainutil.Address, poolType uint16) ([]byte, error) {
-	if !chainutil.IsWitnessV0Address(addr) {
-		return nil, ErrUnsupportedAddress
-	}
-	return payToPoolingAddrScript(addr.ScriptAddress(), poolType)
+func PayToPoolingAddrScript(poolType uint16) ([]byte, error) {
+	return payToPoolingAddrScript(poolType)
 }
 
 // PayToAddrScript creates a new script to pay a transaction output to a the
