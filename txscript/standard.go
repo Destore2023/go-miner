@@ -395,6 +395,28 @@ func PayToPoolingAddrScript(poolType uint16) ([]byte, error) {
 	return payToPoolingAddrScript(poolType)
 }
 
+func payToAwardingAddrScript(scriptHash []byte, frozenPeriod uint64, poolType uint16) ([]byte, error) {
+	if !wire.IsValidAwardFrozenPeriod(frozenPeriod) {
+		return nil, ErrFrozenPeriod
+	}
+	if len(scriptHash) != WitnessV0ScriptHashDataSize {
+		return nil, ErrWitnessProgramLength
+	}
+	if !wire.IsValidPoolType(poolType) {
+		return nil, ErrPoolingType
+	}
+	bufType := make([]byte, 2)
+	binary.LittleEndian.PutUint16(bufType, poolType)
+	bufPeriod := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bufPeriod, frozenPeriod)
+	return NewScriptBuilder().AddOp(OP_0).AddData(scriptHash).addData(bufType).addData(bufPeriod).Script()
+}
+
+// PayToAwardingAddrScript create a new script to pay a
+func PayToAwardingAddrScript(scriptHash []byte, frozenPeriod uint64, poolType uint16) ([]byte, error) {
+	return payToAwardingAddrScript(scriptHash, frozenPeriod, poolType)
+}
+
 // PayToAddrScript creates a new script to pay a transaction output to a the
 // specified address.
 func PayToAddrScript(addr chainutil.Address) ([]byte, error) {

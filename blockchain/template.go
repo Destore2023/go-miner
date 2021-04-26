@@ -246,7 +246,7 @@ type BlockTemplate struct {
 	Err                error
 }
 
-// Miner Reward Tx Out
+// GetMinerRewardTxOutFromCoinbase Miner Reward Tx Out
 // +--------------+
 // | staking pool |
 // +--------------+
@@ -622,7 +622,8 @@ func createStakingPoolRewardTx(nextBlockHeight uint64, rewardAddresses []databas
 	for i := 0; i < len(rewardAddresses); i++ {
 		key := make([]byte, sha256.Size)
 		copy(key, rewardAddresses[i].ScriptHash[:])
-		pkScriptSuperNode, err := txscript.PayToWitnessScriptHashScript(key)
+		// pkScriptSuperNode, err := txscript.PayToWitnessScriptHashScript(key)
+		pkScriptSuperNode, err := txscript.PayToAwardingAddrScript(key, consensus.AwardingTxFrozenPeriod, consensus.StakingPoolType)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "createStakingPoolRewardTx  PayToWitnessScriptHashScript",
 				logging.LogFormat{

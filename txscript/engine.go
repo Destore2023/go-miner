@@ -570,15 +570,6 @@ func (vm *Engine) verifyWitnessProgram(witness [][]byte) error {
 		if len(vm.witnessExtProg[0].data) == WitnessV0PoCPubKeyHashDataSize {
 			buf := make([]byte, 8)
 			binary.LittleEndian.PutUint64(buf, consensus.BindingTxFrozenPeriod)
-			frozenPeriod, err := makeScriptNum(buf, vm.dstack.verifyMinimalData, 9)
-			if err != nil {
-				return err
-			}
-			if frozenPeriod < 0 || frozenPeriod+1 < 0 {
-				return fmt.Errorf("binding tx - invalid frozen period: %d", frozenPeriod)
-			}
-			frozenPeriod++
-			binary.LittleEndian.PutUint64(buf, uint64(frozenPeriod))
 			pkScript, err := NewScriptBuilder().AddData(buf).AddOp(OP_CHECKSEQUENCEVERIFY).AddOp(OP_DROP).Script()
 			if err != nil {
 				return err
@@ -623,6 +614,7 @@ func (vm *Engine) verifyWitnessProgram(witness [][]byte) error {
 			vm.scripts = append(vm.scripts, pops)
 			break
 		}
+		fallthrough
 	default:
 		return ErrWitnessExtProgUnknown
 	}
