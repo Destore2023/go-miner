@@ -203,7 +203,6 @@ func checkInputsStandard(tx *chainutil.Tx, txStore TxStore) error {
 			return ErrExpectedSignInput
 		}
 	}
-
 	return nil
 }
 
@@ -222,7 +221,6 @@ func checkParsePkScript(tx *chainutil.Tx, txStore TxStore) (err error) {
 				logging.CPrint(logging.ERROR, "lock frozen period is invalid", logging.LogFormat{"frozen_period": psi.FrozenPeriod})
 				return ErrInvalidFrozenPeriod
 			}
-
 		case txscript.BindingScriptHashTy:
 			if !checkedBinding {
 				if !IsCoinBaseTx(tx.MsgTx()) {
@@ -256,6 +254,10 @@ func checkParsePkScript(tx *chainutil.Tx, txStore TxStore) (err error) {
 			}
 		case txscript.PoolingScriptHashTy:
 			if !wire.IsValidPoolType(psi.SubClass) {
+				logging.CPrint(logging.ERROR, "PoolingScriptHashTy script hash not equal pool type",
+					logging.LogFormat{
+						"poolType": psi.SubClass,
+					})
 				return ErrInvalidPoolType
 			}
 			scriptHash := make([]byte, 32)
@@ -269,7 +271,20 @@ func checkParsePkScript(tx *chainutil.Tx, txStore TxStore) (err error) {
 				return ErrStandardPoolingTx
 			}
 		case txscript.AwardingScriptHashTy:
-
+			if !wire.IsValidPoolType(psi.SubClass) {
+				logging.CPrint(logging.ERROR, "AwardingScriptHashTy valid pool type",
+					logging.LogFormat{
+						"poolType": psi.SubClass,
+					})
+				return ErrInvalidPoolType
+			}
+			if !wire.IsValidAwardFrozenPeriod(psi.FrozenPeriod) {
+				logging.CPrint(logging.ERROR, "AwardingScriptHashTy valid award frozen period",
+					logging.LogFormat{
+						"poolType": psi.SubClass,
+					})
+				return ErrInvalidFrozenPeriod
+			}
 		case txscript.GoverningScriptHashTy:
 		case txscript.NonStandardTy,
 			txscript.MultiSigTy:

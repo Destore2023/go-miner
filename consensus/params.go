@@ -57,7 +57,6 @@ const (
 	// CoinbaseSubsidyAttenuation 5.838% --> 94.162%   --> 94162/100000
 	CoinbaseSubsidyAttenuation            = 94162
 	CoinbaseSubsidyAttenuationDenominator = 100000
-	StakingPoolAddressScriptHash          = "00000000000000000000000000000001"
 	governAddress                         = "sk1qqpthgpk7yqjmenj6fe3klp9d98ay02e5sc4k8avk8985zty3spvdqdfdy3y"
 	StakingPoolType                       = uint16(1)
 	// BindingTxFrozenPeriod default binding frozen period
@@ -86,11 +85,13 @@ var (
 	// MinRelayTxFee minimum relay fee in Sukhavati
 	MinRelayTxFee = defaultMinRelayTxFee
 
-	//Min Frozen Period in a StakingScriptHash output
+	// MinFrozenPeriod Min Frozen Period in a StakingScriptHash output
 	MinFrozenPeriod = defaultMinFrozenPeriod
+	// MinAwardFrozenPeriod min pooling tx award frozen period
+	MinAwardFrozenPeriod = 1
 	//MinStakingValue minimum StakingScriptHash output in Sukhavati
 	MinStakingValue = defaultMinStakingValue
-	//
+	// StakingTxRewardStart staking tx
 	StakingTxRewardStart = defaultStakingTxRewardStart
 	BindingRequiredSkt   = map[int]float64{
 		24: 0.006144,
@@ -103,7 +104,7 @@ var (
 		38: 152,
 		40: 640,
 	}
-	// day --> weight * 10000
+	// StakingFrozenPeriodWeight day --> weight * 10000
 	StakingFrozenPeriodWeight = map[uint64]uint64{
 		55:  10000,
 		144: 16180,
