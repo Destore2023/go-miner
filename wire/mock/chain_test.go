@@ -66,7 +66,7 @@ func TestNewMockedChain(t *testing.T) {
 			txID := tx.TxHash()
 			for i, txout := range tx.TxOut {
 				scriptClass, pops := txscript.GetScriptInfo(txout.PkScript)
-				frozenPeriod, _, err := txscript.GetParsedOpcode(pops, scriptClass)
+				frozenPeriod, _, _, err := txscript.GetParsedOpcode(pops, scriptClass)
 				if err != nil {
 					t.Log(err, height, i)
 					t.FailNow()

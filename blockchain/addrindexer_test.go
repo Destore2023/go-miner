@@ -137,7 +137,7 @@ func TestAddrIndexer(t *testing.T) {
 		for _, tx := range block.Transactions() {
 			for _, txout := range tx.MsgTx().TxOut {
 				class, ops := txscript.GetScriptInfo(txout.PkScript)
-				_, sh, err := txscript.GetParsedOpcode(ops, class)
+				_, sh, _, err := txscript.GetParsedOpcode(ops, class)
 				assert.Nil(t, err)
 				presentScriptHash[wire.Hash(sh).String()] = struct{}{}
 			}
@@ -152,7 +152,7 @@ func TestAddrIndexer(t *testing.T) {
 	for i, tx := range blocks[21].Transactions() {
 		for j, txout := range tx.MsgTx().TxOut {
 			class, ops := txscript.GetScriptInfo(txout.PkScript)
-			_, sh, err := txscript.GetParsedOpcode(ops, class)
+			_, sh, _, err := txscript.GetParsedOpcode(ops, class)
 			assert.Nil(t, err)
 			if _, ok := presentScriptHash[wire.Hash(sh).String()]; !ok {
 				if _, ok2 := cache[wire.Hash(sh).String()]; !ok2 {

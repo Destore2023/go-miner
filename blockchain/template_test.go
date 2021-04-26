@@ -50,7 +50,7 @@ func TestBlockchain_NewBlockTemplate(t *testing.T) {
 	assert.True(t, blockTemplate.ValidPayAddress)
 
 	scriptClass, pops := txscript.GetScriptInfo(blockTemplate.Block.Transactions[0].TxOut[0].PkScript)
-	_, scriptHash, err := txscript.GetParsedOpcode(pops, scriptClass)
+	_, scriptHash, _, err := txscript.GetParsedOpcode(pops, scriptClass)
 	assert.Nil(t, err)
 	assert.Equal(t, address.ScriptAddress(), scriptHash[:])
 }
