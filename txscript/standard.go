@@ -25,7 +25,7 @@ func init() {
 			clazz == PoolingScriptHashTy ||
 			clazz == AwardingScriptHashTy {
 			var err error
-			frozenOrHeight, witHash, err = GetParsedOpcode(pops, clazz)
+			frozenOrHeight, witHash, subClass, err = GetParsedOpcode(pops, clazz)
 			if err != nil {
 				clazz = NonStandardTy
 			}
@@ -138,53 +138,64 @@ func GetScriptInfo(script []byte) (ScriptClass, []parsedOpcode) {
 	return typeOfScript(pops), pops
 }
 
-func GetParsedOpcode(pops []parsedOpcode, class ScriptClass) (uint64, [32]byte, error) {
+// GetParsedOpcode get parsed opcode
+func GetParsedOpcode(pops []parsedOpcode, class ScriptClass) (uint64, [32]byte, uint16, error) {
 	var rsh [32]byte
 	var height uint64
+	var subClass uint16
 	switch class {
 	case StakingScriptHashTy:
 		scriptHash := pops[1].data
 		if len(scriptHash) != WitnessV0ScriptHashDataSize {
-			return 0, rsh, ErrWitnessProgramLength
+			return 0, rsh, 0, ErrWitnessProgramLength
 		}
 		copy(rsh[:], scriptHash[:])
 		height = binary.LittleEndian.Uint64(pops[2].data)
 	case WitnessV0ScriptHashTy:
 		scriptHash := pops[1].data
 		if len(scriptHash) != WitnessV0ScriptHashDataSize {
-			return 0, rsh, ErrWitnessProgramLength
+			return 0, rsh, 0, ErrWitnessProgramLength
 		}
 		copy(rsh[:], scriptHash[:])
 	case BindingScriptHashTy:
 		scriptHash := pops[1].data
 		if len(scriptHash) != WitnessV0ScriptHashDataSize {
-			return 0, rsh, ErrWitnessProgramLength
+			return 0, rsh, 0, ErrWitnessProgramLength
 		}
 		if len(pops[2].data) != WitnessV0PoCPubKeyHashDataSize {
-			return 0, rsh, ErrWitnessExtProgramLength
+			return 0, rsh, 0, ErrWitnessExtProgramLength
 		}
 		height = consensus.BindingTxFrozenPeriod
 		copy(rsh[:], scriptHash[:])
 	case GoverningScriptHashTy:
 		scriptHash := pops[1].data
 		if len(scriptHash) != WitnessV0ScriptHashDataSize {
-			return 0, rsh, ErrWitnessProgramLength
+			return 0, rsh, 0, ErrWitnessProgramLength
 		}
 	case PoolingScriptHashTy:
 		scriptHash := pops[1].data
 		if len(scriptHash) != WitnessV0ScriptHashDataSize {
-			return 0, rsh, ErrWitnessProgramLength
+			return 0, rsh, 0, ErrWitnessProgramLength
 		}
+		if len(pops[2].data) != WitnessV0PoolTypeDataSize {
+			return 0, rsh, 0, ErrWitnessProgramLength
+		}
+		subClass = binary.LittleEndian.Uint16(pops[2].data)
 	case AwardingScriptHashTy:
 		scriptHash := pops[1].data
 		if len(scriptHash) != WitnessV0ScriptHashDataSize {
-			return 0, rsh, ErrWitnessProgramLength
+			return 0, rsh, 0, ErrWitnessProgramLength
 		}
+		if len(pops[2].data) != WitnessV0PoolTypeDataSize {
+			return 0, rsh, 0, ErrWitnessProgramLength
+		}
+		subClass = binary.LittleEndian.Uint16(pops[2].data)
+		height = binary.LittleEndian.Uint64(pops[3].data)
 	default:
 		logging.CPrint(logging.ERROR, "invalid script hash type", logging.LogFormat{"class": class})
-		return 0, [32]byte{}, errors.New("invalid script hash type")
+		return 0, [32]byte{}, subClass, errors.New("invalid script hash type")
 	}
-	return height, rsh, nil
+	return height, rsh, subClass, nil
 }
 
 // expectedInputs returns the number of arguments required by a script.

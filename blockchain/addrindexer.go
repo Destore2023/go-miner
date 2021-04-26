@@ -224,7 +224,7 @@ func indexScriptPubKeyForTxIn(txAddrIndex shTxLoc, btxSpentIndex btxSpentIndex, 
 	} else {
 		// WitnessV0ScriptHashTy or StakingScriptHashTy
 		// TODO: more rigorous inspection
-		_, rsh, err := txscript.GetParsedOpcode(pops, scriptClass)
+		_, rsh, _, err := txscript.GetParsedOpcode(pops, scriptClass)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "failed to parse opcode")
 			return err
@@ -265,7 +265,7 @@ func indexScriptPubKeyForTxOut(txAddrIndex shTxLoc, btxAddrIndex btxIndex, scrip
 			btxAddrIndex[btxAddrIndexKey] = struct{}{}
 		}
 	} else {
-		_, rsh, err := txscript.GetParsedOpcode(pops, scriptClass)
+		_, rsh, _, err := txscript.GetParsedOpcode(pops, scriptClass)
 		if err != nil {
 			logging.CPrint(logging.ERROR, "failed to parse opcode")
 			return err

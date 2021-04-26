@@ -699,7 +699,7 @@ func createVoutList(mtx *wire.MsgTx, chainParams *config.Params, filterAddrMap m
 		var rewardAddress string
 		if scriptClass == txscript.StakingScriptHashTy {
 			_, pops := txscript.GetScriptInfo(v.PkScript)
-			frozenPeriod, _, err = txscript.GetParsedOpcode(pops, scriptClass)
+			frozenPeriod, _, _, err = txscript.GetParsedOpcode(pops, scriptClass)
 			if err != nil {
 				return nil, -1, err
 			}

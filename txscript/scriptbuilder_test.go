@@ -8,19 +8,16 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/Sukhavati-Labs/go-miner/chainutil"
-	"github.com/Sukhavati-Labs/go-miner/config"
-
 	"github.com/Sukhavati-Labs/go-miner/txscript"
 )
 
 func TestPayToPoolAddrScript(t *testing.T) {
-	add := "sk1qqggu42p34335mwrutv88t7fqh6sp5eqlawglmx457dhn0w7ks2nzsm0rq7q"
-	address, err := chainutil.DecodeAddress(add, &config.ChainParams)
-	if err != nil {
-		panic("init poolPubKeyScript: " + err.Error())
-	}
-	stakingPoolPubKeyScript, err := txscript.PayToPoolingAddrScript(address, 1)
+	//add := "sk1qqggu42p34335mwrutv88t7fqh6sp5eqlawglmx457dhn0w7ks2nzsm0rq7q"
+	//address, err := chainutil.DecodeAddress(add, &config.ChainParams)
+	//if err != nil {
+	//	panic("init poolPubKeyScript: " + err.Error())
+	//}
+	stakingPoolPubKeyScript, err := txscript.PayToPoolingAddrScript(1)
 	if err != nil {
 		panic("init poolPubKeyScript: " + err.Error())
 	}

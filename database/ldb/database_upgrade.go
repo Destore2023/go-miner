@@ -410,7 +410,7 @@ func buildTxIndex(db *ChainDb, progStage string) error {
 
 			for vout, txOut := range tx.TxOut {
 				class, pops := txscript.GetScriptInfo(txOut.PkScript)
-				_, scriptHash, err := txscript.GetParsedOpcode(pops, class)
+				_, scriptHash, _, err := txscript.GetParsedOpcode(pops, class)
 				if err != nil {
 					return err
 				}

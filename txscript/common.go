@@ -111,7 +111,7 @@ const (
 	WitnessV0ScriptHashDataSize    = 32 // Length of witness script hash
 	WitnessV0PoCPubKeyHashDataSize = 20 // Length of poc public key hash
 	WitnessV0FrozenPeriodDataSize  = 8  // Length of byte slice of frozen period
-	WitnessV0PoolTypeDataSize      = 1  // Length of pool type
+	WitnessV0PoolTypeDataSize      = 2  // Length of pool type
 )
 
 // scriptClassToName houses the human-readable strings which describe each

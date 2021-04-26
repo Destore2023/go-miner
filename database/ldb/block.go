@@ -346,7 +346,7 @@ func (db *ChainDb) deleteBlock(blockSha *wire.Hash) (err error) {
 		for i, txOut := range tx.MsgTx().TxOut {
 			class, pushData := txscript.GetScriptInfo(txOut.PkScript)
 			if class == txscript.StakingScriptHashTy {
-				frozenPeriod, _, err := txscript.GetParsedOpcode(pushData, class)
+				frozenPeriod, _, _, err := txscript.GetParsedOpcode(pushData, class)
 				if err != nil {
 					return err
 				}

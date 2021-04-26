@@ -360,7 +360,7 @@ func connectStakingTransactions(txStore database.StakingNodes, block *chainutil.
 		for i, txOut := range msgTx.TxOut {
 			class, pops := txscript.GetScriptInfo(txOut.PkScript)
 			if class == txscript.StakingScriptHashTy {
-				frozenPeriod, rsh, err := txscript.GetParsedOpcode(pops, class)
+				frozenPeriod, rsh, _, err := txscript.GetParsedOpcode(pops, class)
 				if err != nil {
 					return err
 				}
@@ -419,7 +419,7 @@ func disconnectStakingTransactions(db database.DB, txStore database.StakingNodes
 		for i, txOut := range msgTx.TxOut {
 			class, pops := txscript.GetScriptInfo(txOut.PkScript)
 			if class == txscript.StakingScriptHashTy {
-				_, rsh, err := txscript.GetParsedOpcode(pops, class)
+				_, rsh, _, err := txscript.GetParsedOpcode(pops, class)
 				if err != nil {
 					return err
 				}
