@@ -548,7 +548,7 @@ func (vm *Engine) verifyWitnessProgram(witness [][]byte) error {
 				return err
 			}
 			if frozenPeriod < 0 || frozenPeriod+1 < 0 {
-				return fmt.Errorf("invalid frozen period: %d", frozenPeriod)
+				return fmt.Errorf("staking tx - invalid frozen period: %d", frozenPeriod)
 			}
 			frozenPeriod++
 			buf := make([]byte, 8)
@@ -570,6 +570,15 @@ func (vm *Engine) verifyWitnessProgram(witness [][]byte) error {
 		if len(vm.witnessExtProg[0].data) == WitnessV0PoCPubKeyHashDataSize {
 			buf := make([]byte, 8)
 			binary.LittleEndian.PutUint64(buf, consensus.BindingTxFrozenPeriod)
+			frozenPeriod, err := makeScriptNum(buf, vm.dstack.verifyMinimalData, 9)
+			if err != nil {
+				return err
+			}
+			if frozenPeriod < 0 || frozenPeriod+1 < 0 {
+				return fmt.Errorf("binding tx - invalid frozen period: %d", frozenPeriod)
+			}
+			frozenPeriod++
+			binary.LittleEndian.PutUint64(buf, uint64(frozenPeriod))
 			pkScript, err := NewScriptBuilder().AddData(buf).AddOp(OP_CHECKSEQUENCEVERIFY).AddOp(OP_DROP).Script()
 			if err != nil {
 				return err
@@ -581,9 +590,39 @@ func (vm *Engine) verifyWitnessProgram(witness [][]byte) error {
 			vm.scripts = append(vm.scripts, pops)
 			break
 		}
-		// pool tx default error
+		// pool tx
+		if len(vm.witnessExtProg[0].data) == WitnessV0PoolTypeDataSize {
+			break
+		}
 		// else error occurs
-		fallthrough
+		// fallthrough
+		return ErrWitnessExtProgUnknown
+	case 2:
+		//  awarding tx
+		if len(vm.witnessExtProg[0].data) == WitnessV0PoolTypeDataSize && len(vm.witnessExtProg[1].data) == WitnessV0FrozenPeriodDataSize {
+			// the evaluation locktime for OP_CHECKSEQUENCEVERIFY MUST BE frozenPeriod+1
+			frozenPeriod, err := makeScriptNum(vm.witnessExtProg[1].data, vm.dstack.verifyMinimalData, 9)
+			if err != nil {
+				return err
+			}
+			if frozenPeriod < 0 || frozenPeriod+1 < 0 {
+				return fmt.Errorf("awarding tx - invalid frozen period: %d", frozenPeriod)
+			}
+			frozenPeriod++
+			buf := make([]byte, 8)
+			binary.LittleEndian.PutUint64(buf, uint64(frozenPeriod))
+
+			pkScript, err := NewScriptBuilder().AddData(buf).AddOp(OP_CHECKSEQUENCEVERIFY).AddOp(OP_DROP).Script()
+			if err != nil {
+				return err
+			}
+			pops, err := parseScript(pkScript)
+			if err != nil {
+				return err
+			}
+			vm.scripts = append(vm.scripts, pops)
+			break
+		}
 	default:
 		return ErrWitnessExtProgUnknown
 	}

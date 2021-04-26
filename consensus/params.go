@@ -60,7 +60,8 @@ const (
 	governAddress                         = "sk1qqpthgpk7yqjmenj6fe3klp9d98ay02e5sc4k8avk8985zty3spvdqdfdy3y"
 	StakingPoolType                       = uint16(1)
 	// BindingTxFrozenPeriod default binding frozen period
-	BindingTxFrozenPeriod = 90 * DayPeriod
+	BindingTxFrozenPeriod  = 90 * DayPeriod
+	AwardingTxFrozenPeriod = 1 // DayPeriod
 )
 
 var (
