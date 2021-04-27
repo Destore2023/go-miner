@@ -99,12 +99,12 @@ const (
 	NonStandardTy         ScriptClass = iota // None of the recognized forms.
 	WitnessV0ScriptHashTy                    // Pay to witness script hash.
 	StakingScriptHashTy                      // Pay to staking script hash.
-	BindingScriptHashTy                      //pay to binding script hash
+	BindingScriptHashTy                      // pay to binding script hash
 	MultiSigTy                               // Multi signature.
 	NullDataTy                               // Empty data-only (provably prunable).
 	PoolingScriptHashTy                      // pay to pooling script hash
 	AwardingScriptHashTy                     // pay to awarding script hash
-	GoverningScriptHashTy                    //  pay to  Governance
+	GoverningScriptHashTy                    // pay to governing script Hash
 )
 
 const (

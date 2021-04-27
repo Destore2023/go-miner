@@ -30,7 +30,7 @@ func init() {
 				clazz = NonStandardTy
 			}
 		}
-		return byte(clazz), frozenOrHeight, witHash, 0
+		return byte(clazz), frozenOrHeight, witHash, subClass
 	}
 }
 
@@ -180,6 +180,7 @@ func GetParsedOpcode(pops []parsedOpcode, class ScriptClass) (uint64, [32]byte, 
 		if len(pops[2].data) != WitnessV0PoolTypeDataSize {
 			return 0, rsh, 0, ErrWitnessProgramLength
 		}
+		copy(rsh[:], scriptHash[:])
 		subClass = binary.LittleEndian.Uint16(pops[2].data)
 	case AwardingScriptHashTy:
 		scriptHash := pops[1].data
@@ -189,6 +190,7 @@ func GetParsedOpcode(pops []parsedOpcode, class ScriptClass) (uint64, [32]byte, 
 		if len(pops[2].data) != WitnessV0PoolTypeDataSize {
 			return 0, rsh, 0, ErrWitnessProgramLength
 		}
+		copy(rsh[:], scriptHash[:])
 		subClass = binary.LittleEndian.Uint16(pops[2].data)
 		height = binary.LittleEndian.Uint64(pops[3].data)
 	default:

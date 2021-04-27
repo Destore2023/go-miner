@@ -118,6 +118,25 @@ func (chain *Blockchain) FetchEnabledGovernConfig(class uint16) (GovernConfig, e
 	return chain.chainGovern.FetchEnabledGovernConfig(class, chain.BestBlockHeight())
 }
 
+func fetchDefaultGovernConfig(class uint16) (GovernConfig, error) {
+	switch class {
+	case GovernSenateClass:
+		senateConfig := &GovernSenateConfig{
+			blockHeight:  0,
+			activeHeight: 0,
+			shadow:       false,
+			txSha:        zeroHash,
+			senates:      make([]*database.SenateWeight, 0),
+		}
+		senateConfig.senates = append(senateConfig.senates, &database.SenateWeight{
+			Weight:     10000,
+			ScriptHash: [32]byte{66, 57, 85, 6, 53, 140, 105, 183, 15, 139, 97, 206, 191, 36, 23, 212, 3, 76, 131, 253, 114, 63, 179, 86, 158, 109, 230, 247, 122, 208, 84, 197},
+		})
+		return senateConfig, nil
+	}
+	return nil, fmt.Errorf("unkown govern config! class:%d", class)
+}
+
 // FetchEnabledGovernConfig fetch next block height enable config
 // Only one version is enabled at a time
 func (g *ChainGovern) FetchEnabledGovernConfig(class uint16, height uint64) (GovernConfig, error) {
@@ -134,7 +153,8 @@ func (g *ChainGovern) FetchEnabledGovernConfig(class uint16, height uint64) (Gov
 		}
 		l := len(configs)
 		if l == 0 {
-			return nil, EmptyGovernConfigError(class)
+			//return nil, EmptyGovernConfigError(class)
+			return fetchDefaultGovernConfig(class)
 		}
 		if l == 1 {
 			proposal.current = configs[0]

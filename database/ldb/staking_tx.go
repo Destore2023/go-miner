@@ -241,7 +241,7 @@ func stakingTxSearchKey(expiredHeight uint64) []byte {
 // | prefix 3 bytes |  day 8 bytes           |
 // +----------------+------------------------+
 func stakingAwardedSearchKey(queryTime uint64) []byte {
-	day := queryTime / 86400
+	day := queryTime / consensus.DaySeconds
 	prefix := make([]byte, stakingAwardedSearchKeyLength)
 	copy(prefix[:len(recordStakingAwarded)], recordStakingAwarded)
 	binary.LittleEndian.PutUint64(prefix[len(recordStakingAwarded):stakingAwardedSearchKeyLength], day)
@@ -423,8 +423,7 @@ func (db *ChainDb) fetchActiveStakingTxFromUnexpired(height uint64) (map[[sha256
 	return stakingTxInfos, nil
 }
 
-//
-//fetchStakingAwardedRecordByTime
+// FetchStakingAwardedRecordByTime
 // +-----------+-----------+--------------+   +-----------+
 // | prefix(3) |  day(8)   | TxId(32)     | ->| timestamp |
 // +-----------+-----------+--------------+   +-----------+
@@ -432,7 +431,7 @@ func (db *ChainDb) FetchStakingAwardedRecordByTime(queryTime uint64) ([]database
 	stakingAwardedRecords := make([]database.StakingAwardedRecord, 0)
 	iter := db.localStorage.NewIterator(storage.BytesPrefix(recordStakingAwarded))
 	defer iter.Release()
-	expectedDay := queryTime / 86400
+	expectedDay := queryTime / consensus.DaySeconds
 	for iter.Next() {
 		key := iter.Key()
 		day := binary.LittleEndian.Uint64(key[len(recordStakingAwarded) : len(recordStakingAwarded)+8])
@@ -454,7 +453,7 @@ func (db *ChainDb) FetchStakingAwardedRecordByTime(queryTime uint64) ([]database
 }
 
 func (db *ChainDb) insertStakingAwardedRecord(txSha *wire.Hash, awardedTime uint64) (err error) {
-	day := awardedTime / 86400
+	day := awardedTime / consensus.DaySeconds
 	var mapKey = stakingAwardedRecordMapKey{
 		txID: *txSha,
 		day:  day,
