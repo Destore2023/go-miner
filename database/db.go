@@ -59,7 +59,7 @@ type DB interface {
 	// into the database.  The first block inserted into the database
 	// will be treated as the genesis block.  Every subsequent block insert
 	// requires the referenced parent block to already exist.
-	SubmitBlock(block *chainutil.Block, inputTxStore TxReplyStore) (err error)
+	SubmitBlock(block *chainutil.Block) (err error)
 
 	// DeleteBlock will remove any blocks from the database after
 	// the given block.  It terminates any existing transaction and performs

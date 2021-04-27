@@ -8,8 +8,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/Sukhavati-Labs/go-miner/database"
-
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
 	"github.com/Sukhavati-Labs/go-miner/logging"
 	"github.com/Sukhavati-Labs/go-miner/wire"
@@ -268,19 +266,19 @@ func (chain *Blockchain) connectBlock(node *BlockNode, block *chainutil.Block) (
 	if err != nil {
 		return err
 	}
-	txInReplyStore := make(database.TxReplyStore)
-	for txSha, data := range txInputStore {
-		txInReplyStore[txSha] = &database.TxReply{
-			TxSha:   &txSha,
-			Tx:      data.Tx.MsgTx(),
-			Height:  data.BlockHeight,
-			TxSpent: data.Spent,
-			Err:     data.Err,
-		}
-		// blockSha is nil
-	}
+	//txInReplyStore := make(database.TxReplyStore)
+	//for txSha, data := range txInputStore {
+	//	txInReplyStore[txSha] = &database.TxReply{
+	//		TxSha:   &txSha,
+	//		Tx:      data.Tx.MsgTx(),
+	//		Height:  data.BlockHeight,
+	//		TxSpent: data.Spent,
+	//		Err:     data.Err,
+	//	}
+	//	// blockSha is nil
+	//}
 	// Insert the block into the database which houses the main chain.
-	if err = chain.db.SubmitBlock(block, txInReplyStore); err != nil {
+	if err = chain.db.SubmitBlock(block); err != nil {
 		return err
 	}
 

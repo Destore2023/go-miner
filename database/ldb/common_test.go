@@ -68,7 +68,7 @@ func loadTopNBlock(n int) ([]*chainutil.Block, error) {
 }
 
 func insertBlock(db database.DB, block *chainutil.Block) error {
-	err := db.SubmitBlock(block, nil)
+	err := db.SubmitBlock(block)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func initBlocks(db database.DB, numBlocks int) error {
 			continue
 		}
 
-		err = db.SubmitBlock(block, nil)
+		err = db.SubmitBlock(block)
 		if err != nil {
 			return err
 		}

@@ -89,7 +89,7 @@ func loadTestBlocksIntoTestChainDb(db database.DB, numBlocks int) error {
 			continue
 		}
 
-		err = db.SubmitBlock(block, nil)
+		err = db.SubmitBlock(block)
 		if err != nil {
 			return err
 		}

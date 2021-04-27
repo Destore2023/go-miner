@@ -67,7 +67,7 @@ func makeBlockShaKey(blockSha *wire.Hash) []byte {
 	return bs[:]
 }
 
-func (db *ChainDb) SubmitBlock(block *chainutil.Block, txReplyStore database.TxReplyStore) error {
+func (db *ChainDb) SubmitBlock(block *chainutil.Block) error {
 	db.dbLock.Lock()
 	defer db.dbLock.Unlock()
 
@@ -78,7 +78,7 @@ func (db *ChainDb) SubmitBlock(block *chainutil.Block, txReplyStore database.TxR
 		return err
 	}
 
-	if err := db.submitBlock(block, txReplyStore); err != nil {
+	if err := db.submitBlock(block); err != nil {
 		batch.Reset()
 		return err
 	}
@@ -87,7 +87,7 @@ func (db *ChainDb) SubmitBlock(block *chainutil.Block, txReplyStore database.TxR
 	return nil
 }
 
-func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxReplyStore) (err error) {
+func (db *ChainDb) submitBlock(block *chainutil.Block) (err error) {
 
 	defer func() {
 		if err == nil {
@@ -165,32 +165,29 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 			}
 		}
 		//isGovernance := false
-		isStakingPool := false
-		isStakingPoolAward := false
+		//isStakingPool := false
+		//isStakingPoolAward := false
 		// tx in
-		for _, txIn := range tx.TxIn() {
-			if len(inputTxStore) == 0 {
-				break
-			}
-			txReply, ok := inputTxStore[txIn.PreviousOutPoint.Hash]
-			if ok {
-				pubKeyClass := txscript.GetScriptClass(txReply.Tx.TxOut[txIn.PreviousOutPoint.Index].PkScript)
-				if pubKeyClass == txscript.WitnessV0ScriptHashTy {
-					//isGovernance = true
-				} else if pubKeyClass == txscript.PoolingScriptHashTy {
-					isStakingPool = true
-				}
-			}
-		}
+		//for _, txIn := range tx.TxIn() {
+		//	if len(inputTxStore) == 0 {
+		//		break
+		//	}
+		//	txReply, ok := inputTxStore[txIn.PreviousOutPoint.Hash]
+		//	if ok {
+		//		pubKeyClass := txscript.GetScriptClass(txReply.Tx.TxOut[txIn.PreviousOutPoint.Index].PkScript)
+		//		if pubKeyClass == txscript.WitnessV0ScriptHashTy {
+		//			//isGovernance = true
+		//		} else if pubKeyClass == txscript.PoolingScriptHashTy {
+		//			isStakingPool = true
+		//		}
+		//	}
+		//}
 		// find and insert staking tx
 		for i, txOut := range tx.TxOut() {
 			pubKeyInfo := tx.GetPkScriptInfo(i)
-			switch pubKeyInfo.Class {
-			case byte(txscript.WitnessV0ScriptHashTy):
-				if isStakingPool {
-					isStakingPoolAward = true
-				}
-			case byte(txscript.StakingScriptHashTy):
+			scriptClass := txscript.ScriptClass(pubKeyInfo.Class)
+			switch scriptClass {
+			case txscript.StakingScriptHashTy:
 				{
 					logging.CPrint(logging.DEBUG, "Insert StakingTx", logging.LogFormat{
 						"txId":   tx.Hash(),
@@ -203,12 +200,15 @@ func (db *ChainDb) submitBlock(block *chainutil.Block, inputTxStore database.TxR
 						return err
 					}
 				}
+			case txscript.AwardingScriptHashTy:
+				db.insertStakingAwardedRecord(tx.Hash(), uint64(block.MsgBlock().Header.Timestamp.Unix()))
+				break
 			}
 		}
 
-		if isStakingPoolAward {
-			db.insertStakingAwardedRecord(tx.Hash(), uint64(block.MsgBlock().Header.Timestamp.Unix()))
-		}
+		//if isStakingPoolAward {
+		//	db.insertStakingAwardedRecord(tx.Hash(), uint64(block.MsgBlock().Header.Timestamp.Unix()))
+		//}
 
 		err = db.insertTx(tx.Hash(), block.Height(), txLocations[txIdx].TxStart, txLocations[txIdx].TxLen, spentBuf)
 		if err != nil {
@@ -330,18 +330,18 @@ func (db *ChainDb) deleteBlock(blockSha *wire.Hash) (err error) {
 		txUo.delete = true
 		txId := *tx.Hash()
 		db.txUpdateMap[txId] = &txUo
-		rawTx, _, _, _, err := db.fetchTxDataBySha(tx.Hash())
-		if err != nil {
-			continue
-		}
-		isPoolingTx := false
-		isPoolingRewardTx := false
-		for _, txOut := range rawTx.TxOut {
-			class, _ := txscript.GetScriptInfo(txOut.PkScript)
-			if class == txscript.PoolingScriptHashTy {
-				isPoolingTx = true
-			}
-		}
+		//rawTx, _, _, _, err := db.fetchTxDataBySha(tx.Hash())
+		//if err != nil {
+		//	continue
+		//}
+		//isPoolingTx := false
+		//isPoolingRewardTx := false
+		//for _, txOut := range rawTx.TxOut {
+		//	class, _ := txscript.GetScriptInfo(txOut.PkScript)
+		//	if class == txscript.PoolingScriptHashTy {
+		//		isPoolingTx = true
+		//	}
+		//}
 		// delete insert stakingTx in the block
 		for i, txOut := range tx.MsgTx().TxOut {
 			class, pushData := txscript.GetScriptInfo(txOut.PkScript)
@@ -358,18 +358,20 @@ func (db *ChainDb) deleteBlock(blockSha *wire.Hash) (err error) {
 					index:       uint32(i),
 				}
 				db.stakingTxMap[key] = &txStk
-			} else if class == txscript.WitnessV0ScriptHashTy {
-				if isPoolingTx {
-					isPoolingRewardTx = true
-				}
+			} else if class == txscript.AwardingScriptHashTy {
+				batch.Delete(stakingAwardedRecordToKey(stakingAwardedRecordMapKey{
+					day:  uint64(block.MsgBlock().Header.Timestamp.Unix()) / consensus.DaySeconds,
+					txID: txId,
+				}))
+				break
 			}
 		}
-		if isPoolingRewardTx {
-			batch.Delete(stakingAwardedRecordToKey(stakingAwardedRecordMapKey{
-				day:  uint64(block.MsgBlock().Header.Timestamp.Unix()) / consensus.DaySeconds,
-				txID: txId,
-			}))
-		}
+		//if isPoolingRewardTx {
+		//	batch.Delete(stakingAwardedRecordToKey(stakingAwardedRecordMapKey{
+		//		day:  uint64(block.MsgBlock().Header.Timestamp.Unix()) / consensus.DaySeconds,
+		//		txID: txId,
+		//	}))
+		//}
 	}
 	batch.Delete(makeBlockShaKey(blockSha))
 	batch.Delete(makeBlockHeightKey(height))
@@ -476,7 +478,7 @@ func (db *ChainDb) InitByGenesisBlock(block *chainutil.Block) error {
 	db.dbLock.Lock()
 	defer db.dbLock.Unlock()
 
-	if err := db.submitBlock(block, make(database.TxReplyStore)); err != nil {
+	if err := db.submitBlock(block); err != nil {
 		return err
 	}
 

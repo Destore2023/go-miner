@@ -94,7 +94,7 @@ func TestSubmitBlock(t *testing.T) {
 	assert.Nil(t, err)
 
 	for i := 1; i < 8; i++ {
-		err = db.SubmitBlock(blocks[i], nil)
+		err = db.SubmitBlock(blocks[i])
 		assert.Nil(t, err)
 
 		blockHash := blocks[i].Hash()
@@ -176,7 +176,7 @@ func TestAddrIndexer(t *testing.T) {
 	txStore, err := bc.fetchInputTransactions(node, blocks[21])
 	assert.Nil(t, err)
 
-	err = bc.db.SubmitBlock(blocks[21], nil)
+	err = bc.db.SubmitBlock(blocks[21])
 	assert.Nil(t, err)
 	err = adxr.SyncAttachBlock(blocks[21], txStore)
 	assert.Nil(t, err)
