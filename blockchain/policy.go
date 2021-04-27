@@ -419,7 +419,7 @@ func checkTransactionStandard(tx *chainutil.Tx, height uint64, minRelayTxFee cha
 		}
 		info := originTx.Tx.GetPkScriptInfo(int(originTxIndex))
 		scriptClass := txscript.ScriptClass(info.Class)
-		if txscript.PoolingScriptHashTy == scriptClass || txscript.AwardingScriptHashTy == scriptClass {
+		if txscript.PoolingScriptHashTy == scriptClass {
 			logging.CPrint(logging.ERROR, "transaction is an individual staking pool tx",
 				logging.LogFormat{"txHash": tx.Hash(), "scriptClass": info.Class})
 			return ErrNotAllowedTx
@@ -461,6 +461,12 @@ func checkTransactionStandard(tx *chainutil.Tx, height uint64, minRelayTxFee cha
 	numNullDataOutputs := 0
 	// containsBindingTxIn := make(map[txscript.ScriptClass]bool)
 	for i, txOut := range tx.TxOut() {
+		scriptClass := tx.GetPkScriptInfo(i).Class
+		if txscript.AwardingScriptHashTy == txscript.ScriptClass(scriptClass) {
+			logging.CPrint(logging.ERROR, "transaction is an individual staking awarding tx",
+				logging.LogFormat{"txHash": tx.Hash(), "scriptClass": scriptClass})
+			return ErrNotAllowedTx
+		}
 		// Accumulate the number of outputs which only carry data.  For
 		// all other script types, ensure the output value is not
 		// "dust".
