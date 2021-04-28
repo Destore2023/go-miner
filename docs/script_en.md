@@ -31,7 +31,7 @@ Sending a transaction to a P2SWSH address requires the construction of the outpu
 
 | Transaction Element | Script |
 | ---- | ---- |
-| Output Script | 0 [32-byte sha256(witness script)] [frozen_period] |
+| Output Script | 0 [32-byte sha256(witness script)] [frozen_period 8 bytes ] |
 
 `frozen_period` declares how many blocks this transaction output would be confirmed before becoming spendable.
 
@@ -54,3 +54,30 @@ Sending a transaction to a P2BWSH address requires the construction of the outpu
 ## Spending a P2BWSH Output
 
 Same with P2WSH
+
+# P2PWSH
+
+P2PWSH(pay to pooling witness script hash)
+
+## Spending a P2PWSH Output
+
+| Transaction Element | Script |
+| ---- | ---- |
+| Output Script | 0 [32-byte sha256(witness script)] [2-byte pool type ] |
+
+# P2AWSH 
+
+P2PWSH(pay to awarding witness script hash)
+
+## Spending a P2AWSH Output
+
+| Transaction Element | Script |
+| ---- | ---- |
+| Output Script | 0 [32-byte sha256(witness script)] [2-byte pool type ] [8-bytes frozen_period ] |
+
+# P2GWSH 
+
+P2GWSH(pay to governing witness script hash)
+
+## Spending a P2GWSH Output 
+
