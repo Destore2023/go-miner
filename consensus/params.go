@@ -89,7 +89,7 @@ var (
 	// MinFrozenPeriod Min Frozen Period in a StakingScriptHash output
 	MinFrozenPeriod = defaultMinFrozenPeriod
 	// MinAwardFrozenPeriod min pooling tx award frozen period
-	MinAwardFrozenPeriod = 1
+	MinAwardFrozenPeriod uint64 = 1
 	//MinStakingValue minimum StakingScriptHash output in Sukhavati
 	MinStakingValue = defaultMinStakingValue
 	// StakingTxRewardStart staking tx

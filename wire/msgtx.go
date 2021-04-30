@@ -464,7 +464,7 @@ func IsValidFrozenPeriod(height uint64) bool {
 }
 
 func IsValidAwardFrozenPeriod(height uint64) bool {
-	return height >= consensus.MinFrozenPeriod
+	return height >= consensus.MinAwardFrozenPeriod
 }
 
 // IsValidPoolType 0 < poolType < 255
