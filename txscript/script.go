@@ -134,6 +134,14 @@ func IsPayToPoolingScriptHash(script []byte) bool {
 	return isWitnessPoolingScript(pops)
 }
 
+func IsPayToAwardingScriptHash(script []byte) bool {
+	pops, err := parseScript(script)
+	if err != nil {
+		return false
+	}
+	return isWitnessAwardingScript(pops)
+}
+
 func IsPayToGoverningScriptHash(script []byte) bool {
 	pops, err := parseScript(script)
 	if err != nil {
