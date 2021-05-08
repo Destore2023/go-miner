@@ -614,6 +614,12 @@ func (vm *Engine) verifyWitnessProgram(witness [][]byte) error {
 			vm.scripts = append(vm.scripts, pops)
 			break
 		}
+		// governing tx
+		if len(vm.witnessExtProg[0].data) == WitnessV0GovernFlagDateSize && len(vm.witnessExtProg[1].data) == WitnessV0FrozenPeriodDataSize {
+			flag := binary.LittleEndian.Uint32(vm.witnessExtProg[0].data)
+			if flag>>30 == 1 {
+			}
+		}
 		fallthrough
 	default:
 		return ErrWitnessExtProgUnknown

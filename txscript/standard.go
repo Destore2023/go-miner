@@ -112,7 +112,7 @@ func typeOfScript(pops []parsedOpcode) ScriptClass {
 		return PoolingScriptHashTy
 	} else if isWitnessAwardingScript(pops) {
 		return AwardingScriptHashTy
-	} else if isWitnessGovernanceScript(pops) {
+	} else if isWitnessGoverningScript(pops) {
 		return GoverningScriptHashTy
 	}
 	return NonStandardTy
