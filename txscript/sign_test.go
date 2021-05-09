@@ -533,8 +533,8 @@ func TestSignBindingTxOutputWit(t *testing.T) {
 			msg := fmt.Sprintf("%d:%d", hashType, i)
 			//output value is 0
 			var value = 0
-			if err := signAndCheck(msg, tx, i, pkScript, hashType,
-				getSign, getScript, nil, int64(value)); err != nil {
+			err = signAndCheck(msg, tx, i, pkScript, hashType, getSign, getScript, nil, int64(value))
+			if err != nil {
 				t.Error(err)
 				break
 			}
