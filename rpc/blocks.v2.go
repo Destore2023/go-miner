@@ -241,7 +241,7 @@ func (s *Server) marshalGetBlockV2Response(block *chainutil.Block) (*pb.GetBlock
 	for i, tx := range txns {
 		txIDs[i] = tx.Hash().String()
 	}
-	blockReply.Txids = txIDs
+	blockReply.TxIds = txIDs
 
 	return blockReply, nil
 }
