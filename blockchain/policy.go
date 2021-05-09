@@ -3,7 +3,6 @@ package blockchain
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"time"
 
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
@@ -265,7 +264,7 @@ func checkParsePkScript(tx *chainutil.Tx, txStore TxStore) (err error) {
 			if !bytes.Equal(scriptHash, psi.ScriptHash[:]) {
 				logging.CPrint(logging.ERROR, "PoolingScriptHashTy script hash not equal pool type",
 					logging.LogFormat{
-						"scriptHash": hex.EncodeToString(psi.ScriptHash[:]),
+						"scriptHash": psi.ScriptHash[:],
 						"poolType":   psi.SubClass,
 					})
 				return ErrStandardPoolingTx

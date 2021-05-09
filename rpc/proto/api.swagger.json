@@ -1634,6 +1634,17 @@
         }
       }
     },
+    "rpcprotobufAddress": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "script_address": {
+          "type": "string"
+        }
+      }
+    },
     "rpcprotobufBlockInfoForTx": {
       "type": "object",
       "properties": {
@@ -2138,7 +2149,7 @@
           "type": "integer",
           "format": "int64"
         },
-        "txids": {
+        "tx_ids": {
           "type": "array",
           "items": {
             "type": "string"
@@ -3011,6 +3022,12 @@
         "addresses": {
           "type": "array",
           "items": {
+            "$ref": "#/definitions/rpcprotobufAddress"
+          }
+        },
+        "public_keys": {
+          "type": "array",
+          "items": {
             "type": "string"
           }
         }
@@ -3050,7 +3067,7 @@
         "address": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/rpcprotobufAddress"
           }
         },
         "value": {

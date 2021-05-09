@@ -476,16 +476,23 @@ func (s *Server) showCoinbaseOutputDetails(mtx *wire.MsgTx, chainParams *config.
 		// Ignore the error here since an error means the script
 		// couldn't parse and there is no additional information about
 		// it anyways.
-		scriptClass, addrs, _, reqSigs, err := txscript.ExtractPkScriptAddrs(
+		scriptClass, addrs, pubKeys, reqSigs, err := txscript.ExtractPkScriptAddrs(
 			v.PkScript, chainParams)
 		if err != nil {
 			st := status.New(ErrAPIExtractPKScript, ErrCode[ErrAPIExtractPKScript])
 			return nil, -1, st.Err()
 		}
 
-		encodedAddrs := make([]string, len(addrs))
+		encodedAddrs := make([]*pb.Address, len(addrs))
 		for j, addr := range addrs {
-			encodedAddrs[j] = addr.EncodeAddress()
+			encodedAddrs[j] = &pb.Address{
+				Address:       addr.EncodeAddress(),
+				ScriptAddress: string(addr.ScriptAddress()),
+			}
+		}
+		publicKeys := make([]string, len(pubKeys))
+		for k, pubKey := range pubKeys {
+			publicKeys[k] = string(pubKey.SerializeCompressed())
 		}
 
 		//if uint32(i) < numStaking {
@@ -510,11 +517,12 @@ func (s *Server) showCoinbaseOutputDetails(mtx *wire.MsgTx, chainParams *config.
 			N:     uint32(i),
 			Value: valueStr,
 			ScriptPublicKey: &pb.ScriptPubKeyResult{
-				Asm:       disBuf,
-				Hex:       hex.EncodeToString(v.PkScript),
-				ReqSigs:   uint32(reqSigs),
-				Type:      scriptClass.String(),
-				Addresses: encodedAddrs,
+				Asm:        disBuf,
+				Hex:        hex.EncodeToString(v.PkScript),
+				ReqSigs:    uint32(reqSigs),
+				Type:       scriptClass.String(),
+				Addresses:  encodedAddrs,
+				PublicKeys: publicKeys,
 			},
 			Type: outputType,
 		}
@@ -712,12 +720,14 @@ func createVoutList(mtx *wire.MsgTx, chainParams *config.Params, filterAddrMap m
 			rewardAddress = normalAddress.String()
 		}
 
-		encodedAddrs := make([]string, len(addrs))
+		encodedAddrs := make([]*pb.Address, len(addrs))
 		for j, addr := range addrs {
-			encodedAddrs[j] = addr.EncodeAddress()
-
+			encodedAddrs[j] = &pb.Address{
+				Address:       addr.EncodeAddress(),
+				ScriptAddress: string(addr.ScriptAddress()),
+			}
 			if len(filterAddrMap) > 0 {
-				if _, exists := filterAddrMap[encodedAddrs[j]]; exists {
+				if _, exists := filterAddrMap[encodedAddrs[j].Address]; exists {
 					passesFilter = true
 				}
 			}

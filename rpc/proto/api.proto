@@ -342,7 +342,7 @@ message GetBlockHashByHeightResponse {
 }
 
 message GetBestBlockResponse {
-  string hash = 1;
+  string hash   = 1;
   uint64 height = 2;
 }
 
@@ -389,8 +389,8 @@ message Vin {
 }
 
 message ToAddressForTx {
-  repeated string address = 1;
-  string            value = 2;
+  repeated Address address = 1;
+  string            value  = 2;
 }
 
 message InputsInTx {
@@ -400,14 +400,20 @@ message InputsInTx {
   string value             = 4;
 }
 
+message  Address {
+  string        address = 1;
+  string script_address = 2;
+}
+
 message ScriptPubKeyResult {
-  string asm                = 1;
-  string hex                = 2;
-  uint32 req_sigs           = 3;
-  string type               = 4;
-  uint32 frozen_period      = 5;
-  string reward_address     = 6;
-  repeated string addresses = 7;
+  string asm                  = 1;
+  string hex                  = 2;
+  uint32 req_sigs             = 3;
+  string type                 = 4;
+  uint32 frozen_period        = 5;
+  string reward_address       = 6;
+  repeated Address addresses  = 7;
+  repeated string public_keys = 8;
 }
 
 message Vout {
@@ -440,66 +446,66 @@ message TxRawResult {
 }
 
 message Header {
-  string hash = 1;
-  string chain_id = 2;
-  uint64 version = 3;
-  uint64 height = 4;
-  int64 time = 5;
-  string previous_hash = 6;
-  string transaction_root = 7;
-  string witness_root = 8;
-  string proposal_root = 9;
-  string target = 10;
-  string challenge = 11;
-  string public_key = 12;
-  Proof proof = 13;
+  string hash                  = 1;
+  string chain_id              = 2;
+  uint64 version               = 3;
+  uint64 height                = 4;
+  int64 time                   = 5;
+  string previous_hash         = 6;
+  string transaction_root      = 7;
+  string witness_root          = 8;
+  string proposal_root         = 9;
+  string target                = 10;
+  string challenge             = 11;
+  string public_key            = 12;
+  Proof proof                  = 13;
   PoCSignature block_signature = 14;
-  repeated string ban_list = 15;
+  repeated string ban_list     = 15;
 }
 
 message FaultPubKey {
-  uint32 version = 1;
-  uint32 proposal_type = 2;
-  string public_key = 3;
+  uint32 version            = 1;
+  uint32 proposal_type      = 2;
+  string public_key         = 3;
   repeated Header testimony = 4;
 }
 
 message NormalProposal {
-  uint32 version = 1;
+  uint32 version       = 1;
   uint32 proposal_type = 2;
-  string data = 3;
+  string data          = 3;
 }
 
 message ProposalArea {
   repeated FaultPubKey punishment_area = 1;
-  repeated NormalProposal other_area = 2;
+  repeated NormalProposal other_area   = 2;
 }
 
 message GetBlockResponse {
-  string hash = 1;
-  string chain_id = 2;
-  uint64 version = 3;
-  uint64 height = 4;
-  uint64 confirmations = 5;
-  int64 time = 6;
-  string previous_hash = 7;
-  string next_hash = 8;
-  string transaction_root = 9;
-  string witness_root = 10;
-  string proposal_root = 11;
-  string target = 12;
-  string quality = 13;
-  string challenge = 14;
-  string public_key = 15;
-  Proof proof = 16;
+  string hash                  = 1;
+  string chain_id              = 2;
+  uint64 version               = 3;
+  uint64 height                = 4;
+  uint64 confirmations         = 5;
+  int64 time                   = 6;
+  string previous_hash         = 7;
+  string next_hash             = 8;
+  string transaction_root      = 9;
+  string witness_root          = 10;
+  string proposal_root         = 11;
+  string target                = 12;
+  string quality               = 13;
+  string challenge             = 14;
+  string public_key            = 15;
+  Proof proof                  = 16;
   PoCSignature block_signature = 17;
-  repeated string ban_list = 18;
-  ProposalArea proposal_area = 19;
-  repeated string tx = 20;
-  repeated TxRawResult raw_tx = 21;
-  uint32 block_size = 22;
-  string time_utc = 23;
-  uint32 tx_count = 24;
+  repeated string ban_list     = 18;
+  ProposalArea proposal_area   = 19;
+  repeated string  tx          = 20;
+  repeated TxRawResult raw_tx  = 21;
+  uint32 block_size            = 22;
+  string time_utc              = 23;
+  uint32 tx_count              = 24;
 }
 
 message GetBlockHeaderRequest {
@@ -507,25 +513,25 @@ message GetBlockHeaderRequest {
 }
 
 message GetBlockHeaderResponse {
-  string hash = 1;
-  string chain_id = 2;
-  uint64 version = 3;
-  uint64 height = 4;
-  uint64 confirmations = 5;
-  int64 timestamp = 6;
-  string previous_hash = 7;
-  string next_hash = 8;
-  string transaction_root = 9;
-  string witness_root = 10;
-  string proposal_root = 11;
-  string target = 12;
-  string quality = 13;
-  string challenge = 14;
-  string public_key = 15;
-  Proof proof = 16;
+  string hash                  = 1;
+  string chain_id              = 2;
+  uint64 version               = 3;
+  uint64 height                = 4;
+  uint64 confirmations         = 5;
+  int64 timestamp              = 6;
+  string previous_hash         = 7;
+  string next_hash             = 8;
+  string transaction_root      = 9;
+  string witness_root          = 10;
+  string proposal_root         = 11;
+  string target                = 12;
+  string quality               = 13;
+  string challenge             = 14;
+  string public_key            = 15;
+  Proof proof                  = 16;
   PoCSignature block_signature = 17;
-  repeated string ban_list = 18;
-  string time_utc = 19;
+  repeated string ban_list     = 18;
+  string time_utc              = 19;
 }
 
 message GetBlockRequestV2 {
@@ -533,30 +539,30 @@ message GetBlockRequestV2 {
 }
 
 message GetBlockResponseV2 {
-  string previous = 1;
-  string next = 2;
-  uint64 confirmations = 3;
-  uint32 plain_size = 4;
-  uint32 packet_size = 5;
-  string hash = 6;
-  string chain_id = 7;
-  uint64 version = 8;
-  uint64 height = 9;
-  int64  timestamp = 10;
-  string time_utc = 11;
-  string transaction_root = 12;
-  string witness_root = 13;
-  string proposal_root = 14;
-  string target = 15;
-  string quality = 16;
-  string challenge = 17;
-  string public_key = 18;
-  Proof  proof = 19;
-  PoCSignature signature = 20;
+  string previous          = 1;
+  string next              = 2;
+  uint64 confirmations     = 3;
+  uint32 plain_size        = 4;
+  uint32 packet_size       = 5;
+  string hash              = 6;
+  string chain_id          = 7;
+  uint64 version           = 8;
+  uint64 height            = 9;
+  int64  timestamp         = 10;
+  string time_utc          = 11;
+  string transaction_root  = 12;
+  string witness_root      = 13;
+  string proposal_root     = 14;
+  string target            = 15;
+  string quality           = 16;
+  string challenge         = 17;
+  string public_key        = 18;
+  Proof  proof             = 19;
+  PoCSignature signature   = 20;
   repeated string ban_list = 21;
-  ProposalArea proposals = 22;
-  uint32 tx_count = 23;
-  repeated string txids = 24;
+  ProposalArea proposals   = 22;
+  uint32 tx_count          = 23;
+  repeated string tx_ids   = 24;
 }
 
 message TxOutPoint {
@@ -569,49 +575,49 @@ message GetRawTransactionRequest {
   string tx_id = 1;
 }
 message GetRawTransactionResponse {
-  string hex = 1;
-  string tx_id = 2;
-  int32 version = 3;
-  int64 lock_time = 4;
+  string hex           = 1;
+  string tx_id         = 2;
+  int32 version        = 3;
+  int64 lock_time      = 4;
   BlockInfoForTx block = 5;
-  repeated Vin vin = 6;
-  repeated Vout vout = 7;
-  string payload = 8;
+  repeated Vin vin     = 6;
+  repeated Vout vout   = 7;
+  string payload       = 8;
   uint64 confirmations = 9;
-  uint32 tx_size = 10;
-  string fee = 11;
-  int32 status = 12;
-  bool coinbase = 13;
+  uint32 tx_size       = 10;
+  string fee           = 11;
+  int32 status         = 12;
+  bool coinbase        = 13;
 }
 
 message GetTxDescVerbose0Response {
-  string tx_id = 1;
-  uint32 plain_size = 2;
-  uint32 packet_size = 3;
-  int64  time = 4;
-  uint64 height = 5;
-  string fee = 6;
-  double starting_priority = 7;
-  int64  total_input_age = 8;
+  string tx_id              = 1;
+  uint32 plain_size         = 2;
+  uint32 packet_size        = 3;
+  int64  time               = 4;
+  uint64 height             = 5;
+  string fee                = 6;
+  double starting_priority  = 7;
+  int64  total_input_age    = 8;
 }
 
 message GetTxDescVerbose1Response {
-  string tx_id = 1;
-  uint32 plain_size = 2;
-  uint32 packet_size = 3;
-  int64 time = 4;
-  uint64 height = 5;
-  string fee = 6;
-  double starting_priority = 7;
-  int64 total_input_age = 8;
-  double current_priority = 9;
+  string tx_id                = 1;
+  uint32 plain_size           = 2;
+  uint32 packet_size          = 3;
+  int64 time                  = 4;
+  uint64 height               = 5;
+  string fee                  = 6;
+  double starting_priority    = 7;
+  int64 total_input_age       = 8;
+  double current_priority     = 9;
   repeated TxOutPoint depends = 10;
 }
 
 message GetOrphanTxDescResponse {
-  string tx_id = 1;
-  uint32 plain_size = 2;
-  uint32 packet_size = 3;
+  string tx_id                = 1;
+  uint32 plain_size           = 2;
+  uint32 packet_size          = 3;
   repeated TxOutPoint depends = 4;
 }
 
@@ -627,27 +633,27 @@ message GetTxPoolResponse {
 }
 
 message GetTxPoolVerbose0Response {
-  uint32 tx_count = 1;
-  uint32 orphan_count = 2;
-  uint64 tx_plain_size = 3;
-  uint64 tx_packet_size = 4;
-  uint64 orphan_plain_size = 5;
-  uint64 orphan_packet_size = 6;
-  repeated string txs = 7;
-  repeated string orphans = 8;
-  repeated GetTxDescVerbose0Response tx_descs = 9;
+  uint32 tx_count                               = 1;
+  uint32 orphan_count                           = 2;
+  uint64 tx_plain_size                          = 3;
+  uint64 tx_packet_size                         = 4;
+  uint64 orphan_plain_size                      = 5;
+  uint64 orphan_packet_size                     = 6;
+  repeated string txs                           = 7;
+  repeated string orphans                       = 8;
+  repeated GetTxDescVerbose0Response tx_descs   = 9;
   repeated GetOrphanTxDescResponse orphan_descs = 10;
 }
 
 message GetTxPoolVerbose1Response {
-  uint32 tx_count     = 1;
-  uint32 orphan_count = 2;
-  uint64 tx_plain_size  = 3;
-  uint64 tx_packet_size = 4;
-  uint64 orphan_plain_size  = 5;
-  uint64 orphan_packet_size = 6;
-  repeated string txs     = 7;
-  repeated string orphans = 8;
+  uint32 tx_count                               = 1;
+  uint32 orphan_count                           = 2;
+  uint64 tx_plain_size                          = 3;
+  uint64 tx_packet_size                         = 4;
+  uint64 orphan_plain_size                      = 5;
+  uint64 orphan_packet_size                     = 6;
+  repeated string txs                           = 7;
+  repeated string orphans                       = 8;
   repeated GetTxDescVerbose1Response tx_descs   = 9;
   repeated GetOrphanTxDescResponse orphan_descs = 10;
 }
@@ -721,9 +727,9 @@ message ConfigureSpaceKeeperByDirsRequest {
   }
   repeated Allocation allocations  = 1;
   repeated string payout_addresses = 2;
-  string passphrase  = 3;
-  uint32   cointype  = 4;
-  int32 auto_create  = 5; // >0 autoCreate =0 default  <0 no
+  string passphrase                = 3;
+  uint32   cointype                = 4;
+  int32 auto_create                = 5; // >0 autoCreate =0 default  <0 no
 }
 
 message WorkSpacesByDirsResponse {
