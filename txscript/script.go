@@ -62,18 +62,18 @@ func isWitnessAwardingScript(pops []parsedOpcode) bool {
 		pops[3].opcode.value == OP_DATA_8 // lock time
 }
 
-// isWitnessGovernanceScript return true if the passed script is a
+// isWitnessGoverningScript return true if the passed script is a
 // pay to governance script transaction, false otherwise
 // OP_DATA_8 height type
-// +-----------+---------------+-------------+
-// |  OP_0     | OP_DATA_32    | OP_DATA_2   |
-// +-----------+---------------+-------------+
-func isWitnessGovernanceScript(pops []parsedOpcode) bool {
+// +-----------+---------------+-------------+------------+
+// |  OP_0     | OP_DATA_32    | OP_DATA_4   | OP_DATA_8  |
+// +-----------+---------------+-------------+------------+
+func isWitnessGoverningScript(pops []parsedOpcode) bool {
 	return len(pops) == 4 &&
 		pops[0].opcode.value == OP_0 &&
 		pops[1].opcode.value == OP_DATA_32 &&
-		pops[2].opcode.value == OP_DATA_8 && // enabled  height
-		pops[3].opcode.value == OP_DATA_8 //disabled  height
+		pops[2].opcode.value == OP_DATA_4 && // govern flag
+		pops[3].opcode.value == OP_DATA_8 // enabled  height
 }
 
 // isWitnessStakingScript returns true if the passed script is a
@@ -134,12 +134,20 @@ func IsPayToPoolingScriptHash(script []byte) bool {
 	return isWitnessPoolingScript(pops)
 }
 
+func IsPayToAwardingScriptHash(script []byte) bool {
+	pops, err := parseScript(script)
+	if err != nil {
+		return false
+	}
+	return isWitnessAwardingScript(pops)
+}
+
 func IsPayToGoverningScriptHash(script []byte) bool {
 	pops, err := parseScript(script)
 	if err != nil {
 		return false
 	}
-	return isWitnessGovernanceScript(pops)
+	return isWitnessGoverningScript(pops)
 }
 
 // IsWitnessProgram returns true if the passed script is a valid witness

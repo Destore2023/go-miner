@@ -112,7 +112,7 @@ func typeOfScript(pops []parsedOpcode) ScriptClass {
 		return PoolingScriptHashTy
 	} else if isWitnessAwardingScript(pops) {
 		return AwardingScriptHashTy
-	} else if isWitnessGovernanceScript(pops) {
+	} else if isWitnessGoverningScript(pops) {
 		return GoverningScriptHashTy
 	}
 	return NonStandardTy
@@ -227,6 +227,8 @@ func expectedInputs(pops []parsedOpcode, class ScriptClass) int {
 		return 0
 	case AwardingScriptHashTy:
 		return 1
+	case GoverningScriptHashTy:
+		return asSmallInt(pops[0].opcode)
 	case NullDataTy:
 		fallthrough
 	default:
@@ -418,6 +420,11 @@ func payToAwardingAddrScript(scriptHash []byte, frozenPeriod uint64, poolType ui
 func PayToAwardingAddrScript(scriptHash []byte, frozenPeriod uint64, poolType uint16) ([]byte, error) {
 	return payToAwardingAddrScript(scriptHash, frozenPeriod, poolType)
 }
+
+// payToGoverningScript governFlag 32bits flag + type
+//func payToGoverningScript(redeemScript []byte,maturityPeriod uint64,governFlag uint32) ([]byte,error){
+//
+//}
 
 // PayToAddrScript creates a new script to pay a transaction output to a the
 // specified address.
