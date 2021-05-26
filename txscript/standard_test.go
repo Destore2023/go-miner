@@ -485,11 +485,12 @@ func newAddressWitnessScriptHash(scriptHash []byte) chainutil.Address {
 }
 
 func TestPayToStakingAddrScript(t *testing.T) {
-	encodedAddr := "sk1qpqypqxpq9qcrssqgzqvzq2ps8pqqsyqcyq5rqwzqpqgpsgpgxquyqjyww3n"
+	encodedAddr := "sk1qpqypqxpq9qcrssqgzqvzq2ps8pqqsyqcyq5rqwzqpqgpsgpgxquyqm6ra2y"
 	addr, err := chainutil.DecodeAddress(encodedAddr,
 		&config.ChainParams)
 	if err != nil {
 		t.Error(err)
+		t.FailNow()
 	}
 
 	if !chainutil.IsWitnessStakingAddress(addr) {
@@ -551,7 +552,7 @@ func ExampleWitnessScript() {
 	fmt.Println("binding", address.EncodeAddress(), len(pkScript))
 
 	// Output:
-	// witV0 ms1qqqypqxpq9qcrssqgzqvzq2ps8pqqsyqcyq5rqwzqpqgpsgpgxquyqd07tvd 34
-	// staking ms1qpqypqxpq9qcrssqgzqvzq2ps8pqqsyqcyq5rqwzqpqgpsgpgxquyqjyww3n 43
+	// witV0 sk1qqqypqxpq9qcrssqgzqvzq2ps8pqqsyqcyq5rqwzqpqgpsgpgxquyqy3nch6 34
+	// staking sk1qpqypqxpq9qcrssqgzqvzq2ps8pqqsyqcyq5rqwzqpqgpsgpgxquyqm6ra2y 43
 	// binding 1eBKU2y19PUERmytBTyUUGiK7GeJDqq42 55
 }
