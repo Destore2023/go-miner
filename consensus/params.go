@@ -60,8 +60,9 @@ const (
 	governAddress                         = "sk1qqpthgpk7yqjmenj6fe3klp9d98ay02e5sc4k8avk8985zty3spvdqdfdy3y"
 	StakingPoolType                       = uint16(1)
 	// BindingTxFrozenPeriod default binding frozen period
-	BindingTxFrozenPeriod  = 90 * DayPeriod
-	AwardingTxFrozenPeriod = 1 // DayPeriod
+	BindingTxFrozenPeriod = 90 * DayPeriod
+	// AwardingTxFrozenPeriod default awarding tx frozen period
+	AwardingTxFrozenPeriod = 1
 )
 
 var (
@@ -92,7 +93,10 @@ var (
 	MinAwardFrozenPeriod uint64 = 1
 	//MinStakingValue minimum StakingScriptHash output in Sukhavati
 	MinStakingValue = defaultMinStakingValue
-	// StakingTxRewardStart staking tx
+	// MaxGovernClassValue max govern class
+	MaxGovernClassValue            uint32 = 1<<24 - 1
+	RelativeGovernEnableHeightFlag uint32 = 0x80000000
+
 	StakingTxRewardStart = defaultStakingTxRewardStart
 	BindingRequiredSkt   = map[int]float64{
 		24: 0.006144,

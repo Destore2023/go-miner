@@ -7,6 +7,7 @@ package txscript
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"github.com/Sukhavati-Labs/go-miner/consensus"
 
 	"github.com/Sukhavati-Labs/go-miner/chainutil"
@@ -23,7 +24,8 @@ func init() {
 			clazz == StakingScriptHashTy ||
 			clazz == BindingScriptHashTy ||
 			clazz == PoolingScriptHashTy ||
-			clazz == AwardingScriptHashTy {
+			clazz == AwardingScriptHashTy ||
+			clazz == GoverningScriptHashTy {
 			var err error
 			frozenOrHeight, witHash, subClass, err = GetParsedOpcode(pops, clazz)
 			if err != nil {
@@ -228,7 +230,7 @@ func expectedInputs(pops []parsedOpcode, class ScriptClass) int {
 	case AwardingScriptHashTy:
 		return 1
 	case GoverningScriptHashTy:
-		return asSmallInt(pops[0].opcode)
+		return 1
 	case NullDataTy:
 		fallthrough
 	default:
@@ -421,11 +423,6 @@ func PayToAwardingAddrScript(scriptHash []byte, frozenPeriod uint64, poolType ui
 	return payToAwardingAddrScript(scriptHash, frozenPeriod, poolType)
 }
 
-// payToGoverningScript governFlag 32bits flag + type
-//func payToGoverningScript(redeemScript []byte,maturityPeriod uint64,governFlag uint32) ([]byte,error){
-//
-//}
-
 // PayToAddrScript creates a new script to pay a transaction output to a the
 // specified address.
 func PayToAddrScript(addr chainutil.Address) ([]byte, error) {
@@ -434,6 +431,31 @@ func PayToAddrScript(addr chainutil.Address) ([]byte, error) {
 		return nil, ErrUnsupportedAddress
 	}
 	return payToWitnessScriptHashScript(addr.ScriptAddress())
+}
+
+// payToGoverningScript governFlag 32bits flag + type
+func payToGoverningScript(scriptHash []byte, governFlag uint32, maturityPeriod uint64) ([]byte, error) {
+	flagBuf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(flagBuf, governFlag)
+	maturityPeriodBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(maturityPeriodBuf, maturityPeriod)
+	return NewScriptBuilder().AddOp(OP_0).AddData(scriptHash).addData(flagBuf).addData(maturityPeriodBuf).Script()
+}
+
+// PayToGoverningScript : pay to governing script
+// governFlag:
+// 31              23               0
+// +---------------+----------------+
+// |  flag 8 bits  |  class 24 bits |
+// +---------------+----------------+
+func PayToGoverningScript(scriptHash []byte, class uint32, maturityPeriod uint64, relative bool) ([]byte, error) {
+	if class>>24 > 0 {
+		return nil, fmt.Errorf("Invalid class type ")
+	}
+	if relative {
+		class = class | consensus.RelativeGovernEnableHeightFlag
+	}
+	return payToGoverningScript(scriptHash, class, maturityPeriod)
 }
 
 // MultiSigScript returns a valid script for a multisignature redemption where
@@ -531,6 +553,12 @@ func ExtractPkScriptAddrs(pkScript []byte, chainParams *config.Params) (ScriptCl
 			addrs = append(addrs, addr)
 		}
 	case AwardingScriptHashTy:
+		requiredSigs = 1
+		addr, err := chainutil.NewAddressWitnessScriptHash(pops[1].data, chainParams)
+		if err != nil {
+			addrs = append(addrs, addr)
+		}
+	case GoverningScriptHashTy:
 		requiredSigs = 1
 		addr, err := chainutil.NewAddressWitnessScriptHash(pops[1].data, chainParams)
 		if err != nil {

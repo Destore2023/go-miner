@@ -178,4 +178,6 @@ var (
 	ErrScriptTooBig = errors.New("script size is too large")
 
 	ErrWitnessExtProgUnknown = errors.New("unknown witness extension program")
+
+	ErrNeedMorePublicKey = errors.New("need more public key")
 )

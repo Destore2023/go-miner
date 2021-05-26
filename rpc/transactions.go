@@ -487,12 +487,12 @@ func (s *Server) showCoinbaseOutputDetails(mtx *wire.MsgTx, chainParams *config.
 		for j, addr := range addrs {
 			encodedAddrs[j] = &pb.Address{
 				Address:       addr.EncodeAddress(),
-				ScriptAddress: string(addr.ScriptAddress()),
+				ScriptAddress: hex.EncodeToString(addr.ScriptAddress()),
 			}
 		}
 		publicKeys := make([]string, len(pubKeys))
 		for k, pubKey := range pubKeys {
-			publicKeys[k] = string(pubKey.SerializeCompressed())
+			publicKeys[k] = hex.EncodeToString(pubKey.SerializeCompressed())
 		}
 
 		//if uint32(i) < numStaking {
@@ -724,7 +724,7 @@ func createVoutList(mtx *wire.MsgTx, chainParams *config.Params, filterAddrMap m
 		for j, addr := range addrs {
 			encodedAddrs[j] = &pb.Address{
 				Address:       addr.EncodeAddress(),
-				ScriptAddress: string(addr.ScriptAddress()),
+				ScriptAddress: hex.EncodeToString(addr.ScriptAddress()),
 			}
 			if len(filterAddrMap) > 0 {
 				if _, exists := filterAddrMap[encodedAddrs[j].Address]; exists {

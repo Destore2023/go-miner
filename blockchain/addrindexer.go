@@ -37,8 +37,8 @@ type shTxLoc map[[txIndexKeyLen]byte]struct{}
 
 type btxIndex map[[btxIndexKeyLen]byte]struct{}
 
-// btxSpentIndex spent tx map
-type btxSpentIndex map[[btxSpentIndexKeyLen]byte]struct{}
+// bingTxSpentIndex spent tx map
+type bingTxSpentIndex map[[btxSpentIndexKeyLen]byte]struct{}
 
 func mustEncodeTxIndexKey(scriptHash []byte, txOffset, txLen int) []byte {
 	key := make([]byte, txIndexKeyLen)
@@ -194,46 +194,55 @@ func (a *AddrIndexer) deleteTxAddressIndex(blockSha *wire.Hash, blockHeight uint
 
 }
 
-func indexScriptPubKeyForTxIn(txAddrIndex shTxLoc, btxSpentIndex btxSpentIndex, scriptPubKey []byte, locInBlock *wire.TxLoc,
+func indexScriptPubKeyForTxIn(txAddrIndex shTxLoc, btxSpentIndex bingTxSpentIndex, scriptPubKey []byte, locInBlock *wire.TxLoc,
 	blockHeightBefore uint64, txLocBefore *wire.TxLoc, txBeforeIndex uint32) error {
 	scriptClass, pops := txscript.GetScriptInfo(scriptPubKey)
 	switch scriptClass {
-	case txscript.WitnessV0ScriptHashTy, txscript.StakingScriptHashTy, txscript.BindingScriptHashTy:
+	case txscript.WitnessV0ScriptHashTy, txscript.StakingScriptHashTy:
+		{
+			// WitnessV0ScriptHashTy or StakingScriptHashTy
+			// TODO: more rigorous inspection
+			_, rsh, _, err := txscript.GetParsedOpcode(pops, scriptClass)
+			if err != nil {
+				logging.CPrint(logging.ERROR, "failed to parse opcode")
+				return err
+			}
+			var key [txIndexKeyLen]byte
+			copy(key[:], mustEncodeTxIndexKey(rsh[:], locInBlock.TxStart, locInBlock.TxLen))
+			if _, ok := txAddrIndex[key]; !ok {
+				txAddrIndex[key] = struct{}{}
+			}
+		}
+	case txscript.BindingScriptHashTy:
+		{
+			holderScriptHash, bindingScriptHash, err := txscript.GetParsedBindingOpcode(pops)
+			if err != nil {
+				logging.CPrint(logging.ERROR, "failed to parse binding opcode", logging.LogFormat{"error": err})
+				return err
+			}
+			var txKey [txIndexKeyLen]byte
+			copy(txKey[:], mustEncodeTxIndexKey(holderScriptHash, locInBlock.TxStart, locInBlock.TxLen))
+			if _, ok := txAddrIndex[txKey]; !ok {
+				txAddrIndex[txKey] = struct{}{}
+			}
+
+			var btxsKey [btxSpentIndexKeyLen]byte
+			copy(btxsKey[:], mustEncodeGtxSpentIndexKey(bindingScriptHash, locInBlock.TxStart, locInBlock.TxLen, blockHeightBefore, txLocBefore.TxStart, txLocBefore.TxLen, txBeforeIndex))
+			if _, ok := btxSpentIndex[btxsKey]; !ok {
+				btxSpentIndex[btxsKey] = struct{}{}
+			}
+		}
+	case txscript.AwardingScriptHashTy:
+		{
+
+		}
+	case txscript.GoverningScriptHashTy:
+		{
+
+		}
 	default:
 		logging.CPrint(logging.DEBUG, "nonstandard tx")
 		return nil
-	}
-
-	if scriptClass == txscript.BindingScriptHashTy {
-		holderScriptHash, bindingScriptHash, err := txscript.GetParsedBindingOpcode(pops)
-		if err != nil {
-			logging.CPrint(logging.ERROR, "failed to parse binding opcode", logging.LogFormat{"error": err})
-			return err
-		}
-		var txKey [txIndexKeyLen]byte
-		copy(txKey[:], mustEncodeTxIndexKey(holderScriptHash, locInBlock.TxStart, locInBlock.TxLen))
-		if _, ok := txAddrIndex[txKey]; !ok {
-			txAddrIndex[txKey] = struct{}{}
-		}
-
-		var btxsKey [btxSpentIndexKeyLen]byte
-		copy(btxsKey[:], mustEncodeGtxSpentIndexKey(bindingScriptHash, locInBlock.TxStart, locInBlock.TxLen, blockHeightBefore, txLocBefore.TxStart, txLocBefore.TxLen, txBeforeIndex))
-		if _, ok := btxSpentIndex[btxsKey]; !ok {
-			btxSpentIndex[btxsKey] = struct{}{}
-		}
-	} else {
-		// WitnessV0ScriptHashTy or StakingScriptHashTy
-		// TODO: more rigorous inspection
-		_, rsh, _, err := txscript.GetParsedOpcode(pops, scriptClass)
-		if err != nil {
-			logging.CPrint(logging.ERROR, "failed to parse opcode")
-			return err
-		}
-		var key [txIndexKeyLen]byte
-		copy(key[:], mustEncodeTxIndexKey(rsh[:], locInBlock.TxStart, locInBlock.TxLen))
-		if _, ok := txAddrIndex[key]; !ok {
-			txAddrIndex[key] = struct{}{}
-		}
 	}
 	return nil
 }
@@ -289,7 +298,7 @@ func (a *AddrIndexer) indexBlockAddrs(block *chainutil.Block, txStore TxStore) (
 	}
 
 	txAddrIndex := make(shTxLoc)
-	btxSpentIndex := make(btxSpentIndex)
+	btxSpentIndex := make(bingTxSpentIndex)
 	btxAddrIndex := make(btxIndex)
 
 	txRecord := make(map[wire.Hash]int)

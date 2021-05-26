@@ -33,14 +33,14 @@ type SigHashType uint32
 // Hash type bits from the end of a signature.
 const (
 	// SigHashOld          SigHashType = 0x0
-	SigHashAll          SigHashType = 0x1
-	SigHashNone         SigHashType = 0x2
-	SigHashSingle       SigHashType = 0x3
-	SigHashAnyOneCanPay SigHashType = 0x80
+	SigHashAll          SigHashType = 0x1  // 0000 0001
+	SigHashNone         SigHashType = 0x2  // 0000 0010
+	SigHashSingle       SigHashType = 0x3  // 0000 0011
+	SigHashAnyOneCanPay SigHashType = 0x80 // 1000 0000
 
 	// sigHashMask defines the number of bits of the hash type which is used
 	// to identify which outputs are signed.
-	sigHashMask = 0x1f
+	sigHashMask = 0x1f // 0001 1111
 )
 
 // These are the constants specified for maximums in individual scripts.

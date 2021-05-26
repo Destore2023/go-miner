@@ -65,9 +65,9 @@ func isWitnessAwardingScript(pops []parsedOpcode) bool {
 // isWitnessGoverningScript return true if the passed script is a
 // pay to governance script transaction, false otherwise
 // OP_DATA_8 height type
-// +-----------+---------------+-------------+------------+
-// |  OP_0     | OP_DATA_32    | OP_DATA_4   | OP_DATA_8  |
-// +-----------+---------------+-------------+------------+
+// +-----------+---------------+-------------+-----------+
+// |  OP_0     | OP_DATA_32    | OP_DATA_4   | OP_DATA_8 |
+// +-----------+---------------+-------------+-----------+
 func isWitnessGoverningScript(pops []parsedOpcode) bool {
 	return len(pops) == 4 &&
 		pops[0].opcode.value == OP_0 &&
@@ -332,6 +332,10 @@ func parseScriptTemplate(script []byte, opcodes *[256]opcode) ([]parsedOpcode, e
 // applying a number of sanity checks.
 func parseScript(script []byte) ([]parsedOpcode, error) {
 	return parseScriptTemplate(script, &opcodeArray)
+}
+
+func ParseScript(script []byte) ([]parsedOpcode, error) {
+	return parseScript(script)
 }
 
 // unparseScript reversed the action of parseScript and returns the

@@ -5,6 +5,7 @@
 package txscript
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 
@@ -66,11 +67,13 @@ func RawTxInWitnessSignature(tx *wire.MsgTx, sigHashes *TxSigHashes, idx int,
 	return append(signature.Serialize(), byte(hashType)), nil
 }
 
+// signWitMultiSig sign witness multi sign script
+// return script complete error
 func signWitMultiSig(tx *wire.MsgTx, idx int, value int64, subScript []byte, sigHashes *TxSigHashes, hashType SigHashType,
 	pubkey []*btcec.PublicKey, nRequired int, kdb GetSignDB) ([]byte, bool, error) {
 	// We start with a single OP_FALSE to work around the (now standard)
 	// but in the reference implementation that causes a spurious pop at
-	// the end of OP_CHECKMULTISIG. (Already fixed in btc script vm)
+	// the end of OP_CHECKMULTISIG. (Already fixed in Skt script vm)
 	builder := NewScriptBuilder()
 	//.AddOp(OP_FALSE)
 	//sigHashes := NewTxSigHashes(tx)
@@ -108,7 +111,7 @@ func signwit(chainParams *config.Params, tx *wire.MsgTx, idx int, value int64,
 	}
 
 	switch class {
-	case WitnessV0ScriptHashTy:
+	case WitnessV0ScriptHashTy, GoverningScriptHashTy:
 		script, err := sdb.GetScript(addresses[0])
 		if err != nil {
 			return nil, class, nil, 0, err
@@ -127,8 +130,14 @@ func signwit(chainParams *config.Params, tx *wire.MsgTx, idx int, value int64,
 		}
 		return script, class, addresses, nRequired, nil
 	case MultiSigTy:
-		script, _, err := signWitMultiSig(tx, idx, value, subScript, sigHashes, hashType,
+		script, complete, err := signWitMultiSig(tx, idx, value, subScript, sigHashes, hashType,
 			pubkey, nRequired, kdb)
+		if err != nil {
+			return nil, class, nil, 0, err
+		}
+		if !complete {
+			return script, class, addresses, nRequired, ErrNeedMorePublicKey
+		}
 		return script, class, addresses, nRequired, err
 	case PoolingScriptHashTy:
 		script, err := sdb.GetScript(addresses[0])
@@ -153,19 +162,60 @@ func signwit(chainParams *config.Params, tx *wire.MsgTx, idx int, value int64,
 
 }
 
+// SignTxOutputWit sign TxOut witness script
+// txOut.pkScript  --> locking script
+// txIn.witness[0] --> unlocking script
+// txIn.witness[1] --> locking script
 func SignTxOutputWit(chainParams *config.Params, tx *wire.MsgTx, idx int, value int64, pkScript []byte, sigHashes *TxSigHashes, hashType SigHashType, kdb GetSignDB, sdb ScriptDB) (wire.TxWitness, error) {
+	// redeem script
 	sigScript, _, _, _, err := signwit(chainParams, tx, idx, value, pkScript, sigHashes, hashType, kdb, sdb)
 	if err != nil {
 		return nil, err
 	}
 	// TODO keep the sub addressed and pass down to merge.
+	//
 	realSigScript, _, _, _, err := signwit(chainParams, tx, idx, value,
 		sigScript, sigHashes, hashType, kdb, sdb)
 
-	if err != nil {
+	if err != nil && err != ErrNeedMorePublicKey {
 		return nil, err
 	}
 
-	return wire.TxWitness{realSigScript, sigScript}, nil
+	return wire.TxWitness{realSigScript, sigScript}, err
 
+}
+
+// TxWitnessCache return redeemScriptCache unlockingSignatures
+func TxWitnessCache(chainParams *config.Params, tx *wire.MsgTx) (map[string][]byte, []*btcec.Signature, bool, error) {
+	redeemScriptCache := make(map[string][]byte)
+	unlockingSignatures := make([]*btcec.Signature, 0)
+	signed := false
+	for _, txIn := range tx.TxIn {
+		if len(txIn.Witness) < 2 {
+			continue
+		}
+		signed = true
+		unlockingScript := txIn.Witness[0]
+		redeemScript := txIn.Witness[1]
+		signs, err := parseScript(unlockingScript)
+		if err != nil {
+			return nil, nil, false, err
+		}
+
+		for _, sig := range signs {
+			signature, err := btcec.ParseDERSignature(sig.data, btcec.S256())
+			if err != nil {
+				return nil, nil, false, err
+			}
+			unlockingSignatures = append(unlockingSignatures, signature)
+		}
+
+		scriptHash := sha256.Sum256(redeemScript)
+		address, err := chainutil.NewAddressWitnessScriptHash(scriptHash[:], chainParams)
+		if err != nil {
+			return nil, nil, false, err
+		}
+		redeemScriptCache[address.EncodeAddress()] = redeemScript
+	}
+	return redeemScriptCache, unlockingSignatures, signed, nil
 }

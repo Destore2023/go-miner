@@ -11,6 +11,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/Sukhavati-Labs/go-miner/logging"
 	"hash"
 
 	"github.com/Sukhavati-Labs/go-miner/wire"
@@ -2272,8 +2273,13 @@ func opcodeCheckMultiSig(op *parsedOpcode, vm *Engine) error {
 // [... dummy [sig ...] numsigs [pubkey ...] numpubkeys] -> [... bool] -> [...]
 func opcodeCheckMultiSigVerify(op *parsedOpcode, vm *Engine) error {
 	err := opcodeCheckMultiSig(op, vm)
+
 	if err == nil {
 		err = opcodeVerify(op, vm)
+	} else {
+		logging.CPrint(logging.ERROR, "opcodeCheckMultiSigVerify 0", logging.LogFormat{
+			"pkscript": "",
+		})
 	}
 	return err
 }
