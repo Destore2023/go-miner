@@ -136,7 +136,7 @@ func signwit(chainParams *config.Params, tx *wire.MsgTx, idx int, value int64,
 			return nil, class, nil, 0, err
 		}
 		if !complete {
-			return script, class, addresses, nRequired, ErrNeedMorePublicKey
+			return script, class, addresses, nRequired, ErrNeedMoreSignature
 		}
 		return script, class, addresses, nRequired, err
 	case PoolingScriptHashTy:
@@ -177,7 +177,7 @@ func SignTxOutputWit(chainParams *config.Params, tx *wire.MsgTx, idx int, value 
 	realSigScript, _, _, _, err := signwit(chainParams, tx, idx, value,
 		sigScript, sigHashes, hashType, kdb, sdb)
 
-	if err != nil && err != ErrNeedMorePublicKey {
+	if err != nil && err != ErrNeedMoreSignature {
 		return nil, err
 	}
 

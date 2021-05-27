@@ -179,5 +179,5 @@ var (
 
 	ErrWitnessExtProgUnknown = errors.New("unknown witness extension program")
 
-	ErrNeedMorePublicKey = errors.New("need more public key")
+	ErrNeedMoreSignature = errors.New("need more signature")
 )
