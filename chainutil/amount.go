@@ -15,7 +15,7 @@ var (
 )
 
 // AmountUnit describes a method of converting an Amount to something
-// other than the base unit of a Skt.  The value of the AmountUnit
+// other than the base unit of a skt.  The value of the AmountUnit
 // is the exponent component of the decadic multiple to convert from
 // an amount in Skt to an amount counted in units.
 type AmountUnit int
@@ -33,23 +33,23 @@ const (
 
 // String returns the unit as a string.  For recognized units, the SI
 // prefix is used, or "Sukhavati" for the base unit.  For all unrecognized
-// units, "1eN SKT" is returned, where N is the AmountUnit.
+// units, "1eN Skt" is returned, where N is the AmountUnit.
 func (u AmountUnit) String() string {
 	switch u {
 	case AmountMegaSkt:
-		return "MSKT"
+		return "MSkt"
 	case AmountKiloSkt:
-		return "kSKT"
+		return "kSkt"
 	case AmountSkt:
-		return "SKT"
+		return "Skt"
 	case AmountMilliSkt:
-		return "mSKT"
+		return "mSkt"
 	case AmountMicroSkt:
-		return "μSKT"
+		return "μSkt"
 	case AmountSukhavati:
 		return "Sukhavati"
 	default:
-		return "1e" + strconv.FormatInt(int64(u), 10) + " SKT"
+		return "1e" + strconv.FormatInt(int64(u), 10) + " Skt"
 	}
 }
 
@@ -99,12 +99,12 @@ func MinRelayTxFee() Amount {
 // as an integer, to the Amount integer type by rounding to the nearest integer.
 // This is performed by adding or subtracting 0.5 depending on the sign, and
 // relying on integer truncation to round the value to the nearest Amount.
-func round(Sukhavati float64) (Amount, error) {
+func round(sukhavati float64) (Amount, error) {
 	var v int64
-	if Sukhavati < 0 {
-		v = int64(Sukhavati - 0.5)
+	if sukhavati < 0 {
+		v = int64(sukhavati - 0.5)
 	} else {
-		v = int64(Sukhavati + 0.5)
+		v = int64(sukhavati + 0.5)
 	}
 	u, err := safetype.NewUint128FromInt(v)
 	if err != nil {
@@ -113,12 +113,12 @@ func round(Sukhavati float64) (Amount, error) {
 	return checkedAmount(u)
 }
 
-// NewAmountFromskt creates an Amount from a floating point value representing
-// some value in skt.  NewAmountFromskt errors if f is NaN or +-Infinity, but
-// does not check that the amount is within the total amount of skt
+// NewAmountFromSkt creates an Amount from a floating point value representing
+// some value in Skt.  NewAmountFromSkt errors if f is NaN or +-Infinity, but
+// does not check that the amount is within the total amount of Skt
 // producible as f may not refer to an amount at a single moment in time.
 //
-// NewAmountFromskt is for specifically for converting skt to Sukhavati.
+// NewAmountFromSkt is for specifically for converting Skt to Sukhavati.
 // For creating a new Amount with an int64 value which denotes a quantity of Sukhavati,
 // do a simple type conversion from type int64 to Amount.
 func NewAmountFromSkt(f float64) (Amount, error) {
@@ -157,12 +157,12 @@ func (a Amount) ToUnit(u AmountUnit) float64 {
 	return float64(a.UintValue()) / math.Pow10(int(u+8))
 }
 
-// Toskt is the equivalent of calling ToUnit with Amountskt.
+// ToSkt is the equivalent of calling ToUnit with AmountSkt.
 func (a Amount) ToSkt() float64 {
 	return a.ToUnit(AmountSkt)
 }
 
-// Format formats a monetary amount counted in skt base units as a
+// Format formats a monetary amount counted in Skt base units as a
 // string for a given unit.  The conversion will succeed for any unit,
 // however, known units will be formated with an appended label describing
 // the units with SI notation, or "Sukhavati" for the base unit.
@@ -171,7 +171,7 @@ func (a Amount) Format(u AmountUnit) string {
 	return strconv.FormatFloat(a.ToUnit(u), 'f', -int(u+8), 64) + units
 }
 
-// String is the equivalent of calling Format with Amountskt.
+// String is the equivalent of calling Format with AmountSkt.
 func (a Amount) String() string {
 	return a.Format(AmountSkt)
 }

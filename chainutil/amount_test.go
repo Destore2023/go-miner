@@ -119,44 +119,44 @@ func TestAmountUnitConversions(t *testing.T) {
 		s         string
 	}{
 		{
-			name:      "MSKT",
+			name:      "MSkt",
 			amount:    MaxAmount(),
 			unit:      AmountMegaSkt,
 			converted: float64(consensus.MaxSkt) / 1000000,
-			s:         strconv.FormatFloat(float64(consensus.MaxSkt)/1000000, 'f', -1, 64) + " MSKT",
+			s:         strconv.FormatFloat(float64(consensus.MaxSkt)/1000000, 'f', -1, 64) + " MSkt",
 		},
 		{
-			name:      "kSKT",
+			name:      "kSkt",
 			amount:    amt,
 			unit:      AmountKiloSkt,
 			converted: 444.33322211100,
-			s:         "444.333222111 kSKT",
+			s:         "444.333222111 kSkt",
 		},
 		{
-			name:      "SKT",
+			name:      "Skt",
 			amount:    amt,
 			unit:      AmountSkt,
 			converted: 444333.22211100,
-			s:         "444333.222111 SKT",
+			s:         "444333.222111 Skt",
 		},
 		{
-			name:      "mSKT",
+			name:      "mSkt",
 			amount:    amt,
 			unit:      AmountMilliSkt,
 			converted: 444333222.11100,
-			s:         "444333222.111 mSKT",
+			s:         "444333222.111 mSkt",
 		},
 		{
 
-			name:      "μSKT",
+			name:      "μSkt",
 			amount:    amt,
 			unit:      AmountMicroSkt,
 			converted: 444333222111.00,
-			s:         "444333222111 μSKT",
+			s:         "444333222111 μSkt",
 		},
 		{
 
-			name:      "Sukhavati",
+			name:      "sukhavati",
 			amount:    amt,
 			unit:      AmountSukhavati,
 			converted: 44433322211100,
@@ -168,7 +168,7 @@ func TestAmountUnitConversions(t *testing.T) {
 			amount:    amt,
 			unit:      AmountUnit(-1),
 			converted: 4443332.2211100,
-			s:         "4443332.22111 1e-1 SKT",
+			s:         "4443332.22111 1e-1 Skt",
 		},
 	}
 
@@ -210,20 +210,20 @@ func TestAmountMulF64(t *testing.T) {
 		err  error
 	}{
 		{
-			name: "Multiply 0.1 SKT by 2",
-			amt:  10000000, // 0.1 skt
+			name: "Multiply 0.1 Skt by 2",
+			amt:  10000000, // 0.1 Skt
 			mul:  2,
-			res:  20000000, // 0.2 skt
+			res:  20000000, // 0.2 Skt
 		},
 		{
-			name: "Multiply 0.2 SKT by 0.02",
-			amt:  20000000, // 0.2 skt
+			name: "Multiply 0.2 Skt by 0.02",
+			amt:  20000000, // 0.2 Skt
 			mul:  1.02,
-			res:  20400000, // 0.204 skt
+			res:  20400000, // 0.204 Skt
 		},
 		{
-			name: "Multiply 0.1 SKT by -2",
-			amt:  10000000, // 0.1 skt
+			name: "Multiply 0.1 Skt by -2",
+			amt:  10000000, // 0.1 Skt
 			mul:  -1.02,
 			err:  safetype.ErrUint128Underflow,
 		},
@@ -247,9 +247,9 @@ func TestAmountMulF64(t *testing.T) {
 		},
 		{
 			name: "Multiply by 0.",
-			amt:  100000000, // 1 skt
+			amt:  100000000, // 1 Skt
 			mul:  0,
-			res:  0, // 0 skt
+			res:  0, // 0 Skt
 		},
 		{
 			name: "Multiply 1 by 0.5.",

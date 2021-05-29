@@ -19,8 +19,8 @@ func ExampleAmount() {
 	fmt.Println("100,000 Sukhavati:", a)
 	// Output:
 	// Zero Sukhavati: 0 Skt
-	// 100,000,000 Sukhavatis: 1 Skt
-	// 100,000 Sukhavatis: 0.001 Skt
+	// 100,000,000 Sukhavati: 1 Skt
+	// 100,000 Sukhavati: 0.001 Skt
 }
 
 func ExampleNewAmountFromSkt() {
@@ -61,10 +61,16 @@ func ExampleNewAmountFromSkt() {
 func ExampleAmount_unitConversions() {
 	amount, _ := chainutil.NewAmountFromUint(44433322211100)
 
-	fmt.Println("Sukhavati to kSKT:", amount.Format(chainutil.AmountKiloSkt))
-	fmt.Println("Sukhavati to SKT:", amount)
-	fmt.Println("Sukhavati to MilliSKT:", amount.Format(chainutil.AmountMilliSkt))
-	fmt.Println("Sukhavati to MicroSKT:", amount.Format(chainutil.AmountMicroSkt))
+	fmt.Println("Sukhavati to kSkt:", amount.Format(chainutil.AmountKiloSkt))
+	fmt.Println("Sukhavati to Skt:", amount)
+	fmt.Println("Sukhavati to MilliSkt:", amount.Format(chainutil.AmountMilliSkt))
+	fmt.Println("Sukhavati to MicroSkt:", amount.Format(chainutil.AmountMicroSkt))
 	fmt.Println("Sukhavati to Sukhavati:", amount.Format(chainutil.AmountSukhavati))
 
+	// Output:
+	// Sukhavati to kSkt: 444.333222111 kSkt
+	// Sukhavati to Skt: 444333.222111 Skt
+	// Sukhavati to MilliSkt: 444333222.111 mSkt
+	// Sukhavati to MicroSkt: 444333222111 ¦ÌSkt
+	// Sukhavati to Sukhavati: 44433322211100 Sukhavati
 }

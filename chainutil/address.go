@@ -15,7 +15,7 @@ import (
 )
 
 // address version is resulted from:
-//			(witness verison) << 2 | (witness extension version)
+//			(witness version) << 2 | (witness extension version)
 const (
 	// AddressClassWitnessV0 witness v0 address = 0x00 << 2 | 0x00
 	// StandardVersion              = 0x0000
@@ -24,6 +24,9 @@ const (
 	// AddressClassWitnessStaking witness staking address = 0x00 << 2 | 0x01
 	// StakingTxVersion                  = 0x0001
 	AddressClassWitnessStaking uint16 = 0x0001
+	// AddressClassWitnessInnerImport Use the inner import address
+	// StandardVersion              = 0x0000
+	AddressClassWitnessInnerImport uint16 = 0x8000
 )
 
 // UnsupportedWitnessVerError describes an error where a segwit address being
@@ -55,7 +58,7 @@ var (
 
 	// ErrUnknownAddressType describes an error where an address can not
 	// decoded as a specific address type due to the string encoding
-	// beginning with an identifier byte unknown to any standard or
+	// begining with an identifier byte unknown to any standard or
 	// registered (via config.Register) network.
 	ErrUnknownAddressType = errors.New("unknown address type")
 
@@ -69,7 +72,7 @@ var (
 )
 
 // encodeAddress returns a human-readable payment address given a ripemd160 hash
-// and netID which encodes the network and address type.  It is used
+// and netID which encodes the Skt network and address type.  It is used
 // in both pay-to-pubkey-hash (P2PKH) and pay-to-script-hash (P2SH) address
 // encoding.
 func encodeAddress(hash160 []byte, netID byte) string {
@@ -138,14 +141,14 @@ type Address interface {
 	ScriptAddress() []byte
 
 	// IsForNet returns whether or not the address is associated with the
-	// passed chain network.
+	// passed Skt network.
 	IsForNet(*config.Params) bool
 }
 
 // DecodeAddress decodes the string encoding of an address and returns
 // the Address if addr is a valid encoding for a known address type.
 //
-// The skt network the address is associated with is extracted if possible.
+// The Skt network the address is associated with is extracted if possible.
 // When the address does not encode the network, such as in the case of a raw
 // public key, the address will be associated with the passed defaultNet.
 func DecodeAddress(addr string, defaultNet *config.Params) (Address, error) {

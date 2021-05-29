@@ -25,4 +25,5 @@ $ go get -u github.com/btcsuite/btcutil/bech32
 
 ## License
 
-Package bech32 is licensed under the [copyfree](http://copyfree.org) ISC License.
+Package bech32 is licensed under the [copyfree](http://copyfree.org) ISC
+License.

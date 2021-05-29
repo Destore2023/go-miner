@@ -34,7 +34,7 @@ func TestAddressWitnessScriptHash(t *testing.T) {
 	}{
 		{
 			name:          "t1",
-			address:       "sk1qq75qqxpq9qcrssqgzqvzq2ps8pqqqyqcyq5rqwzqpqgpsgpgxp58q7wksu6",
+			address:       "sk1qq75qqxpq9qcrssqgzqvzq2ps8pqqqyqcyq5rqwzqpqgpsgpgxp58qhsmr8d",
 			prog:          []byte{245, 0, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 0, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 13, 14},
 			witnessVer:    0x00,
 			witnessExtVer: 0x00,
@@ -43,7 +43,7 @@ func TestAddressWitnessScriptHash(t *testing.T) {
 		},
 		{
 			name:          "t2",
-			address:       "sk1qp75qqxpq9qcrssqgzqvzq2ps8pqqqyqcyq5rqwzqpqgpsgpgxp58qp9x4py",
+			address:       "sk1qp75qqxpq9qcrssqgzqvzq2ps8pqqqyqcyq5rqwzqpqgpsgpgxp58qgmtx6n",
 			prog:          []byte{245, 0, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 0, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 13, 14},
 			witnessVer:    0x00,
 			witnessExtVer: 0x01,
@@ -52,7 +52,7 @@ func TestAddressWitnessScriptHash(t *testing.T) {
 		},
 		{
 			name:          "t3-invalid ext ver",
-			address:       "sk1qz75qqxpq9qcrssqgzqvzq2ps8pqqqyqcyq5rqwzqpqgpsgpgxp58qfcl600",
+			address:       "sk1qz75qqxpq9qcrssqgzqvzq2ps8pqqqyqcyq5rqwzqpqgpsgpgxp58qqxjf5c",
 			prog:          []byte{245, 0, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 0, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 13, 14},
 			witnessVer:    0x00,
 			witnessExtVer: 0x02,
@@ -115,12 +115,12 @@ func TestWitnessAddressAssert(t *testing.T) {
 	}{
 		{
 			name:      "case 1",
-			address:   "sk1qq75qqxpq9qcrssqgzqvzq2ps8pqqqyqcyq5rqwzqpqgpsgpgxp58q7wksu6",
+			address:   "sk1qq75qqxpq9qcrssqgzqvzq2ps8pqqqyqcyq5rqwzqpqgpsgpgxp58qhsmr8d",
 			isStaking: false,
 		},
 		{
 			name:      "case 2",
-			address:   "sk1qp75qqxpq9qcrssqgzqvzq2ps8pqqqyqcyq5rqwzqpqgpsgpgxp58qp9x4py",
+			address:   "sk1qp75qqxpq9qcrssqgzqvzq2ps8pqqqyqcyq5rqwzqpqgpsgpgxp58qgmtx6n",
 			isStaking: true,
 		},
 	}
