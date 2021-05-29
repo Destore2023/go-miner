@@ -82,6 +82,6 @@ func ExampleDb_newestSha() {
 	fmt.Println("Latest height:", latestHeight)
 
 	// Output:
-	// Latest hash: ee26300e0f068114a680a772e080507c0f9c0ca4335c382c42b78e2eafbebaa3
+	// Latest hash: 7f56dee203d1798c2e34180ed8f763ea62e01758a3cfa91373999a1a1a7b53fb
 	// Latest height: 0
 }

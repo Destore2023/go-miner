@@ -32,7 +32,7 @@ type testContext struct {
 // testInsertBlock ensures InsertBlock conforms to the interface contract.
 func testInsertBlock(tc *testContext) bool {
 	// The block must insert without any errors.
-	err := tc.db.SubmitBlock(tc.block, nil)
+	err := tc.db.SubmitBlock(tc.block)
 	if err != nil {
 		tc.t.Errorf("InsertBlock (%s): failed to insert block #%d (%s) "+
 			"err %v", tc.dbType, tc.blockHeight, tc.blockHash, err)

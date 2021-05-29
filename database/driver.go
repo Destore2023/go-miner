@@ -64,7 +64,8 @@ func Create(dbType string, args ...interface{}) (DB, error) {
 	drv, exists := drivers[dbType]
 	if !exists {
 		str := fmt.Sprintf("driver %q is not registered", dbType)
-		return nil, errors.New(str)
+		logging.CPrint(logging.ERROR, str)
+		return nil, ErrDbUnknownType
 	}
 
 	return drv.Create(args...)
@@ -79,7 +80,8 @@ func Open(dbType string, args ...interface{}) (DB, error) {
 	drv, exists := drivers[dbType]
 	if !exists {
 		str := fmt.Sprintf("driver %q is not registered", dbType)
-		return nil, errors.New(str)
+		logging.CPrint(logging.ERROR, str)
+		return nil, ErrDbUnknownType
 	}
 
 	return drv.Open(args...)
